@@ -1,0 +1,86 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!-- The HTML 4.01 Transitional DOCTYPE declaration-->
+<!-- above set at the top of the file will set     -->
+<!-- the browser's rendering engine into           -->
+<!-- "Quirks Mode". Replacing this declaration     -->
+<!-- with a "Standards Mode" doctype is supported, -->
+<!-- but may lead to some differences in layout.   -->
+
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>Hello App Engine</title>
+</head>
+
+<body>
+	<h1>Hello App Engine!</h1>
+	<div id="status"></div>
+	
+	<div id="container">
+		<table id="probeTable">
+			<thead>
+				<tr>
+					<th>User ID</th>
+					<th>Timestamp</th>
+					<th>ProbeType</th>
+					<th>SensorData</th>
+				</tr>
+			</thead>
+			<tbody id="probeList">
+			</tbody>
+		</table>
+
+	</div>
+
+	<script type="text/javascript">
+		function init() {
+			var container = document.getElementById("status");
+			var content = document.createElement("span");
+			content.innerHTML = "Initializing...";
+			container.appendChild(content);
+			gapi.client.load('analysisEndpoint', 'v1', getSample, '//' + window.location.host + '/_ah/api');
+		}
+	
+		function getSample () {
+			gapi.client.analysisEndpoint.getMyProbeEntries({'amount': 50}).execute(
+			      function(resp) {
+			        if (!resp.code) {
+			          resp.entries = resp.entries || [];
+			          printProbes(resp.entries);
+			        }
+			      });						
+		}
+	
+		function printProbes(probes) {
+			var tbody = document.getElementById("probeList");
+			
+	        for (var i = 0; i < probes.length; i++) {
+	          var row = document.createElement("tr");
+	          
+	          var userCell = document.createElement("td");
+	          userCell.innerHTML = probes[i].userID;
+	          row.appendChild(userCell);
+	          
+	          var timestampCell = document.createElement("td");
+	          timestampCell.innerHTML = probes[i].timestamp;
+	          row.appendChild(timestampCell);
+	          
+	          var probeTypeCell = document.createElement("td");
+	          probeTypeCell.innerHTML = probes[i].probeType;
+	          row.appendChild(probeTypeCell);
+	          
+	          var sensorDataCell = document.createElement("td");
+	          sensorDataCell.innerHTML = probes[i].sensorData;
+	          row.appendChild(sensorDataCell);
+	          
+	          
+	          tbody.appendChild(row);  
+	         }				
+
+		}
+		
+
+	</script>
+	<script src="https://apis.google.com/js/client.js?onload=init"></script>
+</body>
+</html>

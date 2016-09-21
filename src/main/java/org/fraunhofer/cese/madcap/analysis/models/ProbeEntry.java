@@ -1,4 +1,4 @@
-package org.cese.madcap.analysis.models;
+package org.fraunhofer.cese.madcap.analysis.models;
 
 
 import com.googlecode.objectify.annotation.Entity;
