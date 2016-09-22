@@ -1,0 +1,10 @@
+#Thu Sep 22 09:51:15 EDT 2016
+\!/=
+/instance/edu.umd.cs.findbugs.plugin.eclipse/askAboutPerspectiveSwitch=always
+/instance/edu.umd.cs.findbugs.plugin.eclipse/lastUsedGrouping=[Project, BugRank, Confidence, Pattern, Marker]
+/instance/edu.umd.cs.findbugs.plugin.eclipse/switchPerspectiveAfterAnalysis=true
+/instance/org.eclipse.jdt.ui/org.eclipse.jdt.ui.formatterprofiles.version=12
+/instance/org.eclipse.jdt.ui/org.eclipse.jdt.ui.text.custom_code_templates=<?xml version\="1.0" encoding\="UTF-8" standalone\="no"?><templates/>
+@edu.umd.cs.findbugs.plugin.eclipse=3.0.2.20160306-90c514b
+@org.eclipse.jdt.ui=3.12.0.v20160525-1829
+file_export_version=3.0
