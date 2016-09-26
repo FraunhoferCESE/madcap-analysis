@@ -1,0 +1,31 @@
+	<h1>Hello App Engine!</h1>
+	
+	<div id="status"></div>
+
+	<form ng-submit="list()">
+  	  <input type="text" ng-model="filter_type" size="50"><br>
+  	  <input type="text" ng-model="filter_content" size="50"><br>
+  	  <input type="submit" class="btn" value="Post">
+	</form>
+
+	<div id="container">
+		<table id="probeTable">
+			<thead>
+				<tr>
+					<th>User ID</th>
+					<th>Timestamp</th>
+					<th>ProbeType</th>
+					<th>SensorData</th>
+				</tr>
+			</thead>
+			<tbody id="probeList">
+			</tbody>
+		</table>
+	</div>
+	<div>
+	  <ul>
+        <li ng-repeat="probe in $ctrl.probes | filter:$ctrl.searchData | orderBy:$ctrl.orderProp">
+          <p>{{probe.sensor_type}}  {{probe.sensor_data}}  {{phone.user_id}}  {{phone.timestamp}}</p>
+        </li>
+      </ul>
+	</div>

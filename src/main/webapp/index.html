@@ -6,79 +6,31 @@
 <!-- with a "Standards Mode" doctype is supported, -->
 <!-- but may lead to some differences in layout.   -->
 
-<html>
+<html ng-app="mc-a">
 <head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
-<title>Hello App Engine</title>
+
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<title>MADCAP Web Tool</title>
+	
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.8/angular.js"></script> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.8/angular-route.js"></script> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.8/angular-resource.js"></script> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.8/angular-animate.js"></script>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script> 
+
+    <script src="/js/base/madcap_analysis_base.module.js"></script> 
+    <script src="/js/base/sensor_data_presentation_base.module.js"></script> 
+    <script src="/js/sensor_data_presentation_router.config.js"></script> 
+    <script src="/js/sensor_data_presentation.component.js"></script> 
+    
 </head>
 
 <body>
-	<h1>Hello App Engine!</h1>
-	<div id="status"></div>
 
-	<div id="container">
-		<table id="probeTable">
-			<thead>
-				<tr>
-					<th>User ID</th>
-					<th>Timestamp</th>
-					<th>ProbeType</th>
-					<th>SensorData</th>
-				</tr>
-			</thead>
-			<tbody id="probeList">
-			</tbody>
-		</table>
+  <div ng-view></div>
 
-	</div>
-
-	<script type="text/javascript">
-		function init() {
-			var container = document.getElementById("status");
-			var content = document.createElement("span");
-			content.innerHTML = "Initializing...";
-			container.appendChild(content);
-			gapi.client.load('analysisEndpoint', 'v1', getSample, '//' + window.location.host + '/_ah/api');
-		}
-
-		function getSample() {
-			gapi.client.analysisEndpoint.getMyProbeEntries({
-				'amount' : 50
-			}).execute(function(resp) {
-				if (!resp.code) {
-					resp.entries = resp.entries || [];
-					printProbes(resp.entries);
-				}
-			});
-		}
-
-		function printProbes(probes) {
-			var tbody = document.getElementById("probeList");
-
-			for (var i = 0; i < probes.length; i++) {
-				var row = document.createElement("tr");
-
-				var userCell = document.createElement("td");
-				userCell.innerHTML = probes[i].userID;
-				row.appendChild(userCell);
-
-				var timestampCell = document.createElement("td");
-				timestampCell.innerHTML = probes[i].timestamp;
-				row.appendChild(timestampCell);
-
-				var probeTypeCell = document.createElement("td");
-				probeTypeCell.innerHTML = probes[i].probeType;
-				row.appendChild(probeTypeCell);
-
-				var sensorDataCell = document.createElement("td");
-				sensorDataCell.innerHTML = probes[i].sensorData;
-				row.appendChild(sensorDataCell);
-
-				tbody.appendChild(row);
-			}
-
-		}
-	</script>
-	<script src="https://apis.google.com/js/client.js?onload=init"></script>
+<script src="https://apis.google.com/js/client.js?onload=init"></script>
 </body>
 </html>
