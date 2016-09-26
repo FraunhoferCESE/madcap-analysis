@@ -5,7 +5,8 @@ module('sensorDataPresentation').
     controller: function SensorDataPresentationController($scope) {
     	$scope.list = function() {
     		var self = this;
-    	    alert("test");
+//    	    alert("test");
+    		gapi.client.load('analysisEndpoint', 'v1', cont(), '//' + window.location.host + '/_ah/api');
     	    gapi.client.analysisEndpoint.getMyProbeEntries({'amount' : 50}).execute(function(resp) {
     		self.probes = resp.probes;
     	    $scope.$apply();
@@ -16,11 +17,11 @@ module('sensorDataPresentation').
   
 
   function cont()	{
-	  $ctrl.list();
+//	  $ctrl.list();
   };
   
   function init() {
-		gapi.client.load('analysisEndpoint', 'v1', cont(), '//' + window.location.host + '/_ah/api');
+	gapi.client.load('analysisEndpoint', 'v1', cont(), '//' + window.location.host + '/_ah/api');
 	};
 
 	/*function getSample() {
