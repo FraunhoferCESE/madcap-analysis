@@ -1,12 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<!-- The HTML 4.01 Transitional DOCTYPE declaration-->
-<!-- above set at the top of the file will set     -->
-<!-- the browser's rendering engine into           -->
-<!-- "Quirks Mode". Replacing this declaration     -->
-<!-- with a "Standards Mode" doctype is supported, -->
-<!-- but may lead to some differences in layout.   -->
 
-<html ng-app="mc-a">
+<html>
 <head>
 
 	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -21,9 +15,12 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script> 
 
     <script src="js/base/madcap_analysis_base.module.js"></script> 
-    <script src="js/base/sensor_data_presentation_base.module.js"></script> 
-    <script src="js/sensor_data_presentation_router.config.js"></script> 
-    <script src="js/sensor_data_presentation.component.js"></script> 
+    <script src="js/base/sensor_data_presentation_base.module.js"></script>
+    <script src="js/base/login_base.module.js"></script>
+    <script src="js/base/madcap_analysis_base.module.js"></script> 
+    <script src="js/madcap_analysis.config.js"></script> 
+    <script src="js/initializing_file.js"></script> 
+    <script src="https://apis.google.com/js/client.js?onload=init"></script>
     
 </head>
 
@@ -31,6 +28,5 @@
 
   <div ng-view></div>
 
-<script src="https://apis.google.com/js/client.js?onload=init"></script>
 </body>
 </html>

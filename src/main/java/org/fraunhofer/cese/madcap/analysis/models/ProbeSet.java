@@ -6,6 +6,10 @@ import java.util.List;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
 
+/**
+ * A collection of ProbeEntries. Can be used to return a batch of ProbeEntries in one operation
+ *
+ */
 @Entity
 public class ProbeSet {
 	@Id

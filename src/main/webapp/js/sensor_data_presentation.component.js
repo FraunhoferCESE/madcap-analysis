@@ -1,62 +1,43 @@
+/**
+ * The component for the sensorDataPresentation module. It can load an flexible ammount of
+ * ProbeEntries and display them on screen.
+ */
 angular.
 module('sensorDataPresentation').
   component('sensorDataPresentation', {
     templateUrl: 'html/sensor_data_presentation_view.template.html',
     controller: function SensorDataPresentationController($scope) {
+		"use strict";
+		
+		$scope.count = 0;		
+		
+		/**
+		 * Requests from the Cloud storage to load 50 ProbeEntries.
+		 * Also makes them visible in the template on response.
+		 */
     	$scope.list = function() {
-    		var self = this;
-//    	    alert("test");
-    		gapi.client.load('analysisEndpoint', 'v1', cont(), '//' + window.location.host + '/_ah/api');
-    	    gapi.client.analysisEndpoint.getMyProbeEntries({'amount' : 50}).execute(function(resp) {
-    		self.probes = resp.probes;
-    	    $scope.$apply();
-    		});
+    		function continueFetching()	{
+        		gapi.client.analysisEndpoint.getMyProbeEntries({'amount' : 30}).execute(function(resp) {
+        	    	if(resp.entries !== null)	{
+        	    		$scope.entries = resp.entries;
+        	    	}
+        		});
+        	}
+    		$scope.count++;
+    		gapi.client.load('analysisEndpoint', 'v1', continueFetching, '//' + window.location.host + '/_ah/api');
+    	    
+    	};
+    	
+    	
+    	/**
+    	 * The filter function for the shown data. Hides the datarows which don't return true for
+    	 * the search terms.
+    	 */
+    	$scope.searchData = function(probe){
+    	    if (!$scope.filter_type || (probe.probeType.toLowerCase().indexOf($scope.filter_type) !== -1) || (probe.sensorData.toLowerCase().indexOf($scope.filter_content) !== -1) ){
+    	        return true;
+    	    }
+    	    return false;
+    	   };
     	}
-    }
   });
-  
-
-  function cont()	{
-//	  $ctrl.list();
-  };
-  
-  function init() {
-	gapi.client.load('analysisEndpoint', 'v1', cont(), '//' + window.location.host + '/_ah/api');
-	};
-
-	/*function getSample() {
-		gapi.client.analysisEndpoint.getMyProbeEntries({
-			'amount' : 50
-		}).execute(function(resp) {
-			if (!resp.code) {
-				resp.entries = resp.entries || [];
-				printProbes(resp.entries);
-			}
-		});
-	}*/
-
-	/*function printProbes(probes) {
-		var tbody = document.getElementById("probeList");
-
-		for (var i = 0; i < probes.length; i++) {
-			var row = document.createElement("tr");
-
-			var userCell = document.createElement("td");
-			userCell.innerHTML = probes[i].userID;
-			row.appendChild(userCell);
-
-			var timestampCell = document.createElement("td");
-			timestampCell.innerHTML = probes[i].timestamp;
-			row.appendChild(timestampCell);
-
-			var probeTypeCell = document.createElement("td");
-			probeTypeCell.innerHTML = probes[i].probeType;
-			row.appendChild(probeTypeCell);
-
-			var sensorDataCell = document.createElement("td");
-			sensorDataCell.innerHTML = probes[i].sensorData;
-			row.appendChild(sensorDataCell);
-
-			tbody.appendChild(row);
-		}
-*/

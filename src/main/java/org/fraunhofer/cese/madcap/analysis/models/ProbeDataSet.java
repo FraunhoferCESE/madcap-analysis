@@ -7,6 +7,9 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * Not used in the backend. Reference to the same class in the MADCAP app
+ */
 @Entity
 public class ProbeDataSet implements Serializable {
 

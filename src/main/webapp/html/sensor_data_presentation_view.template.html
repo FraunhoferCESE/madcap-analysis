@@ -1,6 +1,5 @@
-	<h1>Hello App Engine!</h1>
-	
-	<div id="status"></div>
+<div allowed="SEE_GUI">
+	<h1>Hello App Engine!</h1>	
 
 	<form ng-submit="list()">
   	  <input type="text" ng-model="filter_type" size="50"><br>
@@ -24,8 +23,9 @@
 	</div>
 	<div>
 	  <ul>
-        <li ng-repeat="probe in $ctrl.probes | filter:$ctrl.searchData | orderBy:$ctrl.orderProp">
-          <p>{{probe.sensor_type}}  {{probe.sensor_data}}  {{phone.user_id}}  {{phone.timestamp}}</p>
+        <li ng-repeat="probe in entries | filter: searchData">
+          <p>{{count}} {{probe.sensorType}}  {{probe.sensorData}}  {{probe.userID}}  {{probe.timestamp}}</p>
         </li>
       </ul>
 	</div>
+</div>

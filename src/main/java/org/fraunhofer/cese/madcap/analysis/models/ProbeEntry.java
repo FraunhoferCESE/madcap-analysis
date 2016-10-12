@@ -1,17 +1,21 @@
 package org.fraunhofer.cese.madcap.analysis.models;
 
 
+import java.io.Serializable;
+
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.Index;
 
 
 /**
- *
+ * The Entity in which data from ALL sensors will be submitted.
  */
 @Entity
-public class ProbeEntry implements Comparable<ProbeEntry>{
+public class ProbeEntry implements Comparable<ProbeEntry>, Serializable{
 
+	private static final long serialVersionUID = 2L;
+	
     @Id
     private String id;
     @Index
@@ -101,7 +105,7 @@ public class ProbeEntry implements Comparable<ProbeEntry>{
     public int compareTo(ProbeEntry other) {
         if(this.getTimestamp()>other.getTimestamp())
                 return 1;
-        else if ((this.getTimestamp()) == other.getTimestamp())
+        else if ((this.getTimestamp()).equals(other.getTimestamp()))
                 return 0;
         else
                 return -1;
