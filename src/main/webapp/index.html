@@ -2,7 +2,7 @@
 
 <html>
 <head>
-
+	
 	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
 	<title>MADCAP Web Tool</title>
 	
@@ -16,17 +16,19 @@
 
     <script src="js/base/madcap_analysis_base.module.js"></script> 
     <script src="js/base/sensor_data_presentation_base.module.js"></script>
-    <script src="js/base/login_base.module.js"></script>
-    <script src="js/base/madcap_analysis_base.module.js"></script> 
+    <script src="js/base/madcap_control_base.module.js"></script> 
     <script src="js/madcap_analysis.config.js"></script> 
     <script src="js/initializing_file.js"></script> 
     <script src="https://apis.google.com/js/client.js?onload=init"></script>
     
+     <link rel="stylesheet" type="text/css" href="css/spinner_information.css">
 </head>
 
 <body>
 
-  <div ng-view></div>
+	<div id="siteloadspinner" class="loader"></div>
+	<h3 id="loadmessage"></h3>
+    <div ng-view></div>
 
 </body>
 </html>
