@@ -51,9 +51,9 @@ public class SecurityEndpoint {
 	}
 	
 	/**
-	 * Checks if the logged in user is allowed to use the webapp
-	 * @param id 
-	 * @param user
+	 * Checks if the logged in user is allowed to use the webapp.
+	 * @param id The users Google id
+	 * @param user OAuth parameter
 	 * @return 'true' when the user is registered in the Constraints class, 'false' otherwise
 	 * @throws OAuthRequestException Gets thrown when there is no logged in user
 	 */
