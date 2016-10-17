@@ -6,10 +6,13 @@ import org.fraunhofer.cese.madcap.analysis.models.UserInformation;
 
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
+import com.google.api.server.spi.config.ApiMethod.HttpMethod;
 import com.google.api.server.spi.config.ApiNamespace;
 import com.google.api.server.spi.config.Named;
 import com.google.appengine.api.oauth.OAuthRequestException;
 import com.google.appengine.api.users.User;
+import com.google.appengine.api.users.UserService;
+import com.google.appengine.api.users.UserServiceFactory;
 import com.googlecode.objectify.ObjectifyService;
 import static org.fraunhofer.cese.madcap.analysis.OfyService.ofy;
 
@@ -25,7 +28,9 @@ import java.util.LinkedList;
  */
 @Api(name = "securityEndpoint", version = "v1", namespace = @ApiNamespace(ownerDomain = "madcap.cese.fraunhofer.org", ownerName = "madcap.cese.fraunhofer.org", packagePath = "security"))
 public class SecurityEndpoint {
-
+	
+	public final String STARTPAGE = "/#!/login"; 
+	
 	/**
 	 * Retuns a list of the paths of all confidential JavaScript-files
 	 * @return See description
@@ -103,5 +108,11 @@ public class SecurityEndpoint {
 			}
 		}
 		return true;
+	}
+	
+	@ApiMethod(name = "login", httpMethod = HttpMethod.POST)
+	public EndpointReturnObject login()	{
+		UserService userService = UserServiceFactory.getUserService();
+		return new EndpointReturnObject(userService.createLoginURL(STARTPAGE));
 	}
 }

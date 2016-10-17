@@ -1,12 +1,10 @@
 /**
- * The component for the madcapCOntrol module. It will feature the ability to controll a
- * user's MADCAP smartphone app, for example by sending push notifications to it.
- * This component is a stub right now and will be implemented at a later time.
+ * The component for the userMap module. It will enable a Google Map where markers can be put onto.
  */
 angular.
 module('userMap').
   component('userMap', {
-    templateUrl: 'html/madcap_control_view.template.html',
+    templateUrl: 'html/user_position_map_view.template.html',
     controller: function madcapController() {
     	"use strict"; 	
 		document.getElementById('siteloadspinner').style.display="block";		
