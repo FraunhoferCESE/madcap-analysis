@@ -11,14 +11,12 @@ angular.
 	  "use strict";
 	  $locationProvider.hashPrefix('!');
       $routeProvider.
-        when('/testit', {
-        }).
         when('/sensor-data-presentation', {
           template: '<sensor-data-presentation></sensor-data-presentation>'
         }).
-        when('/login',	{
-    	  template: '<login></login>'
+        when('/madcap-control',	{
+    	  template: '<madcap-control></madcap-control>'
       	}).
-        otherwise('/login');
+        otherwise('/madcap-control');
     }
   ]);

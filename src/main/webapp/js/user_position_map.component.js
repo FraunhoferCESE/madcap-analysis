@@ -4,8 +4,8 @@
  * This component is a stub right now and will be implemented at a later time.
  */
 angular.
-module('madcapControl').
-  component('madcapControl', {
+module('userMap').
+  component('userMap', {
     templateUrl: 'html/madcap_control_view.template.html',
     controller: function madcapController() {
     	"use strict"; 	

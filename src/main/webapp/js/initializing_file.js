@@ -6,6 +6,7 @@
   function init() {
 		"use strict";
 		var apisToLoad = 3;
+		document.getElementById('loadmessage').innerHTML = "Loading APIs ...";
 		
 		/**
 		 * callback-method for the library-loading. As soon as all libraries are loaded,
@@ -31,6 +32,8 @@
    */
   function auth() {
 	  "use strict";
+	  document.getElementById('loadmessage').innerHTML = "Checking user ...";
+
 	  // Checks if user is logged in
 	  gapi.client.oauth2.userinfo.get().execute(function(resp) {
 	    if (!resp.code) {
@@ -41,11 +44,13 @@
 				}
 				else	{
 					alert("Your Account is not allowed to use this app");
+					document.getElementById('siteloadspinner').style.display="none";
+					document.getElementById('loadmessage').style.display="none";
 				}
 			});
 	    }
 	    else {
-	    	signin(auth, false); 
+	    	signin(onLoginTry, true); 
 	    }
 	  });
 	}
@@ -59,6 +64,8 @@
    */
   function authorizedInit()	{
 	"use strict";
+	document.getElementById('loadmessage').innerHTML = "Loading JavaScript files ...";
+	
 	var js;
   	var jsLoaded;
   	// Gets a list of JavaScript files to load
@@ -107,7 +114,7 @@
   			}
   			if(allLoaded){
   				// Starts the AngularJS part of the webapp
-  				angular.bootstrap(document, ['madcap-analysis']);	    				
+  				angular.bootstrap(document, ['madcap-analysis']);
   			}
   		}
   	});  
@@ -116,11 +123,26 @@
   /**
    * This method logs in the user using Google's login-window. The login in secured by OAuth.
    * This method is only called when the user is not logged in.
-   * @param callback A methiod, which gets called when the login procedure ended
-   * @param mode determes if the login is prosecuted immediately. 
+   * @param callback A method, which gets called when the login procedure ended
+   * @param mode determines if the login is prosecuted immediately. 
    * Works perfectly with 'false' as parameter, while 'true' causes strange errors.
    */
   function signin(callback, mode) {
 	  "use strict";
 	  gapi.auth.authorize({client_id: '611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com',scope: 'https://www.googleapis.com/auth/userinfo.email', immediate: mode}, callback);
+  }
+  
+  function onLoginTry(resp)	{
+	  "use strict";
+	  if(!('access_token' in resp))	{
+		  gapi.client.securityEndpoint.login().execute(function(resp){
+			  window.location = resp.returned;
+		  });
+	  }
+	  else	{
+		  gapi.auth.setToken({
+			access_token: resp.access_token
+		  });
+		  auth();
+	  }
   }

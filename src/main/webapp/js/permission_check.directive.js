@@ -21,6 +21,8 @@ angular.module('madcap-analysis')
 					gapi.client.securityEndpoint.getUserPermission({"userId" : resp.id, "elemPer" : attr.allowed}).execute(function(resp)	{
 						if(resp.returned === "true")	{
 							element.removeClass('hidden');
+							document.getElementById('siteloadspinner').style.display="none";
+							document.getElementById('loadmessage').style.display="none";
 						}
 					});
 				}

@@ -8,16 +8,16 @@ module('sensorDataPresentation').
     templateUrl: 'html/sensor_data_presentation_view.template.html',
     controller: function SensorDataPresentationController($scope) {
 		"use strict";
-		
+		document.getElementById('siteloadspinner').style.display="block";		
 		$scope.count = 0;		
-		
+	
 		/**
 		 * Requests from the Cloud storage to load 50 ProbeEntries.
 		 * Also makes them visible in the template on response.
 		 */
     	$scope.list = function() {
     		function continueFetching()	{
-        		gapi.client.analysisEndpoint.getMyProbeEntries({'amount' : 30}).execute(function(resp) {
+        		gapi.client.analysisEndpoint.getMyProbeEntries({'amount' : 50}).execute(function(resp) {
         	    	if(resp.entries !== null)	{
         	    		$scope.entries = resp.entries;
         	    	}
