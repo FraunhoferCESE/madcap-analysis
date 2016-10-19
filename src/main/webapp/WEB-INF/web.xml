@@ -4,7 +4,7 @@
         <servlet-class>com.google.api.server.spi.SystemServiceServlet</servlet-class>
         <init-param>
             <param-name>services</param-name>
-            <param-value>org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint</param-value>
+            <param-value>org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint,org.fraunhofer.cese.madcap.analysis.SecurityEndpoint</param-value>
         </init-param>
     </servlet>
     <servlet-mapping>

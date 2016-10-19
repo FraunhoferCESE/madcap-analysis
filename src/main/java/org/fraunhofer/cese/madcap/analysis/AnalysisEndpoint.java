@@ -3,6 +3,7 @@ package org.fraunhofer.cese.madcap.analysis;
 
 import java.util.List;
 
+import org.fraunhofer.cese.madcap.analysis.models.EndpointArrayReturnObject;
 import org.fraunhofer.cese.madcap.analysis.models.ProbeEntry;
 import org.fraunhofer.cese.madcap.analysis.models.ProbeSet;
 
@@ -31,5 +32,23 @@ public class AnalysisEndpoint {
 		ObjectifyService.begin();
 		List<ProbeEntry> probeList = ofy().load().type(ProbeEntry.class).limit(amount).list();
 		return new ProbeSet(probeList);
+	}
+	
+	@ApiMethod(name = "getLastFor", httpMethod = ApiMethod.HttpMethod.GET)
+	public ProbeSet getLast(@Named("amount") int amount, @Named("user") String id, User user) throws OAuthRequestException{
+		ObjectifyService.begin();
+		 List<ProbeEntry> result = ofy().load().type(ProbeEntry.class).filter("UserID =", id).filter("probeType =","org.fraunhofer.cese.madcap.Probe.LocationProbe").order("timestamp").limit(amount).list();
+		 return new ProbeSet(result);
+	}
+	
+	@ApiMethod(name = "getUsers", httpMethod = ApiMethod.HttpMethod.GET)
+	public EndpointArrayReturnObject getUsers(User user) throws OAuthRequestException{
+		ObjectifyService.begin();
+		 List<ProbeEntry> result = ofy().load().type(ProbeEntry.class).project("userID").distinct(true).list();
+		 String[] users = new String[result.size()];
+		 for(int i=0; i<result.size(); i++){
+			users[i] = result.get(i).getUserID();
+		 }
+		 return new EndpointArrayReturnObject(users);
 	}
 }

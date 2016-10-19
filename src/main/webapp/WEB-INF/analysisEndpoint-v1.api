@@ -28,6 +28,46 @@
   "ownerName" : "madcap.cese.fraunhofer.org",
   "packagePath" : "analysis",
   "methods" : {
+    "analysisEndpoint.getLastFor" : {
+      "path" : "probeset/{amount}/{user}",
+      "httpMethod" : "GET",
+      "authLevel" : "NONE",
+      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
+      "audiences" : [ ],
+      "clientIds" : [ "292824132082.apps.googleusercontent.com" ],
+      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getLast",
+      "request" : {
+        "parameters" : {
+          "amount" : {
+            "type" : "int32",
+            "required" : true
+          },
+          "user" : {
+            "type" : "string",
+            "required" : true
+          }
+        },
+        "body" : "empty"
+      },
+      "response" : {
+        "body" : "autoTemplate(backendResponse)"
+      }
+    },
+    "analysisEndpoint.getUsers" : {
+      "path" : "endpointarrayreturnobject",
+      "httpMethod" : "GET",
+      "authLevel" : "NONE",
+      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
+      "audiences" : [ ],
+      "clientIds" : [ "292824132082.apps.googleusercontent.com" ],
+      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getUsers",
+      "request" : {
+        "body" : "empty"
+      },
+      "response" : {
+        "body" : "autoTemplate(backendResponse)"
+      }
+    },
     "analysisEndpoint.getMyProbeEntries" : {
       "path" : "probeset/{amount}",
       "httpMethod" : "GET",
@@ -85,9 +125,31 @@
             "type" : "string"
           }
         }
+      },
+      "EndpointArrayReturnObject" : {
+        "id" : "EndpointArrayReturnObject",
+        "type" : "object",
+        "properties" : {
+          "returned" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }
       }
     },
     "methods" : {
+      "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getLast" : {
+        "response" : {
+          "$ref" : "ProbeSet"
+        }
+      },
+      "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getUsers" : {
+        "response" : {
+          "$ref" : "EndpointArrayReturnObject"
+        }
+      },
       "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getMyProbeEntries" : {
         "response" : {
           "$ref" : "ProbeSet"

@@ -89,6 +89,7 @@
 	    	    jsElm.onload = function()	{
 	    	    	jsLoaded[jsElm.src] = true;
 	    	    	checkLoadStatus();
+	    	    	var x=0;
 	    	    };
 	    	    
 	    	    jsElm.type = "application/javascript";
