@@ -20,6 +20,6 @@ angular.
       	when('/user-map',	{
       	  template: '<user-map></user-map>'
         	}).
-        otherwise('/sensor-data-presentation');
+        otherwise('/user-map');
     }
   ]);

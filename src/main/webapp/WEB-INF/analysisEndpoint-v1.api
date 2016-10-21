@@ -29,8 +29,8 @@
   "packagePath" : "analysis",
   "methods" : {
     "analysisEndpoint.getLastFor" : {
-      "path" : "probeset/{amount}/{user}",
-      "httpMethod" : "GET",
+      "path" : "probeset/{amount}/{user}/{offset}",
+      "httpMethod" : "POST",
       "authLevel" : "NONE",
       "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
       "audiences" : [ ],
@@ -44,6 +44,10 @@
           },
           "user" : {
             "type" : "string",
+            "required" : true
+          },
+          "offset" : {
+            "type" : "int32",
             "required" : true
           }
         },

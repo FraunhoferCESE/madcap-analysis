@@ -34,10 +34,10 @@ public class AnalysisEndpoint {
 		return new ProbeSet(probeList);
 	}
 	
-	@ApiMethod(name = "getLastFor", httpMethod = ApiMethod.HttpMethod.GET)
-	public ProbeSet getLast(@Named("amount") int amount, @Named("user") String id, User user) throws OAuthRequestException{
+	@ApiMethod(name = "getLastFor", httpMethod = ApiMethod.HttpMethod.POST)
+	public ProbeSet getLast(@Named("amount") int amount, @Named("user") String id, @Named("offset") int offset, User user) throws OAuthRequestException{
 		ObjectifyService.begin();
-		 List<ProbeEntry> result = ofy().load().type(ProbeEntry.class).filter("UserID =", id).filter("probeType =","org.fraunhofer.cese.madcap.Probe.LocationProbe").order("timestamp").limit(amount).list();
+		 List<ProbeEntry> result = ofy().load().type(ProbeEntry.class).filter("userID =", id).filter("probeType =","\"edu.mit.media.funf.probe.builtin.SimpleLocationProbe\"").order("-timestamp").limit(amount).offset(offset).list();
 		 return new ProbeSet(result);
 	}
 	

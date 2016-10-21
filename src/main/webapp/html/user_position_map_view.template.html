@@ -1,12 +1,25 @@
 <div allowed="SEE_GUI">
-	<button class="col-md-2 btn btn-success" id="map_toggle" ng-model="map_toggle" ng-click="refresh()">Show Map</button>
-	
-    <select ng-model="chosen_user" id="chosen_user" class="form-control" ng-options="user as user for user in users"></select>
-	<button type="submit" class="col-md-2 btn btn-success" ng-click="show10markers()">Show last Locations</button>
-	<br>
-	
-	<div  ng-if="refreshMap">
-    	<ng-map center="[38.97, -76.92]" zoom="15">
-		</ng-map>
+	<div class="container">
+		<div class="row">
+		   	<div class="col-md-12">
+				<button class="btn btn-success" id="map_toggle" ng-model="map_toggle" ng-click="refresh()" style="margin-bottom: 10px; margin-top: 10px;">Show Map</button>	
+   			</div>
+   		</div>
+   		<div ng-if="refreshMap">
+ 	    	<div class="row">
+   				<div class="col-md-4">
+   					<div class="btn-group" role="group" aria-label="Basic example">
+    					<button type="submit" class="btn btn-success" ng-click="showMarkers()" style="margin-bottom: 10px;">Show last Locations</button>
+						<button type="submit" class="btn btn-success" id="heatmap_toggle" ng-model="heatmap_toggle" ng-click="toggleHeatmap()">Show Heatmap</button>
+					</div>
+				</div>
+				<div class="col-md-8">
+					<select ng-model="chosen_user" id="chosen_user" class="form-control" ng-options="user as user for user in users" ng-change="userChange()"></select>
+				</div>
+			</div>
+			<div class="jumbotron">
+				<ng-map center="[38.97, -76.92]" zoom="15"></ng-map>
+			</div>
+		</div>
 	</div>
 </div>
