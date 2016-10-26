@@ -6,7 +6,7 @@ angular.
 module('userMap').
   component('userMap', {
     templateUrl: 'html/user_position_map_view.template.html',
-    controller: function madcapController($scope, NgMap) {
+    controller: function madcapController(NgMap, $scope, $timeout) {
     	"use strict"; 	
  
     	$scope.map = {};
@@ -19,35 +19,26 @@ module('userMap').
 		    radius: 100
 		});
 		document.getElementById('siteloadspinner').style.display="block";
-		_.defer(function(){
-			$scope.refreshMap = false;
-		});
-		
-		//Requests a list of all users, which are connected to (idexed) ProbeEntries
+		$scope.refreshMap = false;
+
+		//Requests a list of all users, which are connected to (indexed) ProbeEntries
 		gapi.client.analysisEndpoint.getUsers().execute(function(resp){
 			$scope.users = resp.returned;
 		});		
 		
 		/**
-		 * Hides or shows the map when the corresponding button is pressed.
-		 * IMPORTANT!: Due to a bug in the AngularJS implementation of Google Maps,
-		 * a once hidden map has to be hide and shown through a ng-if to be visible in te browser. 
-		 * Otherwise, only a grey map gets shown.
+		 * hides the for this view specific loading spinner and text. Provides the ng-if tag time to get shown on the DOM,
+		 * so that NgMap can get the map from the DOM through getMap();
 		 */
 		$scope.refresh = function()	{
-			if($scope.refreshMap === false)	{
-				$scope.refreshMap = true;
-				document.getElementById("map_toggle").innerHTML = "Hide Map";
-				_.defer(function(){
-					NgMap.getMap().then(function(returnMap){
-						$scope.map = returnMap;
-					});					
+			$scope.refreshMap = true;
+			$timeout(function()	{
+				document.getElementById('maploadspinner').style.display="none";
+				document.getElementById('maploadmessage').style.display="none";
+				NgMap.getMap().then(function(returnMap){
+					$scope.map = returnMap;
 				});
-			}
-			else	{
-				$scope.refreshMap = false;
-				document.getElementById("map_toggle").innerHTML = "Show Map";
-			}
+			}, 1000);
 		};
 		
 		/**
@@ -211,6 +202,9 @@ module('userMap').
 			var seconds = "0" + date.getSeconds();
 			return hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
 		}
-	$scope.refresh();
-    }
+		
+		setTimeout(function(){
+			$scope.refresh();
+		},0);
+	}
 });
