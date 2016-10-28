@@ -6,21 +6,26 @@ angular.
 module('sensorDataPresentation').
   component('sensorDataPresentation', {
     templateUrl: 'html/sensor_data_presentation_view.template.html',
-    controller: function SensorDataPresentationController($scope) {
+    controller: function SensorDataPresentationController($scope, loading_overlay) {
 		"use strict";
 		document.getElementById('siteloadspinner').style.display="block";		
-		$scope.count = 0;		
+		$scope.count = 0;	
 	
 		/**
 		 * Requests from the Cloud storage to load 50 ProbeEntries.
 		 * Also makes them visible in the template on response.
 		 */
     	$scope.list = function() {
+    		var self = this;
     		function continueFetching()	{
+    			var dialog = loading_overlay.createLoadOverlay("Loading entries ...",self);
         		gapi.client.analysisEndpoint.getMyProbeEntries({'amount' : 50}).execute(function(resp) {
-        	    	if(resp.entries !== null)	{
-        	    		$scope.entries = resp.entries;
+        			if(resp.entries !== null)	{
+        				$scope.$apply(function()	{
+        					$scope.entries = resp.entries;
+        				});
         	    	}
+        	    	dialog.close();
         		});
         	}
     		$scope.count++;

@@ -6,7 +6,7 @@ angular.
 module('userMap').
   component('userMap', {
     templateUrl: 'html/user_position_map_view.template.html',
-    controller: function madcapController(NgMap, $scope, $timeout) {
+    controller: function madcapController(NgMap, $scope, $timeout, loading_overlay) {
     	"use strict"; 	
  
     	$scope.map = {};
@@ -98,8 +98,10 @@ module('userMap').
 		 */
 		$scope.showMarkers = function()	{
 			var strUser = document.getElementById("chosen_user").options[document.getElementById("chosen_user").selectedIndex].text;
+			var dialog = loading_overlay.createLoadOverlay("Loading entries ...", this);
 			gapi.client.analysisEndpoint.getLastFor({'amount' : 10, 'user' : strUser, 'offset' : $scope.markers.length}).execute(function(resp) {
-        	   	if(resp.entries !== null && resp !== false)	{
+        	   	dialog.close();
+				if(resp.entries !== null && resp !== false)	{
         	   		var rawData = [];
         	   		for(var i=0; i<resp.entries.length; i++)	{
         	   			rawData[i] = resp.entries[i].sensorData;

@@ -18,6 +18,9 @@ angular.module('madcap-analysis')
         	gapi.client.oauth2.userinfo.get().execute(function(resp) {
 				if (!resp.code) {
 					// Determines if this id is connected to a user with the rights to see the container
+		        	//TODO needs much longer during very first call and therefore screws up the whole loading order
+					//TODO solution 1: make call execution shorter
+					//TODO solution 2: block map controller until call got executed
 					gapi.client.securityEndpoint.getUserPermission({"userId" : resp.id, "elemPer" : attr.allowed}).execute(function(resp)	{
 						if(resp.returned === "true")	{
 							element.removeClass('hidden');
