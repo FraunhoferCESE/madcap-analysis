@@ -9,24 +9,29 @@
 	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 	<title>MADCAP Web Tool</title>
 	
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.8/angular.js"></script> 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.8/angular-route.js"></script> 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.8/angular-resource.js"></script> 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.8/angular-animate.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ng-dialog/0.6.4/js/ngDialog.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/ng-dialog/0.6.4/css/ngDialog.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angularjs-slider/5.8.1/rzslider.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/angularjs-slider/5.8.1/rzslider.css" rel="stylesheet">
+    
     <link href="https://cdnjs.cloudflare.com/ajax/libs/ng-dialog/0.6.4/css/ngDialog-theme-plain.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/ng-dialog/0.6.4/css/ngDialog-theme-default.css" rel="stylesheet">
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script> 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script> 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/2.2.0/ui-bootstrap.js"></script> 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/2.2.0/ui-bootstrap-tpls.js"></script> 
-    
+	
 	<script src="https://maps.google.com/maps/api/js?key=AIzaSyC-2OHEKZIewmF5Bmy_SKdEI4ql2veyTGQ&libraries=visualization&v=3"></script>
     <script src="https://rawgit.com/allenhwkim/angularjs-google-maps/master/build/scripts/ng-map.min.js"></script> 
-
+	
     <script src="js/base/madcap_analysis_base.module.js"></script> 
     <script src="js/base/sensor_data_presentation_base.module.js"></script>
     <script src="js/base/madcap_control_base.module.js"></script> 
@@ -40,8 +45,8 @@
 
 <body>
 
-	<div id="siteloadspinner" class="loader"></div>
-	<h3 id="loadmessage"></h3>
+	<div id="siteloadspinner" class="loader" style="display: block; margin-left: auto; margin-right: auto"></div>
+	<h3 id="loadmessage" style="text-align: center;"></h3>
     <div ng-view></div>
 
 </body>

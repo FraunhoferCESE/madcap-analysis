@@ -6,7 +6,7 @@ angular.
 module('userMap').
   component('userMap', {
     templateUrl: 'html/user_position_map_view.template.html',
-    controller: function madcapController(NgMap, $scope, $timeout, loading_overlay) {
+    controller: function madcapController(NgMap, $scope, $timeout, $uibModal, $rootScope, loading_overlay) {
     	"use strict"; 	
  
     	$scope.map = {};
@@ -18,9 +18,12 @@ module('userMap').
 		    data: $scope.mvcArray,
 		    radius: 100
 		});
+		var time = new Date();
+		$scope.unixRest = time - (time%86400000);
+		$scope.unixRest = $scope.unixRest + (new Date().getTimezoneOffset()*60000);
 		document.getElementById('siteloadspinner').style.display="block";
 		$scope.refreshMap = false;
-
+		
 		//Requests a list of all users, which are connected to (indexed) ProbeEntries
 		gapi.client.analysisEndpoint.getUsers().execute(function(resp){
 			$scope.users = resp.returned;
@@ -35,6 +38,9 @@ module('userMap').
 			$timeout(function()	{
 				document.getElementById('maploadspinner').style.display="none";
 				document.getElementById('maploadmessage').style.display="none";
+				$timeout(function () {
+				      $scope.$broadcast('rzSliderForceRender');
+				    });
 				NgMap.getMap().then(function(returnMap){
 					$scope.map = returnMap;
 				});
@@ -45,6 +51,9 @@ module('userMap').
 		 * Resets the marker-array and heatmap whenever the selected user is changed
 		 */
 		$scope.userChange = function()	{
+			$timeout(function () {
+			      $scope.$broadcast('rzSliderForceRender');
+			    });
 			for(var i=0; i<$scope.markers.length; i++){
 				$scope.markers[i].setMap(null);
 			}
@@ -99,15 +108,18 @@ module('userMap').
 		$scope.showMarkers = function()	{
 			var strUser = document.getElementById("chosen_user").options[document.getElementById("chosen_user").selectedIndex].text;
 			var dialog = loading_overlay.createLoadOverlay("Loading entries ...", this);
-			gapi.client.analysisEndpoint.getLastFor({'amount' : 10, 'user' : strUser, 'offset' : $scope.markers.length}).execute(function(resp) {
-        	   	dialog.close();
-				if(resp.entries !== null && resp !== false)	{
+			//Those are 64-bit integers. They have to be passed to the endpoint as long!
+			var lowerBound = $scope.unixRest + $scope.slider.minValue*60000;
+			var upperBound = $scope.unixRest + $scope.slider.maxValue*60000;
+			gapi.client.analysisEndpoint.getInWindow({'user' : strUser, 'start' : lowerBound , 'end' : upperBound}).execute(function(resp) {
+        	   dialog.close();
+        	   if(resp.entries !== null && resp !== false)	{
         	   		var rawData = [];
         	   		for(var i=0; i<resp.entries.length; i++)	{
-        	   			rawData[i] = resp.entries[i].sensorData;
+        	   			rawData[i] = resp.entries[i];
         	   		}
         	   		showOnMap(rawData);
-        	    }
+        	   	}
         	});  
 		};
 		
@@ -120,13 +132,13 @@ module('userMap').
 			var oldMarkersLength = $scope.markers.length;
 			for(var i=$scope.markers.length; i<(oldMarkersLength + entries.length); i++)	{
 				
-				var location = getLocationData(entries[i - oldMarkersLength]);
+				var location = getLocationData(entries[i - oldMarkersLength].sensorData);
 				var coordinates = new google.maps.LatLng(location[0], location[1]);
 				$scope.mvcArray.push(coordinates);
 
 				$scope.markers[i] = new google.maps.Marker({
 					//title: "Time: " + getTimeFromUnix(entries[i - oldMarkersLength].timestamp)
-					title: entries[i - oldMarkersLength].id
+					title: $scope.getTimeOfDay(Math.ceil((entries[i - oldMarkersLength].timestamp-$scope.unixRest)/60000))
 				});
 				$scope.markers[i].setPosition(coordinates);
 				if(!$scope.isHeat)	{
@@ -191,12 +203,51 @@ module('userMap').
 			return returned;
 		}
 		
+		
+	$scope.slider = {
+		    minValue: 0,
+		    maxValue: 1439,
+		    options: {
+	            floor: 0,
+		    	ceil: 1439,
+	            translate: function(value)	{
+	            	return $scope.getTimeOfDay(value);
+	            },
+		    }
+	};
+			
+		
+	$scope.getTimeOfDay = function(value)	{
+		var hour = 12;
+        var decreaser = 0;
+        var daytime = ' am';
+        for(var i=value; 59<i; i = i-60)	{
+           	hour++;
+           	if(hour % 12 === 1)	{
+           		decreaser++;
+           	}
+           	if(23<hour)	{
+          		daytime = ' pm';
+           	}
+        }
+      	value = i;
+       	var stringValue;
+       	if(value>9)	{
+       		stringValue = value;
+       	}
+       	else	{
+       		stringValue = '0'+value;
+       	}
+       	var timeString = '' + (hour - decreaser*12) + ':' + stringValue + daytime;
+       	return timeString;
+	};
+		
 		/**
 		 * Converts unix time into a readable time format
 		 * @param unix the unix time
 		 * @returns a String with the time in "HH:MM:SS" format
 		 */
-		function getTimeFromUnix(unix){
+		function unixToTime(unix){
 			
 			var date = new Date(unix*1000);
 			var hours = date.getHours();
