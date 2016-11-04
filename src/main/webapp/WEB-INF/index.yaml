@@ -1,0 +1,10 @@
+indexes:
+
+- kind: Task
+  properties:
+  - name: userID
+    direction: asc
+  - name: probeType
+    direction: asc
+  - name: timestamp
+    direction: asc

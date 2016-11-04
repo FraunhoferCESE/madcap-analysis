@@ -37,7 +37,7 @@ public class AnalysisEndpoint {
 	@ApiMethod(name = "getInWindow", httpMethod = ApiMethod.HttpMethod.POST)
 	public ProbeSet getInWindow(@Named("user") String id, @Named("start") long startTime, @Named("end") long endTime, User user) throws OAuthRequestException{
 		ObjectifyService.begin();
-		 List<ProbeEntry> result = ofy().load().type(ProbeEntry.class).filter("userID =", id).filter("probeType =","\"edu.mit.media.funf.probe.builtin.SimpleLocationProbe\"").filter("timestamp >=",startTime).filter("timestamp <=",endTime).order("-timestamp").list();
+		 List<ProbeEntry> result = ofy().load().type(ProbeEntry.class).filter("userID =", id).filter("probeType =","\"edu.mit.media.funf.probe.builtin.SimpleLocationProbe\"").filter("timestamp >=",startTime).filter("timestamp <=",endTime).order("timestamp").list();
 		 return new ProbeSet(result);
 	}
 	

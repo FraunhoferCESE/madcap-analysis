@@ -1,11 +1,10 @@
-<div allowed="SEE_GUI">
+<div allowed="SEE_GUI" style="width:99%; height:80%;">
 	<div id="maploadspinner" class="loader" style="display: block; margin-left: auto; margin-right: auto;"></div>
 	<h3 id="maploadmessage" style="text-align: center;">Loading Google Maps ...</h3>   	
 	<div ng-if="refreshMap">
  	    <div class="row"  style="margin-bottom: 10px; margin-top: 20px;">
    			<div class="col-md-4">
    				<div class="btn-group" role="group" aria-label="Basic example" style="margin-left: 20px;">
-    				<button type="submit" class="btn btn-success" ng-click="showMarkers()">Show last Locations</button>
 					<button type="submit" class="btn btn-success" id="heatmap_toggle" ng-model="heatmap_toggle" ng-click="toggleHeatmap()">Show Heatmap</button>
 				</div>
 			</div>
@@ -15,15 +14,40 @@
 				</div>
 			</div>
 		</div>
-		<div>
-			<rzslider 
-				rz-slider-model="slider.minValue" 
-				rz-slider-high="slider.maxValue"
-				rz-slider-options="slider.options">
-			</rzslider>
+		<div class="row" style="margin-bottom: 10px; margin-top: 20px;">
+			<div class="col-md-8">
+				<div style="margin-left: 20px;">
+					<rzslider 
+						rz-slider-model="slider.minValue" 
+						rz-slider-high="slider.maxValue"
+						rz-slider-options="slider.options">
+					</rzslider>
+				</div>
+			</div>
+			<div class="col-md-4" style="margin-top: 15px;">
+        		<div style="margin-right: 20px;">
+        	 		<p class="input-group">
+          	 			<input type="text" class="form-control" uib-datepicker-popup ng-model="dt.value" is-open="popup.opened" datepicker-options="dateOptions" ng-required="true" close-text="Close"/>
+          				<span class="input-group-btn">
+            				<button type="button" class="btn btn-default" ng-click="open()"><i class="glyphicon glyphicon-calendar"></i></button>
+          				</span>
+       		 		</p>
+     			</div>
+			</div>
 		</div>
-		<div class="jumbotron" style="margin-bottom: 20px; margin-top: 20px; margin-left: 20px; margin-right: 20px;">
-			<ng-map center="[38.97, -76.92]" zoom="15" default-style="false" style="width:100%; height:85%;"></ng-map>
+		<div class="row">	
+			<div class="col-md-8">
+				<div style="margin-bottom: 20px; margin-top: 20px; margin-left: 20px; margin-right: 20px;">
+					<div class="jumbotron">
+						<div style="margin-left: 10px;">
+							<ng-map center="[38.97, -76.92]" zoom="15" default-style="false" style="height:85%;"></ng-map>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-4">
+				Filler Text
+			</div>
 		</div>
 	</div>
 </div>
