@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<datastore-indexes autoGenerate="true">
+    <datastore-index kind="LocationEntry" ancestor="false">
+        <property name="userID" direction="asc" />
+        <property name="timestamp" direction="asc" />
+    </datastore-index>
+    <datastore-index kind="BlockCache" ancestor="false">
+        <property name="longitude" direction="asc" />
+        <property name="latitude" direction="asc" />
+        </datastore-index>
+</datastore-indexes>

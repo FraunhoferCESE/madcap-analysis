@@ -36,9 +36,21 @@ public class SecurityEndpoint {
 	 * @return See description
 	 */
 	@ApiMethod(name = "getJs")
-	public String[] getJsSources() {
+	public String[] getJsSources(User user) throws OAuthRequestException{
 		return Constants.JS_SOURCES;
 	}
+	
+	/**
+	 * Fetches our key for citySDK
+	 * @param user: OAuth user
+	 * @return the citySDK key
+	 * @throws OAuthRequestException
+	 */
+	@ApiMethod(name = "getKey")
+	public EndpointReturnObject getKey(User user) throws OAuthRequestException{
+		 return new EndpointReturnObject(Constants.CITYSDK_KEY);
+	}
+
 	
 	/**
 	 * Returns if the given user is allowed to see the given container.
@@ -110,6 +122,10 @@ public class SecurityEndpoint {
 		return true;
 	}
 	
+	/**
+	 * Returns a URL where the user can login.
+	 * @return the URL
+	 */
 	@ApiMethod(name = "login", httpMethod = HttpMethod.POST)
 	public EndpointReturnObject login()	{
 		UserService userService = UserServiceFactory.getUserService();

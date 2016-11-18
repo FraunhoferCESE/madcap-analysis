@@ -28,6 +28,21 @@
   "ownerName" : "madcap.cese.fraunhofer.org",
   "packagePath" : "security",
   "methods" : {
+    "securityEndpoint.getKey" : {
+      "path" : "endpointreturnobject",
+      "httpMethod" : "GET",
+      "authLevel" : "NONE",
+      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
+      "audiences" : [ ],
+      "clientIds" : [ "292824132082.apps.googleusercontent.com" ],
+      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.SecurityEndpoint.getKey",
+      "request" : {
+        "body" : "empty"
+      },
+      "response" : {
+        "body" : "autoTemplate(backendResponse)"
+      }
+    },
     "securityEndpoint.login" : {
       "path" : "login",
       "httpMethod" : "POST",
@@ -68,6 +83,21 @@
         "body" : "autoTemplate(backendResponse)"
       }
     },
+    "securityEndpoint.getJs" : {
+      "path" : "stringcollection",
+      "httpMethod" : "GET",
+      "authLevel" : "NONE",
+      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
+      "audiences" : [ ],
+      "clientIds" : [ "292824132082.apps.googleusercontent.com" ],
+      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.SecurityEndpoint.getJsSources",
+      "request" : {
+        "body" : "empty"
+      },
+      "response" : {
+        "body" : "autoTemplate(backendResponse)"
+      }
+    },
     "securityEndpoint.isRegistered" : {
       "path" : "isUserRegistered/{userId}",
       "httpMethod" : "POST",
@@ -83,21 +113,6 @@
             "required" : true
           }
         },
-        "body" : "empty"
-      },
-      "response" : {
-        "body" : "autoTemplate(backendResponse)"
-      }
-    },
-    "securityEndpoint.getJs" : {
-      "path" : "stringcollection",
-      "httpMethod" : "GET",
-      "authLevel" : "NONE",
-      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
-      "audiences" : [ ],
-      "clientIds" : [ "292824132082.apps.googleusercontent.com" ],
-      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.SecurityEndpoint.getJsSources",
-      "request" : {
         "body" : "empty"
       },
       "response" : {
@@ -130,6 +145,11 @@
       }
     },
     "methods" : {
+      "org.fraunhofer.cese.madcap.analysis.SecurityEndpoint.getKey" : {
+        "response" : {
+          "$ref" : "EndpointReturnObject"
+        }
+      },
       "org.fraunhofer.cese.madcap.analysis.SecurityEndpoint.login" : {
         "response" : {
           "$ref" : "EndpointReturnObject"
@@ -140,14 +160,14 @@
           "$ref" : "EndpointReturnObject"
         }
       },
-      "org.fraunhofer.cese.madcap.analysis.SecurityEndpoint.isUserRegistered" : {
-        "response" : {
-          "$ref" : "EndpointReturnObject"
-        }
-      },
       "org.fraunhofer.cese.madcap.analysis.SecurityEndpoint.getJsSources" : {
         "response" : {
           "$ref" : "StringCollection"
+        }
+      },
+      "org.fraunhofer.cese.madcap.analysis.SecurityEndpoint.isUserRegistered" : {
+        "response" : {
+          "$ref" : "EndpointReturnObject"
         }
       }
     }

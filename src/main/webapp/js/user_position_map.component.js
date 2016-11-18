@@ -6,26 +6,47 @@ angular.
 module('userMap').
   component('userMap', {
     templateUrl: 'html/user_position_map_view.template.html',
-    controller: function madcapController(NgMap, $scope, $timeout, loading_overlay) {
+    controller: function madcapController(NgMap, $scope, $timeout, loading_overlay, census_api, time_parse) {
     	"use strict"; 	
  
-    	$scope.currentSubject = '';
     	$scope.noData = false;
     	$scope.cache = [];
     	$scope.bounds = new google.maps.LatLngBounds();
-    	
+    	$scope.csv = {
+    			createCsv: false,
+    			csvProgress: 0,
+    			max: 0
+    	};
+    	// All the data we need to show the Google Map, markers and the heatmap layer
     	$scope.mapData = {
     			map: {},
     			mvcArray: new google.maps.MVCArray(),
     			heatmapDataArray: new google.maps.MVCArray(),
     			heatmap : {},
     			isHeat: false,
-    			markers: []		
+    			markers: [],
     	};
+    	
+    	// All data regarding the usable users
+    	$scope.userData = {
+    			users: [],
+    			chosen_user: '',
+    			currentSubject: ''
+    		};
+    	
+    	//A collection of data from census requests. Will be expanded in the future probably
+    	$scope.censusData = {
+    		blockData: []		
+    	};
+    	
     	$scope.mapData.heatmap = new google.maps.visualization.HeatmapLayer({
 		    data: $scope.mapData.heatmapDataArray,
 		    radius: 100
 		});
+    	
+    	$scope.setDefault = function()	{
+    		$scope.userData.chosen_user = $scope.userData.users[0];
+    	};
 		
     	// Creates a cache of dynamic size (5 currently)
     	var cacheSize = 5;
@@ -46,15 +67,33 @@ module('userMap').
 		document.getElementById('siteloadspinner').style.display="block";
 		$scope.refreshMap = false;
 		
-		//Requests a list of all users, which are connected to (indexed) ProbeEntries
+		// Requests and sets the citySDK key
+		gapi.client.securityEndpoint.getKey().execute(function(resp){
+			census_api.passKey(resp.returned);
+		});	
+		
+		//Requests a list of all users, which are connected to LocationEntries. Also inserts a filler value when no user is chosen.
 		gapi.client.analysisEndpoint.getUsers().execute(function(resp){
-			$scope.users = resp.returned;
+			for(var i=0; i<resp.returned.length; i++)	{
+				$scope.userData.users[i+1] = resp.returned[i]+""; 
+			}
+			$scope.userData.users[0] = 'Please choose a user ...';
+			
+			//$scope.userData.users = resp.returned; 
+			
 		});		
 		
 		/**
-		 * Calback function for the case that a different user is chosen in the user-dropdown
+		 * Calback function for the case that a different user is chosen in the user-dropdown.
+		 * Deletes the filler value when it is still part of the user aray.
 		 */
 		$scope.userChange = function()	{
+			if($scope.userData.currentSubject === '')	{
+				for(var i=0; i<$scope.userData.users.length-1; i++)	{
+					$scope.userData.users[i] = $scope.userData.users[i+1];
+				}
+				delete $scope.userData.users.splice($scope.userData.users.length-1,1);
+			}
 			$scope.initializeRefresh('user');
 		};
 		/**
@@ -85,19 +124,19 @@ module('userMap').
 		$scope.initializeRefresh = function(source)	{
 			
 			//Step 1: Caching data
-			if($scope.currentSubject !== '' && !($scope.noData))	{
+			if($scope.userData.currentSubject !== '' && !($scope.noData))	{
 				cacheMarkers();
 			}
 			
 			if(source === 'user'){
-				$scope.currentSubject = document.getElementById("chosen_user").options[document.getElementById("chosen_user").selectedIndex].text;
+				$scope.userData.currentSubject = document.getElementById("chosen_user").options[document.getElementById("chosen_user").selectedIndex].text;
 			}
 			else	{
 				$scope.unixRest = source;
 			}
 			
 			//Step 2: Restoring "factory mode"
-			if($scope.currentSubject !== ''){
+			if($scope.userData.currentSubject !== ''){
 				for(var i=0; i<$scope.mapData.markers.length; i++){
 					$scope.mapData.markers[i].setMap(null);
 				}
@@ -126,7 +165,7 @@ module('userMap').
 				// Checks if the key is in the cache
 				for(var j=0; !isCached && j< $scope.cache.length; j++){
 					cachedAt++;
-					if($scope.currentSubject + $scope.unixRest === $scope.cache.meta[j])	{
+					if($scope.userData.currentSubject + $scope.unixRest === $scope.cache.meta[j])	{
 						isCached = true;
 					}
 				}
@@ -153,7 +192,7 @@ module('userMap').
 			// determines if these markers is already cached
 			for(var i=0; !isCached && i< $scope.cache.length; i++){
 				cachedAt++;
-				if(($scope.currentSubject + $scope.unixRest) === $scope.cache.meta[i])	{
+				if(($scope.userData.currentSubject + $scope.unixRest) === $scope.cache.meta[i])	{
 					isCached = true;
 				}
 			}
@@ -167,7 +206,7 @@ module('userMap').
 						$scope.cache.mvc[j] = $scope.cache.mvc[j-1];
 					}
 					$scope.cache[$scope.cache.pointer] = $scope.mapData.markers;
-					$scope.cache.meta[$scope.cache.pointer] = $scope.currentSubject + $scope.unixRest;
+					$scope.cache.meta[$scope.cache.pointer] = $scope.userData.currentSubject + $scope.unixRest;
 					$scope.cache.mvc[$scope.cache.pointer] = $scope.mapData.mvcArray;
 				}
 				else if($scope.cache.pointer>cachedAt)	{
@@ -181,7 +220,7 @@ module('userMap').
 				}
 			}
 			$scope.cache[$scope.cache.pointer] = $scope.mapData.markers;
-			$scope.cache.meta[$scope.cache.pointer] = $scope.currentSubject + $scope.unixRest;
+			$scope.cache.meta[$scope.cache.pointer] = $scope.userData.currentSubject + $scope.unixRest;
 			$scope.cache.mvc[$scope.cache.pointer] = $scope.mapData.mvcArray;
 			// Increasing and reseting of the cachepointer when it gets bigger than the cache itself
 			$scope.cache.pointer = (++($scope.cache.pointer)) % $scope.cache.length;
@@ -196,9 +235,8 @@ module('userMap').
 			var strUser = document.getElementById("chosen_user").options[document.getElementById("chosen_user").selectedIndex].text;
 			var dialog = loading_overlay.createLoadOverlay("Loading entries ...", this);
 			//Those are 64-bit integers. They have to be passed to the endpoint as long!
-			var upperBound = $scope.unixRest + $scope.slider.maxValue*60000;
 			//Querying for the data
-			gapi.client.analysisEndpoint.getInWindow({'user' : strUser, 'start' : $scope.unixRest , 'end' : (upperBound + 86400000)}).execute(function(resp) {
+			gapi.client.analysisEndpoint.getInWindow({'user' : strUser, 'start' : $scope.unixRest , 'end' : ($scope.unixRest + 86400000)}).execute(function(resp) {
         	   dialog.close();
         	   //Checks to see if the returned object is valid and usable
         	   if(resp.entries !== null && resp !== false && resp.hasOwnProperty('entries'))	{
@@ -230,28 +268,41 @@ module('userMap').
 				// Extends the bounds, so that in the end all markers will be visible on the map at once
 				$scope.bounds.extend($scope.mapData.markers[i].getPosition());
 			}
-			$scope.mapData.map.fitBounds($scope.bounds);
-			$scope.mapData.map.setCenter($scope.bounds.getCenter());
+			$scope.centerMap();
 			filterAccordingToSlider();
 		}
+		
+		/**
+		 * Centers map location and zoom on the markers (all of them, not only the shown ones)
+		 */
+		$scope.centerMap = function()	{
+			$scope.mapData.map.fitBounds($scope.bounds);
+			$scope.mapData.map.setCenter($scope.bounds.getCenter());
+		};
 		
 		
 		/**
 		 * Shows markers on the map with the data from the locations. Prepares the raw string and extractes
 		 * locations out of them.
-		 * @param entries: the ProbeEntries
+		 * @param entries: the LocationEntries
 		 */
 		function showOnMap(entries)	{
-			var oldMarkersLength = $scope.mapData.markers.length;
-			for(var i=oldMarkersLength; i<(oldMarkersLength + entries.length); i++)	{
+			for(var i=0; i<entries.length; i++)	{
 				
-				var location = getLocationData(entries[i - oldMarkersLength].sensorData);
+				var location = [];
+				location[0] = entries[i].latitude;
+				location[1] = entries[i].longitude;
+				
 				var coordinates = new google.maps.LatLng(location[0], location[1]);
 				$scope.mapData.mvcArray.push(coordinates);
 
 				$scope.mapData.markers[i] = new google.maps.Marker({
-					title: $scope.getTimeOfDay(Math.ceil((entries[i - oldMarkersLength].timestamp-$scope.unixRest)/60000))
+					title: time_parse.getDateFromTime(Math.ceil((entries[i].timestamp-$scope.unixRest)/60000))
 				});
+				$scope.mapData.markers[i].addListener('click', function() {
+			          $scope.showCensus(this.getTitle(), this.getPosition().lat(), this.getPosition().lng());
+			        });
+
 				$scope.mapData.markers[i].setPosition(coordinates);
 				$scope.mapData.markers[i].setMap($scope.mapData.map);
 				if($scope.mapData.isHeat)	{
@@ -264,50 +315,32 @@ module('userMap').
 			filterAccordingToSlider();
 			
 		}
-		
-		
+	
 		/**
-		 * Filters location data out of a raw String. codeLat and codeLng define the words, which are 
-		 * DIRECTLY BEFORE the coordinates in the raw String. Only returns one pair of coordinates
-		 * @param entry The entry, from which the location data will be extracted
-		 * @returns the x and y coordinates for the marker
+		 * Searches the entry String for the code word. returnes everything betwen thecode word and the next comma in line.
+		 * @param code: The codewort. everything after the codewort until the next comma will be returned as result
+		 * @param entry: a String that contains the required data. Format has to be csv
+		 * @returns
 		 */
-		function getLocationData(entry)	{
-			var returned = [];
-			var doneLat = false;
-			var doneLng = false;
-			var codeLat = "\"mLatitude\":";
-			var codeLng = "\"mLongitude\":";
-			for(var i=0; i<entry.length && (!doneLat || !doneLng); i++)	{
-				if(entry.charAt(i) === codeLat.charAt(0))	{
-					var equalLat = true;
-					for(var j=1; j<codeLat.length; j++)	{
-						if(entry.charAt(i+j) !== codeLat.charAt(j))	{
-							equalLat = false;
+		function refineData(code, entry)	{
+			var done = false;
+			var returned = 'error';
+			for(var i=0; i<entry.length && !done; i++)	{
+				//Checks for equality
+				if(entry.charAt(i) === code.charAt(0))	{
+					var equal = true;
+					//marks when unequal
+					for(var l=1; l<code.length; l++)	{
+						if(entry.charAt(i+l) !== code.charAt(l))	{
+							equal = false;
 						}
 					}
-					if(equalLat)	{
-						returned[0] = "";
-						for(var k=(i+codeLat.length); entry.charAt(k) !== ','; k++)	{
-							returned[0] = returned[0] + entry.charAt(k);
+					if(equal)	{
+						returned = "";
+						for(var m=(i+code.length); entry.charAt(m) !== ','; m++)	{
+							returned = returned + entry.charAt(m);
 						}
-						doneLat = true;
-					}
-				}
-				
-				if(entry.charAt(i) === codeLng.charAt(0))	{
-					var equalLng = true;
-					for(var l=1; l<codeLng.length; l++)	{
-						if(entry.charAt(i+l) !== codeLng.charAt(l))	{
-							equalLng = false;
-						}
-					}
-					if(equalLng)	{
-						returned[1] = "";
-						for(var m=(i+codeLng.length); entry.charAt(m) !== ','; m++)	{
-							returned[1] = returned[1] + entry.charAt(m);
-						}
-						doneLng = true;
+						done = true;
 					}
 				}
 			}
@@ -359,7 +392,7 @@ module('userMap').
 		    	ceil: 1439,
 		    	disabled: false,
 	            translate: function(value)	{
-	            	return $scope.getTimeOfDay(value);
+	            	return time_parse.getDateFromTime(value);
 	            },
 	            onChange: function(sliderId)	{
 	            	filterAccordingToSlider();        	
@@ -374,12 +407,12 @@ module('userMap').
 		 * It updates automatically whenever the slider is moved, but is also called manually
 		 */
 		function filterAccordingToSlider()	{
-			if($scope.currentSubject !== '')	{
+			if($scope.userData.currentSubject !== '')	{
 			    /* Completly clears the heatmap. The heatmapdata is a stack, therefore injecting
 				and removing at specific indexes is not possible*/
         		$scope.mapData.heatmapDataArray.clear();
         		for(var i=0; i<$scope.mapData.markers.length; i++)	{
-        			var value = getTimeFromDate($scope.mapData.markers[i].getTitle());
+        			var value = time_parse.getTimeFromDate($scope.mapData.markers[i].getTitle());
         			if(value < $scope.slider.minValue || $scope.slider.maxValue < value){
         				// Only change if the marker is visible while it shall not be
         				if($scope.mapData.markers[i].getVisible())	{
@@ -399,64 +432,7 @@ module('userMap').
 		}
 		
 		
-		/**
-		 * converts a String with the format HH:MM(am/pm) to unixtime in milliseconds
-		 * @param value: the time as string
-		 * @return the time in unix
-		 */
-		$scope.getTimeOfDay = function(value)	{
-			var hour = 12;
-			var decreaser = 0;
-			var daytime = ' am';
-			for(var i=value; 59<i; i = i-60)	{
-				hour++;
-				if(hour % 12 === 1)	{
-					decreaser++;
-				}
-				if(23<hour)	{
-					daytime = ' pm';
-				}
-			}
-			value = i;
-			var stringValue;
-			if(value>9)	{
-				stringValue = value;
-			}
-			else	{
-				stringValue = '0'+value;
-			}
-			var timeString = '' + (hour - decreaser*12) + ':' + stringValue + daytime;
-			return timeString;
-		};
 		
-		
-		/**
-		 *  The same as getTimeOfDay, but the other way around
-		 * @param title: the time in unix
-		 * @returns the time as String
-		 */
-		function getTimeFromDate(title)	{
-			var hourShifter = 0;
-			
-			if(title.substring(2,3) === ':')	{
-				hourShifter = 1;
-			}
-			var hour = parseInt(title.substring(0,1+hourShifter));
-			var minute = parseInt(title.substring(2+hourShifter,4+hourShifter));
-			var dayTime = title.substring(5+hourShifter,7+hourShifter);
-			if(dayTime === 'am' && hour !== 12){
-				return hour*60+minute;
-			}
-			else if(dayTime === 'am'){
-				return minute;
-			}
-			else if(dayTime === 'pm' && hour !== 12){
-				return hour*60+minute+720;
-			}
-			else	{
-				return minute+720;				
-			}
-		}
 		
 		
 		//-------------------------Stuff for the Datepicker------------------------------------
@@ -559,6 +535,56 @@ module('userMap').
 			$scope.refresh();
 		},0);
 		
+		/**
+		 * loads census data for a given coordinate pair. Saves the returned data in the census data cache.
+		 * EXTENSION: Will update a window with longitude, latitude and time of the marker.
+		 */
+		$scope.showCensus = function(time, lat, lng)	{	
+			census_api.sendRequest(lat, lng,
+			function(resp, id)	{
+				// Necessary to trigger immediate update in Angular
+				$scope.$apply(function()	{
+					var data = resp.features[0].properties;
+					$scope.censusData.blockData = data;
+				});
+			}, false, -1);
+		};
 		
+		/**
+		 * Starts a download for all map data as a csv-file. Currently, the download includes all markers of the chosen day,
+		 * regardless of the fact if they are shown on the map currently. 
+		 */
+		$scope.downloadCSV = function()	{
+	    	$scope.csv.csvProgress = 10;
+			$scope.csv.createCsv = true;
+    		// Prepares data to be passed to (out) census service
+			$scope.userData.chosen_user = $scope.userData.users[2];
+			var coords = [];
+			for(var i=0; i<$scope.mapData.markers.length; i++)	{
+				coords[i] = {};
+				coords[i].time = time_parse.getTimeFromDate($scope.mapData.markers[i].getTitle());
+				coords[i].lat = $scope.mapData.markers[i].getPosition().lat();
+				coords[i].lng = $scope.mapData.markers[i].getPosition().lng();
+			}
+			var date = new Date($scope.unixRest);
+			var day = "=\"" + (1+date.getMonth()) + "/" + date.getDate() + "/" + date.getFullYear()+ "\"";
+			census_api.csvDownload(coords, day, function(percent)	{
+		    	
+				var phase = $scope.$root.$$phase;
+				if(phase === '$apply' || phase === '$digest') {
+		    		$scope.csv.csvProgress = percent;
+		    		if(percent >= 100){
+			    		$scope.csv.createCsv = false;
+			    	}
+				} else {
+					$scope.$apply(function()	{
+			    		$scope.csv.csvProgress = percent;
+			    		if(percent >= 100){
+				    		$scope.csv.createCsv = false;
+				    	}
+			    	});
+				}
+			});
+		};
 	}
 });

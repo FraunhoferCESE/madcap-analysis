@@ -1,0 +1,6 @@
+@CHARSET "ISO-8859-1";
+
+.vcenter {
+    display: flex;
+    align-items: center;
+}

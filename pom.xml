@@ -55,7 +55,7 @@
 			<artifactId>javax.inject</artifactId>
 			<version>1</version>
 		</dependency>
-
+	
 		<!-- Test Dependencies -->
 		<dependency>
 			<groupId>junit</groupId>
