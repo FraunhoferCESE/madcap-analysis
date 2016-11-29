@@ -1,7 +1,7 @@
 <div allowed="SEE_GUI" style="width:99%; height:80%;">
-	<div id="maploadspinner" class="loader" style="display: block; margin-left: auto; margin-right: auto;"></div>
-	<h3 id="maploadmessage" style="text-align: center;">Loading Google Maps ...</h3>   	
-	<div ng-if="refreshMap">
+	<div id="timelineloadspinner" class="loader" style="display: block; margin-left: auto; margin-right: auto;"></div>
+	<h3 id="timelineloadmessage" style="text-align: center;">Loading Timeline ...</h3>
+	<div ng-if="control.showPage">
  	    <div class="row vcenter"  style="margin-bottom: 10px; margin-top: 20px;">
    			<div class="col-md-7">
    				<div class="btn-group" role="group" aria-label="Basic example" style="margin-left: 20px;">
@@ -48,74 +48,9 @@
      			</div>
 			</div>
 		</div>
-		<div class="row">	
-			<div class="col-md-8">
-				<div style="margin-bottom: 20px; margin-top: 20px; margin-left: 20px; margin-right: 20px;">
-					<div class="jumbotron">
-						<div style="margin-left: 10px;">
-							<ng-map center="[38.97, -76.92]" zoom="15" default-style="false" style="height:85%;"></ng-map>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div class="col-md-4">
-				<h3>Census Data:</h3>
-				AREALAND: {{censusData.blockData.AREALAND}}
-				</br>
-				AREAWATER: {{censusData.blockData.AREAWATER}}
-				</br>
-				BASENAME: {{censusData.blockData.BASENAME}}
-				</br>
-				BLOCKGROUP: {{censusData.blockData.BLKGRP}}
-				</br>
-				BLOCK: {{censusData.blockData.BLOCK}}
-				</br>
-				CENT. LATITUDE: {{censusData.blockData.CENTLAT}}
-				</br>
-				CENT. LONGITUDE: {{censusData.blockData.CENTLON}}
-				</br>
-				DIVISION: {{censusData.blockData.DIVISION}}
-				</br>
-				FUNCSTAT: {{censusData.blockData.FUNCSTAT}}
-				</br>
-				GEOID: {{censusData.blockData.GEOID}}
-				</br>
-				INTPT. LATITUDE: {{censusData.blockData.INTPTLAT}}
-				</br>
-				INTPT. LONGITUDE: {{censusData.blockData.INTPTLAT}}
-				</br>
-				LSADC: {{censusData.blockData.LSADC}}
-				</br>
-				MTFCC: {{censusData.blockData.MTFCC}}
-				</br>
-				NAME: {{censusData.blockData.NAME}}
-				</br>
-				OBJECTID: {{censusData.blockData.OBJECTID}}
-				</br>
-				OID: {{censusData.blockData.OID}}
-				</br>
-				REGION: {{censusData.blockData.REGION}}
-				</br>
-				STATE: {{censusData.blockData.STATE}}
-				</br>
-				STATENS: {{censusData.blockData.STATENS}}
-				</br>
-				STUSAB: {{censusData.blockData.STUSAB}}
-				</br>
-			</div>
-		</div>
-		<div class="row">	
-			<div class="col-md-1">
-				<div style="margin-left: 20px;">
-				</div>
-			</div>
-			<div class="col-md-6">
-				
-			</div>
-			<div class="col-md-5" >
-				<div style="text-align:right; margin-right: 20px;">
-					This product uses the Census Bureau Data API but is not endorsed or certified by the Census Bureau.
-				</div>
+		<div class="row">
+			<div class="col-md-12" id="timeline_container">
+				<div id="timeline1"></div>
 			</div>
 		</div>
 	</div>

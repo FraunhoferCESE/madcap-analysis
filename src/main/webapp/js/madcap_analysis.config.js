@@ -17,9 +17,12 @@ config(['$locationProvider', '$routeProvider',
         when('/madcap-control',	{
     	  template: '<madcap-control></madcap-control>'
       	}).
-      	when('/user-map',	{
+      	when('/timeline',	{
+      	  template: '<timeline></timeline>'
+        }).
+        when('/user-map',	{
       	  template: '<user-map></user-map>'
-        	}).
+        }).
         otherwise('/user-map');
     }
   ]);

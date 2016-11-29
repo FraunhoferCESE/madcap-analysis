@@ -7,5 +7,9 @@
     <datastore-index kind="BlockCache" ancestor="false">
         <property name="longitude" direction="asc" />
         <property name="latitude" direction="asc" />
-        </datastore-index>
+    </datastore-index>
+    <datastore-index kind="ForegroundBackgroundEventEntry" ancestor="false">
+        <property name="userID" direction="asc" />
+        <property name="timestamp" direction="asc" />
+    </datastore-index>
 </datastore-indexes>

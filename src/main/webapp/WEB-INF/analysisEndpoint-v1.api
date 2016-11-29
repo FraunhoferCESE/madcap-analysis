@@ -65,7 +65,7 @@
       }
     },
     "analysisEndpoint.getInWindow" : {
-      "path" : "locationset/{user}/{start}/{end}",
+      "path" : "locationentrycollection/{user}/{start}/{end}",
       "httpMethod" : "POST",
       "authLevel" : "NONE",
       "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
@@ -84,6 +84,35 @@
           },
           "end" : {
             "type" : "int64",
+            "required" : true
+          }
+        },
+        "body" : "empty"
+      },
+      "response" : {
+        "body" : "autoTemplate(backendResponse)"
+      }
+    },
+    "analysisEndpoint.getAtLocation" : {
+      "path" : "endpointarrayreturnobject/{lat}/{lng}/{ticket}",
+      "httpMethod" : "POST",
+      "authLevel" : "NONE",
+      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
+      "audiences" : [ ],
+      "clientIds" : [ "292824132082.apps.googleusercontent.com" ],
+      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getAtLocation",
+      "request" : {
+        "parameters" : {
+          "lat" : {
+            "type" : "string",
+            "required" : true
+          },
+          "lng" : {
+            "type" : "string",
+            "required" : true
+          },
+          "ticket" : {
+            "type" : "int32",
             "required" : true
           }
         },
@@ -122,26 +151,26 @@
         "body" : "empty"
       }
     },
-    "analysisEndpoint.getAtLocation" : {
-      "path" : "endpointarrayreturnobject/{lat}/{lng}/{ticket}",
-      "httpMethod" : "POST",
+    "analysisEndpoint.getActivityData" : {
+      "path" : "foregroundbackgroundevententrycollection/{user}/{start}/{end}",
+      "httpMethod" : "GET",
       "authLevel" : "NONE",
       "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
       "audiences" : [ ],
       "clientIds" : [ "292824132082.apps.googleusercontent.com" ],
-      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getAtLocation",
+      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getActivityData",
       "request" : {
         "parameters" : {
-          "lat" : {
+          "user" : {
             "type" : "string",
             "required" : true
           },
-          "lng" : {
-            "type" : "string",
+          "start" : {
+            "type" : "int64",
             "required" : true
           },
-          "ticket" : {
-            "type" : "int32",
+          "end" : {
+            "type" : "int64",
             "required" : true
           }
         },
@@ -200,18 +229,6 @@
           }
         }
       },
-      "LocationSet" : {
-        "id" : "LocationSet",
-        "type" : "object",
-        "properties" : {
-          "entries" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "LocationEntry"
-            }
-          }
-        }
-      },
       "LocationEntry" : {
         "id" : "LocationEntry",
         "type" : "object",
@@ -245,6 +262,36 @@
             "type" : "string"
           }
         }
+      },
+      "LocationEntryCollection" : {
+        "id" : "LocationEntryCollection",
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "LocationEntry"
+            }
+          }
+        }
+      },
+      "ForegroundBackgroundEventEntry" : {
+        "id" : "ForegroundBackgroundEventEntry",
+        "type" : "object",
+        "properties" : {
+        }
+      },
+      "ForegroundBackgroundEventEntryCollection" : {
+        "id" : "ForegroundBackgroundEventEntryCollection",
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "ForegroundBackgroundEventEntry"
+            }
+          }
+        }
       }
     },
     "methods" : {
@@ -260,14 +307,19 @@
       },
       "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getInWindow" : {
         "response" : {
-          "$ref" : "LocationSet"
+          "$ref" : "LocationEntryCollection"
         }
-      },
-      "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.writeInCache" : {
       },
       "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getAtLocation" : {
         "response" : {
           "$ref" : "EndpointArrayReturnObject"
+        }
+      },
+      "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.writeInCache" : {
+      },
+      "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getActivityData" : {
+        "response" : {
+          "$ref" : "ForegroundBackgroundEventEntryCollection"
         }
       }
     }

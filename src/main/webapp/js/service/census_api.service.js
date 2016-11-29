@@ -3,7 +3,7 @@
  * preparing of census data, for example for export.
  */
 angular.module('madcap-analysis')
-.factory('census_api', function(time_parse){
+.factory('census_api', function(helper){
 	  "use strict";
 	  	  
 	  var key = 'no key';
@@ -43,7 +43,7 @@ angular.module('madcap-analysis')
 							gapi.client.analysisEndpoint.writeInCache({"lat" : arrayRef[id].lat, "lng" : arrayRef[id].lng, "block" : data[id].block}).execute();
 							
 							if(--calls === 0){
-								refineData();
+								createCsv(helper.refineData(data));
 							}
 							updateDuringFetch();
 						}, false, resp.returned[1]);
@@ -51,7 +51,7 @@ angular.module('madcap-analysis')
 					else	{
 						data[resp.returned[1]].block = resp.returned[0]; 
 						if(--calls === 0){
-							refineData();
+							createCsv(helper.refineData(data));
 						}
 						updateDuringFetch();
 					}
@@ -69,54 +69,12 @@ angular.module('madcap-analysis')
 				}
 			}
 			
-			/**
-			 * Takes all the data for each block and bundles it into one data set. 
-			 * For example:
-			 * 1:30pm, Block 2020
-			 * 2:30pm, Block 2020
-			 * 2:50pm, Block 2020
-			 * Becomes: 1:30pm-2:50pm, Block 2020 
-			 * 
-			 * 1:30pm, Block 2020
-			 * 2:30pm, Block 2020
-			 * 2:50pm, Block 2099
-			 * 2:54pm, Block 2099
-			 * 4:00pm, Block 2099
-			 * 4:50pm, Block 2020
-			 * 8:50pm, Block 2020
-			 * Becomes: 1:30pm-2:50pm, Block 2020
-			 * 			2:50pm-4:00pm, Block 2099
-			 * 			4:50pm-8:50pm, Block 2020 
-			 */
-			function refineData()	{
-				var refinedData = [];
-				var locationCounter = 0;
-				for(var i=0; i<data.length; i++){
-					if(refinedData.length !== 0 && refinedData[locationCounter].block === data[i].block)	{
-						if(refinedData[locationCounter].start > data[i].time)	{
-							refinedData[locationCounter].start = data[i].time;
-						}
-						else if (refinedData[locationCounter].end < data[i].time)	{
-							refinedData[locationCounter].end = data[i].time;							
-						}
-					}
-					else	{
-						if(refinedData.length !== 0)	{
-							locationCounter++;
-						}
-						refinedData[locationCounter] = {};
-						refinedData[locationCounter].block = data[i].block;
-						refinedData[locationCounter].start = data[i].time;
-						refinedData[locationCounter].end = data[i].time;
-					}
-				}
-				createCsv(refinedData);
-			}
+			
 			
 			function createCsv(data)	{
 				var row = 'data:text/csv;charset=utf-8,' + dayRef + '\r\nStart time","End time","Block"\r\n';
 				for(var i=0; i<data.length;i++)	{
-					row = row + time_parse.getDateFromTime(data[i].start) + ',' + time_parse.getDateFromTime(data[i].end) + ',' + data[i].block + '\r\n';
+					row = row + helper.getDateFromTime(data[i].start) + ',' + helper.getDateFromTime(data[i].end) + ',' + data[i].block + '\r\n';
 				}
 				var encodedUri = encodeURI(row);
 				var link = document.createElement("a");

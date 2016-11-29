@@ -6,7 +6,7 @@ angular.
 module('userMap').
   component('userMap', {
     templateUrl: 'html/user_position_map_view.template.html',
-    controller: function madcapController(NgMap, $scope, $timeout, loading_overlay, census_api, time_parse) {
+    controller: function madcapController(NgMap, $scope, $timeout, loading_overlay, census_api, helper, allowed_directive_service) {
     	"use strict"; 	
  
     	$scope.noData = false;
@@ -100,7 +100,9 @@ module('userMap').
 		 * Callback function for the case that the chosen date changes
 		 */
 		$scope.$watch('dt.value', function(newValue) { 
-			$scope.initializeRefresh(newValue.getTime());
+			if(typeof newValue !== 'undefined' && newValue !== 'Please select a date ...')	{
+				$scope.initializeRefresh(newValue.getTime());
+			}
 	    });
 		/**
 		 * This method is called whenever a new set of data needs to get shown on the map.
@@ -239,13 +241,9 @@ module('userMap').
 			gapi.client.analysisEndpoint.getInWindow({'user' : strUser, 'start' : $scope.unixRest , 'end' : ($scope.unixRest + 86400000)}).execute(function(resp) {
         	   dialog.close();
         	   //Checks to see if the returned object is valid and usable
-        	   if(resp.entries !== null && resp !== false && resp.hasOwnProperty('entries'))	{
-        	   		var rawData = [];
-        	   		for(var i=0; i<resp.entries.length; i++)	{
-        	   			rawData[i] = resp.entries[i];
-        	   		}
+        	   if(resp !== null && resp !== false && resp.items.length !== 0)	{	   		
         	   		$scope.noData = false;
-        	   		showOnMap(rawData);
+        	   		showOnMap(resp.items);
         	   	}
         	   else	{
         		   $scope.noData = true;
@@ -269,7 +267,7 @@ module('userMap').
 				$scope.bounds.extend($scope.mapData.markers[i].getPosition());
 			}
 			$scope.centerMap();
-			filterAccordingToSlider();
+			$scope.filterAccordingToSlider();
 		}
 		
 		/**
@@ -297,11 +295,11 @@ module('userMap').
 				$scope.mapData.mvcArray.push(coordinates);
 
 				$scope.mapData.markers[i] = new google.maps.Marker({
-					title: time_parse.getDateFromTime(Math.ceil((entries[i].timestamp-$scope.unixRest)/60000))
+					title: helper.getDateFromTime(Math.ceil((entries[i].timestamp-$scope.unixRest)/60000))
 				});
 				$scope.mapData.markers[i].addListener('click', function() {
-			          $scope.showCensus(this.getTitle(), this.getPosition().lat(), this.getPosition().lng());
-			        });
+					$scope.showCensus(this.getTitle(), this.getPosition().lat(), this.getPosition().lng());
+			    });
 
 				$scope.mapData.markers[i].setPosition(coordinates);
 				$scope.mapData.markers[i].setMap($scope.mapData.map);
@@ -312,7 +310,7 @@ module('userMap').
 			}
 			$scope.mapData.map.fitBounds($scope.bounds);
 			$scope.mapData.map.setCenter($scope.bounds.getCenter());
-			filterAccordingToSlider();
+			$scope.filterAccordingToSlider();
 			
 		}
 	
@@ -377,7 +375,7 @@ module('userMap').
 					$scope.mapData.markers[i].setVisible(false);
 				}
 			}
-			filterAccordingToSlider();
+			$scope.filterAccordingToSlider();
 	    };
 	    
 	    
@@ -392,10 +390,10 @@ module('userMap').
 		    	ceil: 1439,
 		    	disabled: false,
 	            translate: function(value)	{
-	            	return time_parse.getDateFromTime(value);
+	            	return helper.getDateFromTime(value);
 	            },
 	            onChange: function(sliderId)	{
-	            	filterAccordingToSlider();        	
+	            	$scope.filterAccordingToSlider();        	
 	            }
 		    },
 		};
@@ -406,13 +404,13 @@ module('userMap').
 		 * sorts out the markers which shall not be seen and fills the heatmap.
 		 * It updates automatically whenever the slider is moved, but is also called manually
 		 */
-		function filterAccordingToSlider()	{
+		$scope.filterAccordingToSlider = function()	{
 			if($scope.userData.currentSubject !== '')	{
 			    /* Completly clears the heatmap. The heatmapdata is a stack, therefore injecting
 				and removing at specific indexes is not possible*/
         		$scope.mapData.heatmapDataArray.clear();
         		for(var i=0; i<$scope.mapData.markers.length; i++)	{
-        			var value = time_parse.getTimeFromDate($scope.mapData.markers[i].getTitle());
+        			var value = helper.getTimeFromDate($scope.mapData.markers[i].getTitle());
         			if(value < $scope.slider.minValue || $scope.slider.maxValue < value){
         				// Only change if the marker is visible while it shall not be
         				if($scope.mapData.markers[i].getVisible())	{
@@ -433,83 +431,8 @@ module('userMap').
 		
 		
 		
+		$scope = helper.datePickerSetup($scope);
 		
-		
-		//-------------------------Stuff for the Datepicker------------------------------------
-		$scope.today = function() {
-		    $scope.dt = new Date();
-		};
-		$scope.clear = function() {
-		    $scope.dt = null;
-		};
-
-		$scope.inlineOptions = {
-		    customClass: getDayClass,
-		    minDate: new Date(2016, 1, 1),
-		    showWeeks: true
-		};
-		$scope.dateOptions = {
-		    formatYear: 'yy',
-		    maxDate: new Date(),
-		    minDate: new Date(2016, 1, 1),
-		    startingDay: 1
-		};
-		  
-		$scope.toggleMax = function() {
-		    $scope.inlineOptions.maxDate = $scope.inlineOptions.maxDate ? null : new Date();
-		    $scope.dateOptions.maxDate = $scope.inlineOptions.maxDate;
-		};
-
-		$scope.setDate = function(year, month, day) {
-		    $scope.dt = new Date(year, month, day);
-		};
-
-		$scope.open = function() {
-		    $scope.popup.opened = true;
-		};
-		$scope.popup = {
-		    opened: false
-		};
-	
-		function getDayClass(data) {
-		    var date = data.date;
-		    var mode = data.mode;
-		    if (mode === 'day') {
-		        var dayToCheck = new Date(date).setHours(0,0,0,0);
-
-		        for (var i = 0; i < $scope.events.length; i++) {
-		        	var currentDay = new Date($scope.events[i].date).setHours(0,0,0,0);
-
-		        	if (dayToCheck === currentDay) {
-		        		return $scope.events[i].status;
-		        	}
-		        }
-		    }
-		    return '';
-		}
-		
-		$scope.today();
-		$scope.toggleMax();
-		$scope.format = 'MM/dd/yyyy';
-		$scope.altInputFormats = ['M!/d!/yyyy'];
-		
-		var tomorrow = new Date();
-		tomorrow.setDate(tomorrow.getDate() + 1);
-		var afterTomorrow = new Date();
-		afterTomorrow.setDate(tomorrow.getDate() + 1);
-		$scope.events = [
-		    {
-		      date: tomorrow,
-		      status: 'full'
-		    },
-		    {
-		      date: afterTomorrow,
-		      status: 'partially'
-		    }
-		  ];
-		
-		
-		//----------------End for the stuff of the Datepicker--------------------------------------
 		
 		
 		/**
@@ -532,7 +455,7 @@ module('userMap').
 		
 		
 		setTimeout(function(){
-			$scope.refresh();
+			allowed_directive_service.passDirectiveCallback($scope.refresh);
 		},0);
 		
 		/**
@@ -562,7 +485,7 @@ module('userMap').
 			var coords = [];
 			for(var i=0; i<$scope.mapData.markers.length; i++)	{
 				coords[i] = {};
-				coords[i].time = time_parse.getTimeFromDate($scope.mapData.markers[i].getTitle());
+				coords[i].time = helper.getTimeFromDate($scope.mapData.markers[i].getTitle());
 				coords[i].lat = $scope.mapData.markers[i].getPosition().lat();
 				coords[i].lng = $scope.mapData.markers[i].getPosition().lng();
 			}
