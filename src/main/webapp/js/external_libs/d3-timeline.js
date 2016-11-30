@@ -29,7 +29,7 @@
         beginning = 0,
         labelMargin = 0,
         ending = 0,
-        margin = {left: 30, right:30, top: 30, bottom:30},
+        margin = {left: 0, right:0, top: 30, bottom:30},
         stacked = false,
         rotateTicks = false,
         timeIsRelative = false,
@@ -50,6 +50,8 @@
         showAxisCalendarYear = false,
         axisBgColor = "white",
         chartData = {},
+        
+        containerMargin = 0,
         manualRange = false;
       ;
 
@@ -159,7 +161,6 @@
     };
 
     function timeline (gParent) {
-    	var x=0;
       var g = gParent.append("g");
       var gParentSize = gParent[0][0].getBoundingClientRect();
 
@@ -228,7 +229,7 @@
 
       var scaleFactor;
 
-            // draw the chart
+       // draw the chart
       g.each(function(d, i) {
         chartData = d;
         d.forEach( function(datum, index){
@@ -244,18 +245,20 @@
 
           var labelwidth = 0;
           // add the label
-          if (hasLabel) { labelwidth = (appendLabel(gParent, yAxisMapping, index, hasLabel, datum))[0][0].textLength.baseVal.value; }
+          if (hasLabel) { 
+        	  var labelWidth = (appendLabel(gParent, yAxisMapping, index, hasLabel, datum))[0][0].getComputedTextLength();
+          }
           
-          if(margin.left < labelwidth)	{
-        	  margin.left = labelwidth;
+          if(containerMargin < labelWidth)	{
+        	  containerMargin = labelWidth;
           }
         });
          
-        margin.left = margin.left + 20;
+        containerMargin = containerMargin + 20;
 
         setWidth();
         scaleFactor = (1/(ending - beginning)) * (width - margin.left - margin.right);
-        
+        g.attr("transform","translate("+containerMargin+")");
         d.forEach( function(datum, index){
             var data = datum.times;
             g.selectAll("svg").data(data).enter()
@@ -360,7 +363,7 @@
    // draw the axis
       var xScale = d3.time.scale()
         .domain([beginning, ending])
-        .range([margin.left, width + margin.left]);
+        .range([margin.left, width - margin.left - margin.right]);
 
       var xAxis = d3.svg.axis()
         .scale(xScale)
@@ -455,7 +458,7 @@
       function setWidth() {
         if (!width && !gParentSize.width) {
           try {
-            width = gParentItem.attr("width");
+            width = gParentItem.attr("width") - containerMargin;
             if (!width) {
               throw "width of the timeline is not set. As of Firefox 27, timeline().with(x) needs to be explicitly set in order to render";
             }
@@ -464,7 +467,7 @@
           }
         } else if (!(width && gParentSize.width)) {
           try {
-            width = gParentItem.attr("width");
+            width = gParentItem.attr("width") - containerMargin;
           } catch (err) {
             console.log( err );
           }
