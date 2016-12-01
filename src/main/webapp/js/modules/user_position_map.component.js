@@ -295,7 +295,7 @@ module('userMap').
 				$scope.mapData.mvcArray.push(coordinates);
 
 				$scope.mapData.markers[i] = new google.maps.Marker({
-					title: helper.getDateFromTime(Math.ceil((entries[i].timestamp-$scope.unixRest)/60000))
+					title: helper.getDateFromUnix(Math.ceil((entries[i].timestamp-$scope.unixRest)/60000))
 				});
 				$scope.mapData.markers[i].addListener('click', function() {
 					$scope.showCensus(this.getTitle(), this.getPosition().lat(), this.getPosition().lng());
@@ -390,7 +390,7 @@ module('userMap').
 		    	ceil: 1439,
 		    	disabled: false,
 	            translate: function(value)	{
-	            	return helper.getDateFromTime(value);
+	            	return helper.getDateFromUnix(value);
 	            },
 	            onChange: function(sliderId)	{
 	            	$scope.filterAccordingToSlider();        	
@@ -410,7 +410,7 @@ module('userMap').
 				and removing at specific indexes is not possible*/
         		$scope.mapData.heatmapDataArray.clear();
         		for(var i=0; i<$scope.mapData.markers.length; i++)	{
-        			var value = helper.getTimeFromDate($scope.mapData.markers[i].getTitle());
+        			var value = helper.getUnixFromDate($scope.mapData.markers[i].getTitle());
         			if(value < $scope.slider.minValue || $scope.slider.maxValue < value){
         				// Only change if the marker is visible while it shall not be
         				if($scope.mapData.markers[i].getVisible())	{
@@ -485,7 +485,7 @@ module('userMap').
 			var coords = [];
 			for(var i=0; i<$scope.mapData.markers.length; i++)	{
 				coords[i] = {};
-				coords[i].time = helper.getTimeFromDate($scope.mapData.markers[i].getTitle());
+				coords[i].time = helper.getUnixFromDate($scope.mapData.markers[i].getTitle());
 				coords[i].lat = $scope.mapData.markers[i].getPosition().lat();
 				coords[i].lng = $scope.mapData.markers[i].getPosition().lng();
 			}

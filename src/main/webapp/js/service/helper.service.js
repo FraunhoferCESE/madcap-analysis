@@ -10,11 +10,12 @@ angular.module('madcap-analysis')
 	return	{
 	
 		/**
-		 * converts a String with the format HH:MM(am/pm) to unixtime in milliseconds
-		 * @param value: the time as string
-		 * @return the time in unix
-		 */
-		getDateFromTime : function(value)	{
+	 	*  The same as getDateFromTime, but the other way around
+	 	* @param value: the time in unix
+	 	* @returns the time as String
+	 	*/
+		
+		getDateFromUnix : function(value)	{
 			var hour = 12;
 			var decreaser = 0;
 			var daytime = ' am';
@@ -39,13 +40,12 @@ angular.module('madcap-analysis')
 			return timeString;
 		},
 	
-	
 		/**
-	 	*  The same as getDateFromTime, but the other way around
-	 	* @param title: the time in unix
-	 	* @returns the time as String
-	 	*/
-		getTimeFromDate : function(title)	{
+		 * converts a String with the format HH:MM(am/pm) to unixtime in milliseconds
+		 * @param title: the time as string
+		 * @return the time in unix
+		 */
+		getUnixFromDate : function(title)	{
 			var hourShifter = 0;
 		
 			if(title.substring(2,3) === ':')	{

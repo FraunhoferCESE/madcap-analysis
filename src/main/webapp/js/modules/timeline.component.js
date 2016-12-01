@@ -8,7 +8,17 @@ module('timeline').
     			
 		$scope.control = {showPage: false};
 
-    	$scope.limiter = 2;
+    	$scope.stopper = {
+    		directiveFinished: false,
+    		renderingfinished: false,
+    		firstRendering: true
+    	};
+    	
+    	$scope.barInfo = {
+    		label: "No activity chosen",
+    		start: "No activity chosen",
+    		end: "No activity chosen"
+    	};
     	
     	$scope.userData = {
     			users: [],
@@ -32,7 +42,8 @@ module('timeline').
     		document.getElementById('timelineloadspinner').style.display="block";
 			document.getElementById('timelineloadmessage').style.display="block";		
 		
-			if(--$scope.limiter === 0)	{
+			$scope.stopper.directiveFinished = true;
+			if($scope.stopper.renderingFinished)	{
             	$scope.filterAccordingToSlider();	
       			}
 		});
@@ -64,7 +75,7 @@ module('timeline').
 				    	ceil: 1439,
 				    	disabled: false,
 			            translate: function(value)	{
-			            	return helper.getDateFromTime(value);
+			            	return helper.getDateFromUnix(value);
 			            },
 			            onChange: function(sliderId)	{
 			            	$scope.filterAccordingToSlider();        	
@@ -123,6 +134,10 @@ module('timeline').
 		$scope.eventData.eventStorage[0].times = [];
 		$scope.eventData.eventStorage[0].times[0] = {"starting_time": $scope.unixRest, "ending_time": ($scope.unixRest + 86400000)};
 		$scope.renderTimeline = function()	{
+			$scope.eventData = {
+		    		eventStorage: [],
+		    		eventCache: []
+		    	};
 			gapi.client.analysisEndpoint.getActivityData({"user" : $scope.userData.currentSubject, "start" : $scope.unixRest, "end" : ($scope.unixRest + 86400000)}).execute(function(resp)	{
 				if(resp !== null && resp !== false && typeof resp.items !== 'undefined' && resp.items.length !== 0)	{
 					var rawData = [];
@@ -146,10 +161,21 @@ module('timeline').
 							count++;
 						}
 					}
+					$scope.eventData.eventStorage.sort(function(a,b)	{
+						var upperA = a.label.toUpperCase();
+						var upperB = b.label.toUpperCase();
+						if(upperA < upperB){
+							return -1;
+						}
+						else if(upperA > upperB)	{
+							return 1;
+						}
+						return 0;
+					});
 				}
      	   
-				if(--$scope.limiter <= 0)	{
-	            	$scope.sliderOverload++;
+				$scope.stopper.renderingFinished = true;
+				if($scope.stopper.directiveFinished)	{
       				$scope.filterAccordingToSlider();	
       			}			
 			});
@@ -157,19 +183,28 @@ module('timeline').
         
         $scope.callback = function()	{
         	
-			if($scope.limiter === 0){
+			if($scope.stopper.firstRendering){
 				document.getElementById('timelineloadspinner').style.display="none";
 				document.getElementById('timelineloadmessage').style.display="none";					
 				$scope = helper.datePickerSetup($scope);
 				$scope.$apply(function()	{
 					$scope.control.showPage = true;
 				});
+				$scope.stopper.firstRendering = false;
 			}
 			
 			$timeout(function()	{
 				$scope.$apply(function(){
 					d3.select("svg").remove();
-					$scope.chart = d3.timeline().stack().changerange($scope.slider.minValue*60*1000 + $scope.unixRest, $scope.slider.maxValue*60*1000 + $scope.unixRest);
+					$scope.chart = d3.timeline().stack().changerange($scope.slider.minValue*60*1000 + $scope.unixRest, $scope.slider.maxValue*60*1000 + $scope.unixRest).hover(
+						function (d, i, datum) {
+								$scope.$apply(function()	{
+									$scope.barInfo.label = datum.label;
+									$scope.barInfo.start = helper.getDateFromUnix(Math.ceil((d.starting_time-$scope.unixRest)/60000));
+									$scope.barInfo.end = helper.getDateFromUnix(Math.ceil((d.ending_time-$scope.unixRest)/60000));
+								});
+							}
+					);
 					$scope.r = d3.select("#timeline1").append("svg").attr("width", 1000) .datum($scope.eventData.eventCache).call($scope.chart);
 				});
 			}, 0);
@@ -177,14 +212,4 @@ module('timeline').
         $scope.renderTimeline();
 	 }
   }
-  );
-
-
-
-
-
-
-1479569549235
-1479569549235
-1479571123664
-1479569640000
+);

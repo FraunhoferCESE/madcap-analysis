@@ -43,17 +43,25 @@
         "body" : "autoTemplate(backendResponse)"
       }
     },
-    "analysisEndpoint.getMyProbeEntries" : {
-      "path" : "probeset/{amount}",
-      "httpMethod" : "GET",
+    "analysisEndpoint.getAtLocation" : {
+      "path" : "endpointarrayreturnobject/{lat}/{lng}/{ticket}",
+      "httpMethod" : "POST",
       "authLevel" : "NONE",
       "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
       "audiences" : [ ],
       "clientIds" : [ "292824132082.apps.googleusercontent.com" ],
-      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getMyProbeEntries",
+      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getAtLocation",
       "request" : {
         "parameters" : {
-          "amount" : {
+          "lat" : {
+            "type" : "string",
+            "required" : true
+          },
+          "lng" : {
+            "type" : "string",
+            "required" : true
+          },
+          "ticket" : {
             "type" : "int32",
             "required" : true
           }
@@ -84,35 +92,6 @@
           },
           "end" : {
             "type" : "int64",
-            "required" : true
-          }
-        },
-        "body" : "empty"
-      },
-      "response" : {
-        "body" : "autoTemplate(backendResponse)"
-      }
-    },
-    "analysisEndpoint.getAtLocation" : {
-      "path" : "endpointarrayreturnobject/{lat}/{lng}/{ticket}",
-      "httpMethod" : "POST",
-      "authLevel" : "NONE",
-      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
-      "audiences" : [ ],
-      "clientIds" : [ "292824132082.apps.googleusercontent.com" ],
-      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getAtLocation",
-      "request" : {
-        "parameters" : {
-          "lat" : {
-            "type" : "string",
-            "required" : true
-          },
-          "lng" : {
-            "type" : "string",
-            "required" : true
-          },
-          "ticket" : {
-            "type" : "int32",
             "required" : true
           }
         },
@@ -179,6 +158,27 @@
       "response" : {
         "body" : "autoTemplate(backendResponse)"
       }
+    },
+    "analysisEndpoint.getMyProbeEntries" : {
+      "path" : "probeset/{amount}",
+      "httpMethod" : "GET",
+      "authLevel" : "NONE",
+      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
+      "audiences" : [ ],
+      "clientIds" : [ "292824132082.apps.googleusercontent.com" ],
+      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getMyProbeEntries",
+      "request" : {
+        "parameters" : {
+          "amount" : {
+            "type" : "int32",
+            "required" : true
+          }
+        },
+        "body" : "empty"
+      },
+      "response" : {
+        "body" : "autoTemplate(backendResponse)"
+      }
     }
   },
   "descriptor" : {
@@ -192,40 +192,6 @@
             "items" : {
               "type" : "string"
             }
-          }
-        }
-      },
-      "ProbeSet" : {
-        "id" : "ProbeSet",
-        "type" : "object",
-        "properties" : {
-          "entries" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "ProbeEntry"
-            }
-          }
-        }
-      },
-      "ProbeEntry" : {
-        "id" : "ProbeEntry",
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string"
-          },
-          "timestamp" : {
-            "type" : "string",
-            "format" : "int64"
-          },
-          "probeType" : {
-            "type" : "string"
-          },
-          "sensorData" : {
-            "type" : "string"
-          },
-          "userID" : {
-            "type" : "string"
           }
         }
       },
@@ -279,6 +245,28 @@
         "id" : "ForegroundBackgroundEventEntry",
         "type" : "object",
         "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "string",
+            "format" : "int64"
+          },
+          "eventType" : {
+            "type" : "integer"
+          },
+          "packageName" : {
+            "type" : "string"
+          },
+          "className" : {
+            "type" : "string"
+          },
+          "accuracy" : {
+            "type" : "number"
+          },
+          "userID" : {
+            "type" : "string"
+          }
         }
       },
       "ForegroundBackgroundEventEntryCollection" : {
@@ -292,6 +280,40 @@
             }
           }
         }
+      },
+      "ProbeSet" : {
+        "id" : "ProbeSet",
+        "type" : "object",
+        "properties" : {
+          "entries" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "ProbeEntry"
+            }
+          }
+        }
+      },
+      "ProbeEntry" : {
+        "id" : "ProbeEntry",
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "string",
+            "format" : "int64"
+          },
+          "probeType" : {
+            "type" : "string"
+          },
+          "sensorData" : {
+            "type" : "string"
+          },
+          "userID" : {
+            "type" : "string"
+          }
+        }
       }
     },
     "methods" : {
@@ -300,9 +322,9 @@
           "$ref" : "EndpointArrayReturnObject"
         }
       },
-      "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getMyProbeEntries" : {
+      "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getAtLocation" : {
         "response" : {
-          "$ref" : "ProbeSet"
+          "$ref" : "EndpointArrayReturnObject"
         }
       },
       "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getInWindow" : {
@@ -310,16 +332,16 @@
           "$ref" : "LocationEntryCollection"
         }
       },
-      "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getAtLocation" : {
-        "response" : {
-          "$ref" : "EndpointArrayReturnObject"
-        }
-      },
       "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.writeInCache" : {
       },
       "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getActivityData" : {
         "response" : {
           "$ref" : "ForegroundBackgroundEventEntryCollection"
+        }
+      },
+      "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getMyProbeEntries" : {
+        "response" : {
+          "$ref" : "ProbeSet"
         }
       }
     }

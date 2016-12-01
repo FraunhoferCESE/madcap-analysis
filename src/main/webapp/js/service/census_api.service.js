@@ -74,7 +74,7 @@ angular.module('madcap-analysis')
 			function createCsv(data)	{
 				var row = 'data:text/csv;charset=utf-8,' + dayRef + '\r\nStart time","End time","Block"\r\n';
 				for(var i=0; i<data.length;i++)	{
-					row = row + helper.getDateFromTime(data[i].start) + ',' + helper.getDateFromTime(data[i].end) + ',' + data[i].block + '\r\n';
+					row = row + helper.getDateFromUnix(data[i].start) + ',' + helper.getDateFromUnix(data[i].end) + ',' + data[i].block + '\r\n';
 				}
 				var encodedUri = encodeURI(row);
 				var link = document.createElement("a");
