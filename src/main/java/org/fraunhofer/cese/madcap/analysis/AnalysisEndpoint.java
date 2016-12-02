@@ -1,18 +1,12 @@
 package org.fraunhofer.cese.madcap.analysis;
 
-
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.nio.charset.Charset;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.fraunhofer.cese.madcap.analysis.models.BlockCache;
+import org.fraunhofer.cese.madcap.analysis.models.Constants;
 import org.fraunhofer.cese.madcap.analysis.models.EndpointArrayReturnObject;
+import org.fraunhofer.cese.madcap.analysis.models.ForegroundBackgroundEventEntry;
 import org.fraunhofer.cese.madcap.analysis.models.LocationEntry;
-import org.fraunhofer.cese.madcap.analysis.models.LocationSet;
 import org.fraunhofer.cese.madcap.analysis.models.ProbeEntry;
 import org.fraunhofer.cese.madcap.analysis.models.ProbeSet;
 
@@ -31,7 +25,10 @@ import static org.fraunhofer.cese.madcap.analysis.OfyService.ofy;
 /**
  * This class responds when a client tries query data from the Cloud storage.
  */
-@Api(name = "analysisEndpoint", version = "v1", namespace = @ApiNamespace(ownerDomain = "madcap.cese.fraunhofer.org", ownerName = "madcap.cese.fraunhofer.org", packagePath = "analysis"))
+@Api(name = "analysisEndpoint", 
+	version = "v1", 
+	namespace = @ApiNamespace(ownerDomain = "madcap.cese.fraunhofer.org", ownerName = "madcap.cese.fraunhofer.org", packagePath = "analysis"),
+	clientIds = Constants.WEB_CLIENT_ID)
 public class AnalysisEndpoint {
 
 	
@@ -42,6 +39,9 @@ public class AnalysisEndpoint {
 	 */
 	@ApiMethod(name = "getMyProbeEntries", httpMethod = ApiMethod.HttpMethod.GET)
 	public ProbeSet getMyProbeEntries(@Named("amount") int amount, User user) throws OAuthRequestException{
+		if(user == null){
+			throw new OAuthRequestException("ERROR: User is null!");
+		}
 		ObjectifyService.begin();
 		List<ProbeEntry> probeList = ofy().load().type(ProbeEntry.class).limit(amount).list();
 		return new ProbeSet(probeList);
@@ -58,10 +58,13 @@ public class AnalysisEndpoint {
 	 * @throws OAuthRequestException
 	 */
 	@ApiMethod(name = "getInWindow", httpMethod = ApiMethod.HttpMethod.POST)
-	public LocationSet getInWindow(@Named("user") String id, @Named("start") long startTime, @Named("end") long endTime, User user) throws OAuthRequestException{
+	public LocationEntry[] getInWindow(@Named("user") String id, @Named("start") long startTime, @Named("end") long endTime, User user) throws OAuthRequestException{
+		if(user == null){
+			throw new OAuthRequestException("ERROR: User is null!");
+		}
 		ObjectifyService.begin();
 		List<LocationEntry> result = ofy().load().type(LocationEntry.class).filter("userID =",id).filter("timestamp >=",startTime).filter("timestamp <=",endTime).order("timestamp").list();
-		return new LocationSet(result);
+		return result.toArray(new LocationEntry[result.size()]);
 	}
 
 	
@@ -76,6 +79,9 @@ public class AnalysisEndpoint {
 	 */
 	@ApiMethod(name = "writeInCache", httpMethod = ApiMethod.HttpMethod.POST)
 	public void writeInCache(@Named("lat") final String lat, @Named("lng") final String lng, @Named("block") final String block, User user) throws OAuthRequestException{
+		if(user == null){
+			throw new OAuthRequestException("ERROR: User is null!");
+		}
 		ObjectifyService.begin();
 		ofy().transact(new VoidWork() {
 		    public void vrun() {
@@ -103,7 +109,9 @@ public class AnalysisEndpoint {
 	 */
 	@ApiMethod(name = "getAtLocation", httpMethod = ApiMethod.HttpMethod.POST)
 	public EndpointArrayReturnObject getAtLocation(@Named("lat") String lat, @Named("lng") String lng, @Named("ticket") int ticket, User user) throws OAuthRequestException{
-		
+		if(user == null){
+			throw new OAuthRequestException("ERROR: User is null!");
+		}
 		ObjectifyService.begin();
 		
 		BlockCache result = ofy().load().type(BlockCache.class).id(""+Float.parseFloat(lat)+Float.parseFloat(lng)).now();
@@ -120,10 +128,13 @@ public class AnalysisEndpoint {
 	 * Gets all users which have uploaded LocationEntries.
 	 * @param user: OAuth user
 	 * @return the list of users
-	 * @throws OAuthRequestException
+	 * @throws OAuthRequestExceptionz
 	 */
 	@ApiMethod(name = "getUsers", httpMethod = ApiMethod.HttpMethod.GET)
 	public EndpointArrayReturnObject getUsers(User user) throws OAuthRequestException{
+		if(user == null){
+			throw new OAuthRequestException("ERROR: User is null!");
+		} 
 		ObjectifyService.begin();
 		 List<LocationEntry> result = ofy().load().type(LocationEntry.class).project("userID").distinct(true).list();
 		 String[] users = new String[result.size()];
@@ -131,5 +142,21 @@ public class AnalysisEndpoint {
 			users[i] = result.get(i).getUserID();
 		 }
 		 return new EndpointArrayReturnObject(users);
+	}
+	
+	/**
+	 * Gets all users which have uploaded LocationEntries.
+	 * @param user: OAuth user
+	 * @return the list of users
+	 * @throws OAuthRequestException
+	 */
+	@ApiMethod(name = "getActivityData", httpMethod = ApiMethod.HttpMethod.GET)
+	public ForegroundBackgroundEventEntry[] getActivityData(@Named("user") String id, @Named("start") long startTime, @Named("end") long endTime, User user) throws OAuthRequestException{
+		if(user == null){
+			throw new OAuthRequestException("ERROR: User is null!");
+		}
+		ObjectifyService.begin();
+		List<ForegroundBackgroundEventEntry> activities = ofy().load().type(ForegroundBackgroundEventEntry.class).filter("userID =",id).filter("timestamp >=",startTime).filter("timestamp <=",endTime).order("timestamp").list();
+		return activities.toArray(new ForegroundBackgroundEventEntry[activities.size()]);
 	}
 }

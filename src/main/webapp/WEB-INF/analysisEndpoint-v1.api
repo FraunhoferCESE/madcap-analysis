@@ -34,7 +34,7 @@
       "authLevel" : "NONE",
       "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
       "audiences" : [ ],
-      "clientIds" : [ "292824132082.apps.googleusercontent.com" ],
+      "clientIds" : [ "611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com" ],
       "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getUsers",
       "request" : {
         "body" : "empty"
@@ -49,7 +49,7 @@
       "authLevel" : "NONE",
       "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
       "audiences" : [ ],
-      "clientIds" : [ "292824132082.apps.googleusercontent.com" ],
+      "clientIds" : [ "611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com" ],
       "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getAtLocation",
       "request" : {
         "parameters" : {
@@ -72,13 +72,42 @@
         "body" : "autoTemplate(backendResponse)"
       }
     },
+    "analysisEndpoint.getActivityData" : {
+      "path" : "foregroundbackgroundevententrycollection/{user}/{start}/{end}",
+      "httpMethod" : "GET",
+      "authLevel" : "NONE",
+      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
+      "audiences" : [ ],
+      "clientIds" : [ "611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com" ],
+      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getActivityData",
+      "request" : {
+        "parameters" : {
+          "user" : {
+            "type" : "string",
+            "required" : true
+          },
+          "start" : {
+            "type" : "int64",
+            "required" : true
+          },
+          "end" : {
+            "type" : "int64",
+            "required" : true
+          }
+        },
+        "body" : "empty"
+      },
+      "response" : {
+        "body" : "autoTemplate(backendResponse)"
+      }
+    },
     "analysisEndpoint.getInWindow" : {
       "path" : "locationentrycollection/{user}/{start}/{end}",
       "httpMethod" : "POST",
       "authLevel" : "NONE",
       "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
       "audiences" : [ ],
-      "clientIds" : [ "292824132082.apps.googleusercontent.com" ],
+      "clientIds" : [ "611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com" ],
       "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getInWindow",
       "request" : {
         "parameters" : {
@@ -107,7 +136,7 @@
       "authLevel" : "NONE",
       "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
       "audiences" : [ ],
-      "clientIds" : [ "292824132082.apps.googleusercontent.com" ],
+      "clientIds" : [ "611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com" ],
       "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.writeInCache",
       "request" : {
         "parameters" : {
@@ -130,42 +159,13 @@
         "body" : "empty"
       }
     },
-    "analysisEndpoint.getActivityData" : {
-      "path" : "foregroundbackgroundevententrycollection/{user}/{start}/{end}",
-      "httpMethod" : "GET",
-      "authLevel" : "NONE",
-      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
-      "audiences" : [ ],
-      "clientIds" : [ "292824132082.apps.googleusercontent.com" ],
-      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getActivityData",
-      "request" : {
-        "parameters" : {
-          "user" : {
-            "type" : "string",
-            "required" : true
-          },
-          "start" : {
-            "type" : "int64",
-            "required" : true
-          },
-          "end" : {
-            "type" : "int64",
-            "required" : true
-          }
-        },
-        "body" : "empty"
-      },
-      "response" : {
-        "body" : "autoTemplate(backendResponse)"
-      }
-    },
     "analysisEndpoint.getMyProbeEntries" : {
       "path" : "probeset/{amount}",
       "httpMethod" : "GET",
       "authLevel" : "NONE",
       "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
       "audiences" : [ ],
-      "clientIds" : [ "292824132082.apps.googleusercontent.com" ],
+      "clientIds" : [ "611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com" ],
       "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getMyProbeEntries",
       "request" : {
         "parameters" : {
@@ -191,6 +191,46 @@
             "type" : "array",
             "items" : {
               "type" : "string"
+            }
+          }
+        }
+      },
+      "ForegroundBackgroundEventEntry" : {
+        "id" : "ForegroundBackgroundEventEntry",
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "string",
+            "format" : "int64"
+          },
+          "eventType" : {
+            "type" : "integer"
+          },
+          "packageName" : {
+            "type" : "string"
+          },
+          "className" : {
+            "type" : "string"
+          },
+          "accuracy" : {
+            "type" : "number"
+          },
+          "userID" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ForegroundBackgroundEventEntryCollection" : {
+        "id" : "ForegroundBackgroundEventEntryCollection",
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "ForegroundBackgroundEventEntry"
             }
           }
         }
@@ -241,46 +281,6 @@
           }
         }
       },
-      "ForegroundBackgroundEventEntry" : {
-        "id" : "ForegroundBackgroundEventEntry",
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string"
-          },
-          "timestamp" : {
-            "type" : "string",
-            "format" : "int64"
-          },
-          "eventType" : {
-            "type" : "integer"
-          },
-          "packageName" : {
-            "type" : "string"
-          },
-          "className" : {
-            "type" : "string"
-          },
-          "accuracy" : {
-            "type" : "number"
-          },
-          "userID" : {
-            "type" : "string"
-          }
-        }
-      },
-      "ForegroundBackgroundEventEntryCollection" : {
-        "id" : "ForegroundBackgroundEventEntryCollection",
-        "type" : "object",
-        "properties" : {
-          "items" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "ForegroundBackgroundEventEntry"
-            }
-          }
-        }
-      },
       "ProbeSet" : {
         "id" : "ProbeSet",
         "type" : "object",
@@ -327,17 +327,17 @@
           "$ref" : "EndpointArrayReturnObject"
         }
       },
+      "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getActivityData" : {
+        "response" : {
+          "$ref" : "ForegroundBackgroundEventEntryCollection"
+        }
+      },
       "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getInWindow" : {
         "response" : {
           "$ref" : "LocationEntryCollection"
         }
       },
       "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.writeInCache" : {
-      },
-      "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getActivityData" : {
-        "response" : {
-          "$ref" : "ForegroundBackgroundEventEntryCollection"
-        }
       },
       "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getMyProbeEntries" : {
         "response" : {

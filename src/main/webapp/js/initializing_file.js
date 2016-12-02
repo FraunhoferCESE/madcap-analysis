@@ -15,13 +15,18 @@
 		 */
 		function con()	{
 			if(--apisToLoad === 0)	{
-				auth();
+				  document.getElementById('loadmessage').innerHTML = "Checking user ...";
+				  gapi.auth.authorize({client_id: '611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com',scope: 'https://www.googleapis.com/auth/userinfo.email', immediate: true}, auth);
 			}
 		}
-		
-    	gapi.client.load('oauth2','v2',con);
-    	gapi.client.load('analysisEndpoint', 'v1', con, '//' + window.location.host + '/_ah/api');
-		gapi.client.load('securityEndpoint', 'v1', con, '//' + window.location.host + '/_ah/api');
+		if(window.location.href.substring(0,8) !== "https://") {
+			window.location = "https://" + window.location.href.substring(7,window.location.href.length);
+		}
+		else	{
+			gapi.client.load('oauth2','v2',con);
+			gapi.client.load('analysisEndpoint', 'v1', con, '//' + window.location.host + '/_ah/api');
+			gapi.client.load('securityEndpoint', 'v1', con, '//' + window.location.host + '/_ah/api');
+		}
 	}
   
   
@@ -30,30 +35,37 @@
    * All checks are performed on the non-visible security endpoint. Starts the login process if the user is not logged in.
    * When the user is logged in, the initalization of classified JavaScript files begins.
    */
-  function auth() {
+  function auth(oldResp) {
 	  "use strict";
-	  document.getElementById('loadmessage').innerHTML = "Checking user ...";
-
-	  // Checks if user is logged in
-	  gapi.client.oauth2.userinfo.get().execute(function(resp) {
-	    if (!resp.code) {
-	    	// Checks if the users Google ID is allowed to use the webapp
-	    	gapi.client.securityEndpoint.isRegistered({"userId" : resp.id}).execute(function(resp)	{
-				if(resp.returned === "true"){
-					authorizedInit();
-				}
-				else	{
-					alert("Your Account is not allowed to use this app");
-					document.getElementById('siteloadspinner').style.display="none";
-					document.getElementById('loadmessage').style.display="none";
-				}
-			});
-	    }
-	    else {
-	    	signin(onLoginTry, true); 
-	    }
-	  });
-	}
+	  var v=0;
+	  if(!('access_token' in oldResp))	{
+  		  gapi.client.securityEndpoint.login().execute(function(resp){
+  			  window.location = resp.returned;
+  		  });
+  	  }
+  	  else	{
+  		  gapi.auth.setToken({
+  			access_token: oldResp.access_token
+  		  });	  
+  		  
+  		  // Checks if user is logged in
+  		  gapi.client.oauth2.userinfo.get().execute(function(resp) {
+  			  if (!resp.code) {
+  				  // Checks if the users Google ID is allowed to use the webapp
+  				  gapi.client.securityEndpoint.isRegistered({"userId" : resp.id}).execute(function(resp)	{
+  					  if(resp.returned === "true"){
+  						  authorizedInit();
+  					  }
+  					  else	{
+  						  alert("Your Account is not allowed to use this app");
+  						  document.getElementById('siteloadspinner').style.display="none";
+  						  document.getElementById('loadmessage').style.display="none";
+  					  }
+  				  });
+  			  }
+  		  });
+  	  }
+  }
 
   
   /**

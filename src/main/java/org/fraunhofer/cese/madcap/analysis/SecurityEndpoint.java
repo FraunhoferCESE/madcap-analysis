@@ -26,7 +26,7 @@ import java.util.LinkedList;
  * @author SHintzen
  *
  */
-@Api(name = "securityEndpoint", version = "v1", namespace = @ApiNamespace(ownerDomain = "madcap.cese.fraunhofer.org", ownerName = "madcap.cese.fraunhofer.org", packagePath = "security"))
+@Api(name = "securityEndpoint", version = "v1", namespace = @ApiNamespace(ownerDomain = "madcap.cese.fraunhofer.org", ownerName = "madcap.cese.fraunhofer.org", packagePath = "security"), clientIds = {Constants.WEB_CLIENT_ID})
 public class SecurityEndpoint {
 	
 	public final String STARTPAGE = "/#!/login"; 
@@ -37,6 +37,9 @@ public class SecurityEndpoint {
 	 */
 	@ApiMethod(name = "getJs")
 	public String[] getJsSources(User user) throws OAuthRequestException{
+		if(user == null){
+			throw new OAuthRequestException("ERROR: User is null!");
+		}
 		return Constants.JS_SOURCES;
 	}
 	
@@ -48,7 +51,10 @@ public class SecurityEndpoint {
 	 */
 	@ApiMethod(name = "getKey")
 	public EndpointReturnObject getKey(User user) throws OAuthRequestException{
-		 return new EndpointReturnObject(Constants.CITYSDK_KEY);
+		if(user == null){
+			throw new OAuthRequestException("ERROR: User is null!");
+		} 
+		return new EndpointReturnObject(Constants.CITYSDK_KEY);
 	}
 
 	
@@ -62,6 +68,9 @@ public class SecurityEndpoint {
 	 */
 	@ApiMethod(name = "getUserPermission")
 	public EndpointReturnObject getUserPermission(@Named("userId") String id, @Named("elemPer") String elemPermissions, User user) throws OAuthRequestException  {
+		if(user == null){
+			throw new OAuthRequestException("ERROR: User is null!");
+		}
 		ObjectifyService.begin();
 		UserInformation result = ofy().load().type(UserInformation.class).id(id).now();
 		return new EndpointReturnObject("" + permissionCheck(result, elemPermissions));
@@ -76,12 +85,15 @@ public class SecurityEndpoint {
 	 */
 	@ApiMethod(name = "isRegistered")
 	public EndpointReturnObject isUserRegistered(@Named("userId") String id, User user) throws OAuthRequestException	{
-		for(int i=0; i<Constants.REGISTERED_USERS.length; i++){
-			if(id.equals(Constants.REGISTERED_USERS[i]))	{
-				return new EndpointReturnObject("true");
-			}
+		if(user == null){
+			throw new OAuthRequestException("ERROR: User is null!");
 		}
-		return new EndpointReturnObject("false");
+		ObjectifyService.begin();
+		UserInformation result = ofy().load().type(UserInformation.class).id(id).now();
+		if(result != null){
+			return new EndpointReturnObject("true");
+		}
+		return new EndpointReturnObject("false");			
 	}
 	
 	/**
