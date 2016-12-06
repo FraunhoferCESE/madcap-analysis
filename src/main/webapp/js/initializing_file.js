@@ -15,6 +15,7 @@
 		 */
 		function con()	{
 			if(--apisToLoad === 0)	{
+				var y=0;
 				  document.getElementById('loadmessage').innerHTML = "Checking user ...";
 				  gapi.auth.authorize({client_id: '611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com',scope: 'https://www.googleapis.com/auth/userinfo.email', immediate: true}, auth);
 			}
@@ -39,7 +40,7 @@
 	  "use strict";
 	  var v=0;
 	  if(!('access_token' in oldResp))	{
-  		  gapi.client.securityEndpoint.login().execute(function(resp){
+  		  gapi.client.securityEndpoint.login({"para" : encodeURI(window.location.href)}).execute(function(resp){
   			  window.location = resp.returned;
   		  });
   	  }
@@ -52,7 +53,7 @@
   		  gapi.client.oauth2.userinfo.get().execute(function(resp) {
   			  if (!resp.code) {
   				  // Checks if the users Google ID is allowed to use the webapp
-  				  gapi.client.securityEndpoint.isRegistered({"userId" : resp.id}).execute(function(resp)	{
+  				  gapi.client.securityEndpoint.isRegistered().execute(function(resp)	{
   					  if(resp.returned === "true"){
   						  authorizedInit();
   					  }
@@ -130,31 +131,4 @@
   			}
   		}
   	});  
-  }
-  
-  /**
-   * This method logs in the user using Google's login-window. The login in secured by OAuth.
-   * This method is only called when the user is not logged in.
-   * @param callback A method, which gets called when the login procedure ended
-   * @param mode determines if the login is prosecuted immediately. 
-   * Works perfectly with 'false' as parameter, while 'true' causes strange errors.
-   */
-  function signin(callback, mode) {
-	  "use strict";
-	  gapi.auth.authorize({client_id: '611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com',scope: 'https://www.googleapis.com/auth/userinfo.email', immediate: mode}, callback);
-  }
-  
-  function onLoginTry(resp)	{
-	  "use strict";
-	  if(!('access_token' in resp))	{
-		  gapi.client.securityEndpoint.login().execute(function(resp){
-			  window.location = resp.returned;
-		  });
-	  }
-	  else	{
-		  gapi.auth.setToken({
-			access_token: resp.access_token
-		  });
-		  auth();
-	  }
   }

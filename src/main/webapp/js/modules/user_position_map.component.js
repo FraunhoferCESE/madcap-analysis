@@ -31,12 +31,28 @@ module('userMap').
     	$scope.userData = {
     			users: [],
     			chosen_user: '',
-    			currentSubject: ''
+    			currentSubject: '',
+    			searchSelection: '',
+    			/**
+    			 * Calback function for the case that a different user is chosen in the user-dropdown.
+    			 * Deletes the filler value when it is still part of the user aray.
+    			 */
+    			userChange: function()	{
+    				if($scope.userData.currentSubject === '')	{
+    					for(var i=0; i<$scope.userData.users.length-1; i++)	{
+    						$scope.userData.users[i] = $scope.userData.users[i+1];
+    					}
+    					delete $scope.userData.users.splice($scope.userData.users.length-1,1);
+    				}
+    				$scope.initializeRefresh('user');
+    			}
     		};
     	
     	//A collection of data from census requests. Will be expanded in the future probably
     	$scope.censusData = {
-    		blockData: []		
+    		blockData: [],
+    		longitude: "",
+    		latitude: ""
     	};
     	
     	$scope.mapData.heatmap = new google.maps.visualization.HeatmapLayer({
@@ -83,19 +99,7 @@ module('userMap').
 			
 		});		
 		
-		/**
-		 * Calback function for the case that a different user is chosen in the user-dropdown.
-		 * Deletes the filler value when it is still part of the user aray.
-		 */
-		$scope.userChange = function()	{
-			if($scope.userData.currentSubject === '')	{
-				for(var i=0; i<$scope.userData.users.length-1; i++)	{
-					$scope.userData.users[i] = $scope.userData.users[i+1];
-				}
-				delete $scope.userData.users.splice($scope.userData.users.length-1,1);
-			}
-			$scope.initializeRefresh('user');
-		};
+		
 		/**
 		 * Callback function for the case that the chosen date changes
 		 */
@@ -241,7 +245,7 @@ module('userMap').
 			gapi.client.analysisEndpoint.getInWindow({'user' : strUser, 'start' : $scope.unixRest , 'end' : ($scope.unixRest + 86400000)}).execute(function(resp) {
         	   dialog.close();
         	   //Checks to see if the returned object is valid and usable
-        	   if(resp !== null && resp !== false && resp.items.length !== 0)	{	   		
+        	   if(resp !== false && typeof resp.result !== 'undefined' && resp.result.length !== 0)	{	   		
         	   		$scope.noData = false;
         	   		showOnMap(resp.items);
         	   	}
@@ -298,6 +302,8 @@ module('userMap').
 					title: helper.getDateFromUnix(Math.ceil((entries[i].timestamp-$scope.unixRest)/60000))
 				});
 				$scope.mapData.markers[i].addListener('click', function() {
+					$scope.censusData.latitude = this.getPosition().lat();
+					$scope.censusData.longitude = this.getPosition().lng();
 					$scope.showCensus(this.getTitle(), this.getPosition().lat(), this.getPosition().lng());
 			    });
 
@@ -507,6 +513,23 @@ module('userMap').
 				    	}
 			    	});
 				}
+			});
+		};
+		
+		$scope.downloadLocationCSV = function()	{
+			var subject = $scope.userData.currentSubject;
+			gapi.client.analysisEndpoint.callForLocationCSV({"user" : subject}).execute(function(resp){
+				var row = 'data:text/csv;charset=utf-8,' + ("=\"user: " + subject + "\"") + '\r\nTime","latitude","longitude","bearing"\r\n';
+				for(var i=0; i<resp.items.length;i++)	{
+					row = row + helper.getDateFromUnix(Math.ceil(resp.items[i].timestamp/60000)) + ',' + resp.items[i].latitude + ',' + resp.items[i].longitude + ',' + resp.items[i].bearing + '\r\n';
+				}
+				var encodedUri = encodeURI(row);
+				var link = document.createElement("a");
+				link.setAttribute("href", encodedUri);
+				link.setAttribute("download", "my_data.csv");
+				document.body.appendChild(link); // Required for FF
+				link.click();
+				document.body.removeChild(link); // Required for FF
 			});
 		};
 	}

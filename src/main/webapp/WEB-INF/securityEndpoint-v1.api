@@ -43,8 +43,29 @@
         "body" : "autoTemplate(backendResponse)"
       }
     },
+    "securityEndpoint.getUserPermission" : {
+      "path" : "endpointreturnobject/{elemPer}",
+      "httpMethod" : "GET",
+      "authLevel" : "NONE",
+      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
+      "audiences" : [ ],
+      "clientIds" : [ "611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com" ],
+      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.SecurityEndpoint.getUserPermission",
+      "request" : {
+        "parameters" : {
+          "elemPer" : {
+            "type" : "string",
+            "required" : true
+          }
+        },
+        "body" : "empty"
+      },
+      "response" : {
+        "body" : "autoTemplate(backendResponse)"
+      }
+    },
     "securityEndpoint.login" : {
-      "path" : "login",
+      "path" : "login/{para}",
       "httpMethod" : "POST",
       "authLevel" : "NONE",
       "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
@@ -52,6 +73,12 @@
       "clientIds" : [ "611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com" ],
       "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.SecurityEndpoint.login",
       "request" : {
+        "parameters" : {
+          "para" : {
+            "type" : "string",
+            "required" : true
+          }
+        },
         "body" : "empty"
       },
       "response" : {
@@ -74,7 +101,7 @@
       }
     },
     "securityEndpoint.isRegistered" : {
-      "path" : "isUserRegistered/{userId}",
+      "path" : "isUserRegistered",
       "httpMethod" : "POST",
       "authLevel" : "NONE",
       "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
@@ -82,37 +109,6 @@
       "clientIds" : [ "611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com" ],
       "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.SecurityEndpoint.isUserRegistered",
       "request" : {
-        "parameters" : {
-          "userId" : {
-            "type" : "string",
-            "required" : true
-          }
-        },
-        "body" : "empty"
-      },
-      "response" : {
-        "body" : "autoTemplate(backendResponse)"
-      }
-    },
-    "securityEndpoint.getUserPermission" : {
-      "path" : "endpointreturnobject/{userId}/{elemPer}",
-      "httpMethod" : "GET",
-      "authLevel" : "NONE",
-      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
-      "audiences" : [ ],
-      "clientIds" : [ "611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com" ],
-      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.SecurityEndpoint.getUserPermission",
-      "request" : {
-        "parameters" : {
-          "userId" : {
-            "type" : "string",
-            "required" : true
-          },
-          "elemPer" : {
-            "type" : "string",
-            "required" : true
-          }
-        },
         "body" : "empty"
       },
       "response" : {
@@ -150,6 +146,11 @@
           "$ref" : "EndpointReturnObject"
         }
       },
+      "org.fraunhofer.cese.madcap.analysis.SecurityEndpoint.getUserPermission" : {
+        "response" : {
+          "$ref" : "EndpointReturnObject"
+        }
+      },
       "org.fraunhofer.cese.madcap.analysis.SecurityEndpoint.login" : {
         "response" : {
           "$ref" : "EndpointReturnObject"
@@ -161,11 +162,6 @@
         }
       },
       "org.fraunhofer.cese.madcap.analysis.SecurityEndpoint.isUserRegistered" : {
-        "response" : {
-          "$ref" : "EndpointReturnObject"
-        }
-      },
-      "org.fraunhofer.cese.madcap.analysis.SecurityEndpoint.getUserPermission" : {
         "response" : {
           "$ref" : "EndpointReturnObject"
         }

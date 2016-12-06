@@ -11,7 +11,8 @@ module('timeline').
     	$scope.stopper = {
     		directiveFinished: false,
     		renderingfinished: false,
-    		firstRendering: true
+    		firstRendering: true,
+    		setScrollListener: false
     	};
     	
     	$scope.barInfo = {
@@ -198,16 +199,50 @@ module('timeline').
 					d3.select("svg").remove();
 					$scope.chart = d3.timeline().stack().changerange($scope.slider.minValue*60*1000 + $scope.unixRest, $scope.slider.maxValue*60*1000 + $scope.unixRest).hover(
 						function (d, i, datum) {
-								$scope.$apply(function()	{
-									$scope.barInfo.label = datum.label;
-									$scope.barInfo.start = helper.getDateFromUnix(Math.ceil((d.starting_time-$scope.unixRest)/60000));
-									$scope.barInfo.end = helper.getDateFromUnix(Math.ceil((d.ending_time-$scope.unixRest)/60000));
-								});
-							}
+							$scope.$apply(function()	{
+								$scope.barInfo.label = datum.label;
+								$scope.barInfo.start = helper.getDateFromUnix(Math.ceil((d.starting_time-$scope.unixRest)/60000));
+								$scope.barInfo.end = helper.getDateFromUnix(Math.ceil((d.ending_time-$scope.unixRest)/60000));
+							});
+						}
 					);
+					if(!$scope.stopper.setScrollListener)	{
+						document.getElementById("timeline1").addEventListener('wheel',function(event){
+							if(event.deltaY < 0)	{
+								if($scope.slider.minValue < $scope.slider.maxValue+5)	{
+									$scope.slider.maxValue = $scope.slider.maxValue - 5;
+								}
+								else{
+									$scope.slider.maxValue = $scope.slider.minValue + 1;
+								}
+								if($scope.slider.minValue-5 < $scope.slider.maxValue)	{
+									$scope.slider.minValue = $scope.slider.minValue + 5;
+								}
+								else	{
+									$scope.slider.minValue = $scope.slider.maxValue - 1;
+								}
+							}
+							else if(event.deltaY > 0)	{
+								if(4 < $scope.slider.minValue){
+									$scope.slider.minValue = $scope.slider.minValue - 5;
+								}
+								else	{
+									$scope.slider.minValue = 0;
+								}
+								if($scope.slider.maxValue<1435)	{
+									$scope.slider.maxValue = $scope.slider.maxValue + 5;
+								}
+								else	{
+									$scope.slider.maxValue = 1439;
+								}
+							}
+							$scope.stopper.setScrollListener = true;
+			            	$scope.filterAccordingToSlider();        	
+						});
+					}
 					$scope.r = d3.select("#timeline1").append("svg").attr("width", 1000) .datum($scope.eventData.eventCache).call($scope.chart);
 				});
-			}, 0);
+			}, 0)
         };
         $scope.renderTimeline();
 	 }

@@ -7,7 +7,8 @@
    				<div class="btn-group" role="group" aria-label="Basic example" style="margin-left: 20px;">
 					<button type="submit" class="btn btn-success" id="heatmap_toggle" ng-model="heatmap_toggle" ng-click="toggleHeatmap()">Show Heatmap</button>
 					<button type="submit" class="btn btn-success" id="center_map" ng-model="center_map" ng-click="centerMap()">Center Map</button>
-					<button type="submit" class="btn btn-success" ng-click="downloadCSV()">Download as CSV
+					<button type="submit" class="btn btn-success" ng-click="downloadCSV()">Download blocks as CSV</button>
+					<button type="submit" class="btn btn-success" ng-click="downloadLocationCSV()">Download locations as CSV</button>
 						<div ng-if="csv.createCsv">
    					 		<uib-progressbar max="csv.max" value="csv.csvProgress"><b>{{csv.csvProgress}}%</b></uib-progressbar>
 						</div>
@@ -22,7 +23,7 @@
 			<div class="col-md-1" style="text-align:right;">Selected User:</div>
 			<div class="col-md-3">
 				<div style="margin-right: 20px;">
-					<select ng-model="userData.chosen_user" ng-init="setDefault()" id="chosen_user" class="form-control" ng-options="user as user for user in userData.users" ng-change="userChange()"></select>
+					<select ng-model="userData.chosen_user" ng-init="setDefault()" id="chosen_user" class="form-control" ng-options="user as user for user in userData.users" ng-change="userData.userChange()"></select>
 				</div>
 			</div>
 		</div>
@@ -59,6 +60,11 @@
 				</div>
 			</div>
 			<div class="col-md-4">
+				<h3>Geographical Data:</h3>
+				LONGITUDE: {{censusData.longitude}}
+				</br>
+				LATITUDE: {{censusData.latitude}}
+				</br>
 				<h3>Census Data:</h3>
 				AREALAND: {{censusData.blockData.AREALAND}}
 				</br>
