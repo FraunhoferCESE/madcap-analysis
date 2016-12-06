@@ -1,0 +1,15 @@
+<div allowed="SEE_GUI" style="width:99%; height:80%;">
+	<div id="controllers">
+		<div ng-if="visibilityControl.dateAndSliderControl">
+			<date-and-slider></date-and-slider>
+		</div>
+	</div>
+	<div id="views">
+		<div ng-if="visibilityControl.sensorData">
+			<user-map></user-map>
+		</div>
+		<div ng-if="visibilityControl.timeline">
+			<timeline></timeline>
+		</div>
+	</div>
+</div>

@@ -16,20 +16,23 @@ import com.google.appengine.api.users.UserServiceFactory;
 import com.googlecode.objectify.ObjectifyService;
 import static org.fraunhofer.cese.madcap.analysis.OfyService.ofy;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.LinkedList;
+
 
 /**
  * This endpoint manages all security measures of the webapp. This includes:
  * - Visibility permissions
  * - Loading of confidential files (JavaScript for example)
- * - loading of user permissions
+ * - loading of user permissions & permission checks
+ * - Loading of secret keys
  * @author SHintzen
  *
  */
 @Api(name = "securityEndpoint", version = "v1", namespace = @ApiNamespace(ownerDomain = "madcap.cese.fraunhofer.org", ownerName = "madcap.cese.fraunhofer.org", packagePath = "security"), clientIds = {Constants.WEB_CLIENT_ID})
 public class SecurityEndpoint {
 	
-	public final String STARTPAGE = "/#!/login"; 
 	
 	/**
 	 * Retuns a list of the paths of all confidential JavaScript-files
@@ -37,11 +40,10 @@ public class SecurityEndpoint {
 	 */
 	@ApiMethod(name = "getJs")
 	public String[] getJsSources(User user) throws OAuthRequestException{
-		if(user == null){
-			throw new OAuthRequestException("ERROR: User is null!");
-		}
+		isUserValid(user);
 		return Constants.JS_SOURCES;
 	}
+
 	
 	/**
 	 * Fetches our key for citySDK
@@ -51,9 +53,7 @@ public class SecurityEndpoint {
 	 */
 	@ApiMethod(name = "getKey")
 	public EndpointReturnObject getKey(User user) throws OAuthRequestException{
-		if(user == null){
-			throw new OAuthRequestException("ERROR: User is null!");
-		} 
+		isUserValid(user);
 		return new EndpointReturnObject(Constants.CITYSDK_KEY);
 	}
 
@@ -67,14 +67,13 @@ public class SecurityEndpoint {
 	 * @throws OAuthRequestException Gets thrown when there is no logged in user
 	 */
 	@ApiMethod(name = "getUserPermission")
-	public EndpointReturnObject getUserPermission(@Named("userId") String id, @Named("elemPer") String elemPermissions, User user) throws OAuthRequestException  {
-		if(user == null){
-			throw new OAuthRequestException("ERROR: User is null!");
-		}
+	public EndpointReturnObject getUserPermission(@Named("elemPer") String elemPermissions, User user) throws OAuthRequestException  {
+		isUserValid(user);
 		ObjectifyService.begin();
-		UserInformation result = ofy().load().type(UserInformation.class).id(id).now();
+		UserInformation result = ofy().load().type(UserInformation.class).id(user.getEmail().toLowerCase()).now();
 		return new EndpointReturnObject("" + permissionCheck(result, elemPermissions));
 	}
+	
 	
 	/**
 	 * Checks if the logged in user is allowed to use the webapp.
@@ -84,17 +83,17 @@ public class SecurityEndpoint {
 	 * @throws OAuthRequestException Gets thrown when there is no logged in user
 	 */
 	@ApiMethod(name = "isRegistered")
-	public EndpointReturnObject isUserRegistered(@Named("userId") String id, User user) throws OAuthRequestException	{
-		if(user == null){
-			throw new OAuthRequestException("ERROR: User is null!");
+	public EndpointReturnObject isUserRegistered(User user) throws OAuthRequestException	{
+		try	{
+			isUserValid(user);
 		}
-		ObjectifyService.begin();
-		UserInformation result = ofy().load().type(UserInformation.class).id(id).now();
-		if(result != null){
-			return new EndpointReturnObject("true");
+		catch(OAuthRequestException e)	{
+			return new EndpointReturnObject("false");			
+
 		}
-		return new EndpointReturnObject("false");			
+		return new EndpointReturnObject("true");
 	}
+	
 	
 	/**
 	 * Does the logic work of getUserPermission. Checks if the user has all the necessary 
@@ -134,13 +133,42 @@ public class SecurityEndpoint {
 		return true;
 	}
 	
+	
 	/**
 	 * Returns a URL where the user can login.
 	 * @return the URL
 	 */
-	@ApiMethod(name = "login", httpMethod = HttpMethod.POST)
-	public EndpointReturnObject login()	{
+	@ApiMethod(name = "login")
+	public EndpointReturnObject login(@Named("para") String callback)	{
 		UserService userService = UserServiceFactory.getUserService();
-		return new EndpointReturnObject(userService.createLoginURL(STARTPAGE));
+		String url = "ERROR";
+		try {
+			url = URLDecoder.decode(callback, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return new EndpointReturnObject(userService.createLoginURL(url));
+	}
+	
+	
+	/**
+	 * Checks if a logged in OAuth user got provided and if the user is registered in the Datastore
+	 * @param user: OAuth user
+	 * @return boolean indicating if the user is valid
+	 * @throws OAuthRequestException
+	 */
+	public static boolean isUserValid(User user) throws OAuthRequestException	{
+		// Checking if there is a logged in user
+		if(user == null){
+			throw new OAuthRequestException("ERROR: User is null!");
+		}
+		ObjectifyService.begin();
+		// Checking if the logged in user is registered 
+		UserInformation result = ofy().load().type(UserInformation.class).id(user.getEmail().toLowerCase()).now();
+		if(result != null){
+			return true;
+		}
+		throw new OAuthRequestException("ERROR: User is mot registered!");	
 	}
 }

@@ -5,39 +5,46 @@ module('timeline').
     controller: function SensorDataPresentationController($scope, $timeout, helper, allowed_directive_service) {
     	
     	"use strict"; 	
-    			
-		$scope.control = {showPage: false};
-
+    	
+    	// Various flags to synchronize the multiple callbacks during initialization
     	$scope.stopper = {
+    	    showPage: false,
     		directiveFinished: false,
     		renderingfinished: false,
     		firstRendering: true,
     		setScrollListener: false
     	};
     	
+    	/* Information about the bars shown right besides the timeline. Shows the information of the bar
+    	the mouse last hovered over*/
     	$scope.barInfo = {
     		label: "No activity chosen",
     		start: "No activity chosen",
     		end: "No activity chosen"
     	};
     	
+    	// All relevant data about the user
+    	//TODO replace filler currentSubject with actual functionality on load
     	$scope.userData = {
     			users: [],
     			chosen_user: '',
     			currentSubject: '101106521377446542291'
     		};
     	
+    	// Storage for the event data. eventStorage contains all loaded data, eventCache only the currently shown
     	$scope.eventData = {
     		eventStorage: [],
     		eventCache: []
     	};
     	
+    	// Listener for the datepicker
     	$scope.$watch('dt.value', function(newValue) { 
 			if(typeof newValue !== 'undefined' && newValue !== 'Please select a date ...')	{
 				$scope.unixRest = newValue.getTime();
 			}
 	    });
     	
+    	// passes the callback t the permission check directive
     	allowed_directive_service.passDirectiveCallback(function()	{
       			
     		document.getElementById('timelineloadspinner').style.display="block";
@@ -56,7 +63,11 @@ module('timeline').
 			$scope.userData.users[0] = 'Please choose a user ...';
 						
 		});
+    
     	
+    	/**
+    	 * Handles the change of the chosen user. Updates the user and renders the timeline anew
+    	 */
     	$scope.userChange = function()	{
 			if($scope.userData.currentSubject === '')	{
 				for(var i=0; i<$scope.userData.users.length-1; i++)	{
@@ -84,39 +95,53 @@ module('timeline').
 				    },
 				};
 		
+		
+		  /**
+		   * Filters the barts according to the slider. This contains two main functionalities:
+		   * 1. add bars to the cache which are in the sliders range in full
+		   * 2. add cutted bars to the cache which are only partially in the sliders range
+		   * Filtering has do be done twodimensional (Many events in storage (D1), many times in events(D2)).
+		   */
 		  $scope.filterAccordingToSlider = function()	{	
 				
 			  	$scope.eventData.eventCache = [];
 			  	var sliderStart = $scope.unixRest + $scope.slider.minValue*60*1000;
 				var sliderEnd = $scope.unixRest + $scope.slider.maxValue*60*1000;
-			  	for(var i=0; i<$scope.eventData.eventStorage.length; i++){					
+			  	// Go through all events
+				for(var i=0; i<$scope.eventData.eventStorage.length; i++){					
 					  $scope.eventData.eventCache[i] = {};
 					  $scope.eventData.eventCache[i].times = [];
 					  $scope.eventData.eventCache[i].label = $scope.eventData.eventStorage[i].label;
 					  
-					  var skippedTimes = 0;  
+					  var skippedTimes = 0;
+					  // Go through all times in an event
 			  		  for(var j=0; j<$scope.eventData.eventStorage[i].times.length; j++){
 			  			  var timeframe = $scope.eventData.eventStorage[i].times[j];
 			  			  timeframe.starting_time = parseInt(timeframe.starting_time);
 			  			  timeframe.ending_time = parseInt(timeframe.ending_time);
+			  			  // Bar is not in range. Skip it
 			  			  if(sliderEnd < timeframe.starting_time || sliderStart > timeframe.ending_time)	{
 			  				  skippedTimes++;
 			  			  }
+			  			  // Bars end is outside the range. Cut end
 			  			  else if(sliderStart < timeframe.starting_time && timeframe.ending_time > sliderEnd)	{
 			  				$scope.eventData.eventCache[i].times[j-skippedTimes] = {};
 			  				  $scope.eventData.eventCache[i].times[j-skippedTimes].starting_time = $scope.eventData.eventStorage[i].times[j].starting_time;
 			  				  $scope.eventData.eventCache[i].times[j-skippedTimes].ending_time = sliderEnd;
 			  			  }
+			  			  // Bars start is outside the range. Cut start
 			  			  else if(sliderStart > timeframe.starting_time && timeframe.ending_time < sliderEnd)	{
 			  				  $scope.eventData.eventCache[i].times[j-skippedTimes] = {};
 			  				  $scope.eventData.eventCache[i].times[j-skippedTimes].ending_time = $scope.eventData.eventStorage[i].times[j].ending_time;
 			  				  $scope.eventData.eventCache[i].times[j-skippedTimes].starting_time = sliderStart;						  
 			  			  }
+			  			  // Bars start and end are outside the range. Cut on both ends
 			  			  else if(sliderStart > timeframe.starting_time && timeframe.ending_time > sliderEnd)	{
 				  				$scope.eventData.eventCache[i].times[j-skippedTimes] = {};
 			  				  $scope.eventData.eventCache[i].times[j-skippedTimes].starting_time = sliderStart;						  
 			  				  $scope.eventData.eventCache[i].times[j-skippedTimes].ending_time = sliderEnd;						  
 			  			  }
+			  			  // Bars is in range. Copy from storage to cache
 			  			  else if(sliderStart < timeframe.starting_time && timeframe.ending_time < sliderEnd)	{
 			  				$scope.eventData.eventCache[i].times[j-skippedTimes] = {};
 			  				$scope.eventData.eventCache[i].times[j-skippedTimes].ending_time = $scope.eventData.eventStorage[i].times[j].ending_time;
@@ -134,6 +159,12 @@ module('timeline').
 		$scope.eventData.eventStorage[0].label = "No data";
 		$scope.eventData.eventStorage[0].times = [];
 		$scope.eventData.eventStorage[0].times[0] = {"starting_time": $scope.unixRest, "ending_time": ($scope.unixRest + 86400000)};
+		
+		
+		/**
+		 * Renders the timeline. Loads the events and filters them by bundling multiple timstamps
+		 *  for the same event into one timeframe.
+		 */
 		$scope.renderTimeline = function()	{
 			$scope.eventData = {
 		    		eventStorage: [],
@@ -149,6 +180,7 @@ module('timeline').
 					}
 					var refinedData = helper.refineData(rawData);
 					var count = 0;
+					// Creates the data for the timeline
 					for(var j=0; j<refinedData.length; j++)	{
 						var expendedExisting = false;
 						for(var k=0; k<$scope.eventData.eventStorage.length; k++)	{
@@ -162,6 +194,7 @@ module('timeline').
 							count++;
 						}
 					}
+					
 					$scope.eventData.eventStorage.sort(function(a,b)	{
 						var upperA = a.label.toUpperCase();
 						var upperB = b.label.toUpperCase();
@@ -182,6 +215,10 @@ module('timeline').
 			});
         };
         
+        
+        /**
+         * Renders the timeline
+         */
         $scope.callback = function()	{
         	
 			if($scope.stopper.firstRendering){
@@ -189,7 +226,7 @@ module('timeline').
 				document.getElementById('timelineloadmessage').style.display="none";					
 				$scope = helper.datePickerSetup($scope);
 				$scope.$apply(function()	{
-					$scope.control.showPage = true;
+					$scope.stopper.showPage = true;
 				});
 				$scope.stopper.firstRendering = false;
 			}
@@ -207,6 +244,10 @@ module('timeline').
 						}
 					);
 					if(!$scope.stopper.setScrollListener)	{
+						/**
+						 * MAnipulates time slider on scrolling. One scroll tick decreases the timeframe
+						 * by 5 Minutes on each side of the slider
+						 */
 						document.getElementById("timeline1").addEventListener('wheel',function(event){
 							if(event.deltaY < 0)	{
 								if($scope.slider.minValue < $scope.slider.maxValue+5)	{
@@ -242,7 +283,7 @@ module('timeline').
 					}
 					$scope.r = d3.select("#timeline1").append("svg").attr("width", 1000) .datum($scope.eventData.eventCache).call($scope.chart);
 				});
-			}, 0)
+			}, 0);
         };
         $scope.renderTimeline();
 	 }

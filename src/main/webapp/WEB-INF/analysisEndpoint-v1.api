@@ -28,27 +28,6 @@
   "ownerName" : "madcap.cese.fraunhofer.org",
   "packagePath" : "analysis",
   "methods" : {
-    "analysisEndpoint.getMyProbeEntries" : {
-      "path" : "probeset/{amount}",
-      "httpMethod" : "GET",
-      "authLevel" : "NONE",
-      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
-      "audiences" : [ ],
-      "clientIds" : [ "611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com" ],
-      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getMyProbeEntries",
-      "request" : {
-        "parameters" : {
-          "amount" : {
-            "type" : "int32",
-            "required" : true
-          }
-        },
-        "body" : "empty"
-      },
-      "response" : {
-        "body" : "autoTemplate(backendResponse)"
-      }
-    },
     "analysisEndpoint.getUsers" : {
       "path" : "endpointarrayreturnobject",
       "httpMethod" : "GET",
@@ -64,26 +43,18 @@
         "body" : "autoTemplate(backendResponse)"
       }
     },
-    "analysisEndpoint.getInWindow" : {
-      "path" : "locationentrycollection/{user}/{start}/{end}",
-      "httpMethod" : "POST",
+    "analysisEndpoint.callForLocationCSV" : {
+      "path" : "locationCSV/{user}",
+      "httpMethod" : "GET",
       "authLevel" : "NONE",
       "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
       "audiences" : [ ],
       "clientIds" : [ "611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com" ],
-      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getInWindow",
+      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.locationCSV",
       "request" : {
         "parameters" : {
           "user" : {
             "type" : "string",
-            "required" : true
-          },
-          "start" : {
-            "type" : "int64",
-            "required" : true
-          },
-          "end" : {
-            "type" : "int64",
             "required" : true
           }
         },
@@ -113,6 +84,35 @@
           },
           "ticket" : {
             "type" : "int32",
+            "required" : true
+          }
+        },
+        "body" : "empty"
+      },
+      "response" : {
+        "body" : "autoTemplate(backendResponse)"
+      }
+    },
+    "analysisEndpoint.getInWindow" : {
+      "path" : "locationentrycollection/{user}/{start}/{end}",
+      "httpMethod" : "POST",
+      "authLevel" : "NONE",
+      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
+      "audiences" : [ ],
+      "clientIds" : [ "611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com" ],
+      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getInWindow",
+      "request" : {
+        "parameters" : {
+          "user" : {
+            "type" : "string",
+            "required" : true
+          },
+          "start" : {
+            "type" : "int64",
+            "required" : true
+          },
+          "end" : {
+            "type" : "int64",
             "required" : true
           }
         },
@@ -179,65 +179,10 @@
       "response" : {
         "body" : "autoTemplate(backendResponse)"
       }
-    },
-    "analysisEndpoint.callForLocationCSV" : {
-      "path" : "locationCSV/{user}",
-      "httpMethod" : "GET",
-      "authLevel" : "NONE",
-      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
-      "audiences" : [ ],
-      "clientIds" : [ "611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com" ],
-      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.locationCSV",
-      "request" : {
-        "parameters" : {
-          "user" : {
-            "type" : "string",
-            "required" : true
-          }
-        },
-        "body" : "empty"
-      },
-      "response" : {
-        "body" : "autoTemplate(backendResponse)"
-      }
     }
   },
   "descriptor" : {
     "schemas" : {
-      "ProbeSet" : {
-        "id" : "ProbeSet",
-        "type" : "object",
-        "properties" : {
-          "entries" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "ProbeEntry"
-            }
-          }
-        }
-      },
-      "ProbeEntry" : {
-        "id" : "ProbeEntry",
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string"
-          },
-          "timestamp" : {
-            "type" : "string",
-            "format" : "int64"
-          },
-          "probeType" : {
-            "type" : "string"
-          },
-          "sensorData" : {
-            "type" : "string"
-          },
-          "userID" : {
-            "type" : "string"
-          }
-        }
-      },
       "EndpointArrayReturnObject" : {
         "id" : "EndpointArrayReturnObject",
         "type" : "object",
@@ -338,17 +283,12 @@
       }
     },
     "methods" : {
-      "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getMyProbeEntries" : {
-        "response" : {
-          "$ref" : "ProbeSet"
-        }
-      },
       "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getUsers" : {
         "response" : {
           "$ref" : "EndpointArrayReturnObject"
         }
       },
-      "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getInWindow" : {
+      "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.locationCSV" : {
         "response" : {
           "$ref" : "LocationEntryCollection"
         }
@@ -358,16 +298,16 @@
           "$ref" : "EndpointArrayReturnObject"
         }
       },
+      "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getInWindow" : {
+        "response" : {
+          "$ref" : "LocationEntryCollection"
+        }
+      },
       "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.writeInCache" : {
       },
       "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getActivityData" : {
         "response" : {
           "$ref" : "ForegroundBackgroundEventEntryCollection"
-        }
-      },
-      "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.locationCSV" : {
-        "response" : {
-          "$ref" : "LocationEntryCollection"
         }
       }
     }

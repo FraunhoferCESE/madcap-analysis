@@ -1,12 +1,12 @@
 /**
  * The component for the userMap module. It enables a Google Map where markers can be put onto.
- * A heatmap-overlay is also supported
+ * A heatmap-overlay is also supported. Filtering can be conducted by  time slider and date
  */
 angular.
 module('userMap').
   component('userMap', {
     templateUrl: 'html/user_position_map_view.template.html',
-    controller: function madcapController(NgMap, $scope, $timeout, loading_overlay, census_api, helper, allowed_directive_service) {
+    controller: function mapController(NgMap, $scope, $timeout, loading_overlay, census_api, helper, allowed_directive_service) {
     	"use strict"; 	
  
     	$scope.noData = false;
@@ -433,16 +433,12 @@ module('userMap').
         			}
         		}
         	}
-		}
-		
-		
+		};		
 		
 		$scope = helper.datePickerSetup($scope);
-		
-		
-		
+				
 		/**
-		 * hides the for this view specific loading spinner and text. Provides the ng-if tag time to get shown on the DOM,
+		 * Hides the for this view specific loading spinner and text. Provides the ng-if tag time to get shown on the DOM,
 		 * so that NgMap can get the map from the DOM through getMap();
 		 */
 		$scope.refresh = function()	{
@@ -459,10 +455,10 @@ module('userMap').
 			}, 1000);
 		};
 		
-		
 		setTimeout(function(){
 			allowed_directive_service.passDirectiveCallback($scope.refresh);
 		},0);
+		
 		
 		/**
 		 * loads census data for a given coordinate pair. Saves the returned data in the census data cache.
@@ -478,6 +474,7 @@ module('userMap').
 				});
 			}, false, -1);
 		};
+		
 		
 		/**
 		 * Starts a download for all map data as a csv-file. Currently, the download includes all markers of the chosen day,
@@ -516,6 +513,9 @@ module('userMap').
 			});
 		};
 		
+		/**
+		 * Exports the last 1000 locations of the user as CSV file. Formated to be openable in Excel.
+		 */
 		$scope.downloadLocationCSV = function()	{
 			var subject = $scope.userData.currentSubject;
 			gapi.client.analysisEndpoint.callForLocationCSV({"user" : subject}).execute(function(resp){
@@ -527,9 +527,9 @@ module('userMap').
 				var link = document.createElement("a");
 				link.setAttribute("href", encodedUri);
 				link.setAttribute("download", "my_data.csv");
-				document.body.appendChild(link); // Required for FF
+				document.body.appendChild(link);
 				link.click();
-				document.body.removeChild(link); // Required for FF
+				document.body.removeChild(link);
 			});
 		};
 	}

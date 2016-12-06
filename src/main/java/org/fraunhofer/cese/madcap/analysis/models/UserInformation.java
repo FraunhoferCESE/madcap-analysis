@@ -13,11 +13,10 @@ import com.googlecode.objectify.annotation.Id;
 public class UserInformation {
 	
 	@Id
-	private String id;
+	private String email;
 	
 	/* This variable is not used, but needs to be in the class to match the entities signature in
 	 * the Cloud Storage */
-	private String name;
 	private boolean see_GUI;
 	
 	/**

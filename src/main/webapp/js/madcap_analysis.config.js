@@ -5,26 +5,26 @@ angular.
 module('madcap-analysis').
 config(['$locationProvider', '$routeProvider',
     /**
-     * Routes to the login view by default.
+     * Routes to the user map view by default.
      */      
     function config($locationProvider, $routeProvider) {
 	  "use strict";
 	  $locationProvider.hashPrefix('!');
       $routeProvider.
-        when('/sensor-data-presentation', {
-          template: '<sensor-data-presentation></sensor-data-presentation>'
-        }).
-        when('/madcap-control',	{
+      when('/master', {
+          template: '<master></master>'
+        }).  
+      when('/madcap-control',	{
     	  template: '<madcap-control></madcap-control>'
-      	}).
-      	when('/timeline',	{
+      }).
+      when('/timeline',	{
       	  template: '<timeline></timeline>'
-        }).
-        when('/user-map',	{
+      }).
+      when('/user-map',	{
       	  template: '<user-map></user-map>'
-        }).
-        otherwise('/user-map');
-    }
+      }).
+          otherwise('/user-map');
+      }
   ]);
 
 /**
