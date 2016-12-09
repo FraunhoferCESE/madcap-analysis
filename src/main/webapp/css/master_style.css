@@ -1,0 +1,13 @@
+@CHARSET "ISO-8859-1";
+
+.logo{
+    max-height: 100%;
+    max-width: auto;
+    float: right;
+}
+.bararrow{
+	padding-top: 19px;
+	padding-bottom: 19px;
+	padding-left: 8px;
+	padding-right: 8px;
+}

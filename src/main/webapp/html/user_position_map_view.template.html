@@ -7,8 +7,8 @@
    				<div class="btn-group" role="group" aria-label="Basic example" style="margin-left: 20px;">
 					<button type="submit" class="btn btn-success" id="heatmap_toggle" ng-model="heatmap_toggle" ng-click="toggleHeatmap()">Show Heatmap</button>
 					<button type="submit" class="btn btn-success" id="center_map" ng-model="center_map" ng-click="centerMap()">Center Map</button>
-					<button type="submit" class="btn btn-success" ng-click="downloadCSV()">Download blocks as CSV</button>
 					<button type="submit" class="btn btn-success" ng-click="downloadLocationCSV()">Download locations as CSV</button>
+					<button type="submit" class="btn btn-success" ng-click="downloadCSV()">Download blocks as CSV
 						<div ng-if="csv.createCsv">
    					 		<uib-progressbar max="csv.max" value="csv.csvProgress"><b>{{csv.csvProgress}}%</b></uib-progressbar>
 						</div>
@@ -61,52 +61,28 @@
 			</div>
 			<div class="col-md-4">
 				<h3>Geographical Data:</h3>
-				LONGITUDE: {{censusData.longitude}}
+				Longitude: {{censusData.longitude}}
 				</br>
-				LATITUDE: {{censusData.latitude}}
+				Latitude: {{censusData.latitude}}
+				</br>
+				State: {{censusData.blockData.state}}
+				</br>
+				County: {{censusData.blockData.county}}
+				</br>
+				Tract: {{censusData.blockData.tract}}
+				</br>
+				Block group: {{censusData.blockData.blockGroup}}
+				</br>
+				Block: {{censusData.blockData.block}}
+				</br>
+				Place name: {{censusData.blockData.place_name}}
 				</br>
 				<h3>Census Data:</h3>
-				AREALAND: {{censusData.blockData.AREALAND}}
+				Average household size (owner): {{censusData.averages.owner}}
 				</br>
-				AREAWATER: {{censusData.blockData.AREAWATER}}
+				Average household size (renter): {{censusData.averages.renter}}
 				</br>
-				BASENAME: {{censusData.blockData.BASENAME}}
-				</br>
-				BLOCKGROUP: {{censusData.blockData.BLKGRP}}
-				</br>
-				BLOCK: {{censusData.blockData.BLOCK}}
-				</br>
-				CENT. LATITUDE: {{censusData.blockData.CENTLAT}}
-				</br>
-				CENT. LONGITUDE: {{censusData.blockData.CENTLON}}
-				</br>
-				DIVISION: {{censusData.blockData.DIVISION}}
-				</br>
-				FUNCSTAT: {{censusData.blockData.FUNCSTAT}}
-				</br>
-				GEOID: {{censusData.blockData.GEOID}}
-				</br>
-				INTPT. LATITUDE: {{censusData.blockData.INTPTLAT}}
-				</br>
-				INTPT. LONGITUDE: {{censusData.blockData.INTPTLAT}}
-				</br>
-				LSADC: {{censusData.blockData.LSADC}}
-				</br>
-				MTFCC: {{censusData.blockData.MTFCC}}
-				</br>
-				NAME: {{censusData.blockData.NAME}}
-				</br>
-				OBJECTID: {{censusData.blockData.OBJECTID}}
-				</br>
-				OID: {{censusData.blockData.OID}}
-				</br>
-				REGION: {{censusData.blockData.REGION}}
-				</br>
-				STATE: {{censusData.blockData.STATE}}
-				</br>
-				STATENS: {{censusData.blockData.STATENS}}
-				</br>
-				STUSAB: {{censusData.blockData.STUSAB}}
+				Average household size (total): {{censusData.averages.total}}
 				</br>
 			</div>
 		</div>

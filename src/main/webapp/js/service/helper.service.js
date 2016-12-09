@@ -104,9 +104,12 @@ angular.module('madcap-analysis')
 						locationCounter++;
 					}
 					refinedData[locationCounter] = {};
-					refinedData[locationCounter].block = thisData[i].block;
+					for(var prop in thisData[i])	{
+						refinedData[locationCounter][prop] = thisData[i][prop];
+					}
 					refinedData[locationCounter].start = thisData[i].time;
 					refinedData[locationCounter].end = thisData[i].time;
+					
 				}
 			}
 			return refinedData;

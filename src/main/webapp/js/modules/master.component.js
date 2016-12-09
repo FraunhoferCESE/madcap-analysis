@@ -6,8 +6,41 @@ angular.
 module('master').
   component('master', {
     templateUrl: 'html/master_view.template.html',
-    controller: function masterController() {
+    controller: function masterController($scope) {
     	"use strict"; 	
-		document.getElementById('siteloadspinner').style.display="block";		
+		document.getElementById('siteloadspinner').style.display="block";	
+		
+		$scope.controlControl = {
+			mapButtons:	{
+				visible: false
+			},
+			dateAndSlider: {
+				visible: false
+			},
+		};
+		
+		$scope.viewControl = {		
+						
+			usermap:	{
+				name: 'Map view',
+				visible: false,
+				scope: {},
+				style: 'white'
+			},
+			timeline:	{
+				name: 'Timeline view',
+				visible: false,
+				scope: {},
+				style: 'white'
+			}
+		};
+		
+		$scope.setColor = function(name)	{
+			$scope.viewControl[name].style = 'grey';
+		};
+		
+		$scope.toggleColor = function(name)	{
+			$scope.viewControl[name].style = 'grey';
+		};
     } 
 });

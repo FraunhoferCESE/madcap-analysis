@@ -467,12 +467,41 @@ module('userMap').
 		$scope.showCensus = function(time, lat, lng)	{	
 			census_api.sendRequest(lat, lng,
 			function(resp, id)	{
+				
+				var count = 0;
+				var persons = 0;
+				var households = 0;
+				var averages = [];
+				for(var num in resp.data[0])	{
+				
+					persons = persons + parseInt(resp.data[0][num])*(count+1);
+					households = households + parseInt(resp.data[0][num]);
+					if(count === 6){
+						if(households !== 0){
+							averages[averages.length] = persons/households;
+						}
+						else	{
+							averages[averages.length] = 0;
+						}
+						persons = 0;
+						households = 0;
+					}
+					
+					count++
+					count = count % 7;
+				}
+				
 				// Necessary to trigger immediate update in Angular
 				$scope.$apply(function()	{
-					var data = resp.features[0].properties;
-					$scope.censusData.blockData = data;
+					$scope.censusData.blockData = resp;
+					delete $scope.censusData.blockData.variables;
+					delete $scope.censusData.blockData.data;					
+					$scope.censusData.averages = {};
+					$scope.censusData.averages.owner = averages[0]; 
+					$scope.censusData.averages.renter = averages[1]; 
+					$scope.censusData.averages.total = averages[2]; 
 				});
-			}, false, -1);
+			}, true, -1);
 		};
 		
 		
@@ -494,7 +523,7 @@ module('userMap').
 			}
 			var date = new Date($scope.unixRest);
 			var day = "=\"" + (1+date.getMonth()) + "/" + date.getDate() + "/" + date.getFullYear()+ "\"";
-			census_api.csvDownload(coords, day, function(percent)	{
+			census_api.csvDownload(coords, day, $scope.userData.currentSubject, function(percent)	{
 		    	
 				var phase = $scope.$root.$$phase;
 				if(phase === '$apply' || phase === '$digest') {

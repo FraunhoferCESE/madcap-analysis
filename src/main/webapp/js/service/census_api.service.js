@@ -1,5 +1,5 @@
 /**
- * This service provides all functionalities which handle census data. This includesdata fetching as well as
+ * This service provides all functionalities which handle census data. This includes data fetching as well as
  * preparing of census data, for example for export.
  */
 angular.module('madcap-analysis')
@@ -19,12 +19,12 @@ angular.module('madcap-analysis')
 		   * @param updater: A method which gets called continuosly throughout the download process.
 		   * 				Can be used to update a progress bar for example
 		   */
-		csvDownload : function(array, day, updater)	{
+		csvDownload : function(array, day, user, updater)	{
 			var calls = array.length;
 			var progressUpdate = updater;
 			var data = [];
-			var arrayRef = array;
-			var dayRef = day;
+			var userRef = user;
+			var dayRef = day; 
 			var self = this;
 			var updateValue = 0;
 			var oldUpdateValue = 0;
@@ -36,26 +36,52 @@ angular.module('madcap-analysis')
 			for(var i=0; i<array.length; i++)	{
 				data[i] = {};
 				data[i].time = array[i].time;
-				gapi.client.analysisEndpoint.getAtLocation({"lat" : array[i].lat, "lng" : array[i].lng, "ticket" : i}).execute(function(resp){
-					if(resp.result.returned[0] === 'no entry')	{
-						self.sendRequest(arrayRef[resp.returned[1]].lat, arrayRef[resp.returned[1]].lng, function(resp, id)	{
-							data[id].block = resp.features[0].properties.BLOCK; 
-							gapi.client.analysisEndpoint.writeInCache({"lat" : arrayRef[id].lat, "lng" : arrayRef[id].lng, "block" : data[id].block}).execute();
+				requestLookup(i);
+			}
+
+			function requestLookup(passedI)	{
+				self.sendRequest(array[passedI].lat, array[passedI].lng, function(resp, id)	{
 							
-							if(--calls === 0){
-								createCsv(helper.refineData(data));
-							}
-							updateDuringFetch();
-						}, false, resp.returned[1]);
+					if(typeof resp.data === 'undefined')	{
+						requestLookup(id);
 					}
 					else	{
-						data[resp.returned[1]].block = resp.returned[0]; 
+						var count = 0;
+						var persons = 0;
+						var households = 0;
+						var averages = [];
+						
+						for(var num in resp.data[0])	{
+							
+							persons = persons + parseInt(resp.data[0][num])*(count+1);
+							households = households + parseInt(resp.data[0][num]);
+							count = count % 6;
+							if(count === 0){
+								if(households !== 0)	{
+									averages[averages.length] = persons/households;
+								}
+								else	{
+									averages[averages.length] = 0;
+								}
+								persons = 0;
+								households = 0;
+							}
+						
+							count++;
+							count = count % 7;
+						}
+						data[id].block = resp.block; 
+						data[id].avOwner = averages[0]; 
+						data[id].avRenter = averages[1];
+						data[id].avTotal = averages[2]; 
+						gapi.client.analysisEndpoint.writeInCache({"lat" : array[id].lat, "lng" : array[id].lng, "block" : data[id].block}).execute();
+					
 						if(--calls === 0){
 							createCsv(helper.refineData(data));
 						}
 						updateDuringFetch();
 					}
-				});
+				}, true, passedI);					
 			}
 			
 			/**
@@ -72,14 +98,22 @@ angular.module('madcap-analysis')
 			
 			
 			function createCsv(data)	{
-				var row = 'data:text/csv;charset=utf-8,' + dayRef + '\r\nStart time","End time","Block"\r\n';
+				var row = 'data:text/csv;charset=utf-8,Day:' + dayRef + ',Subject:' + userRef + '\r\nStart time","End time","Block","Average hosehold size (owner)","Average hosehold size (renter)","Average hosehold size (total)"\r\n';
 				for(var i=0; i<data.length;i++)	{
-					row = row + helper.getDateFromUnix(data[i].start) + ',' + helper.getDateFromUnix(data[i].end) + ',' + data[i].block + '\r\n';
+					if(i !== 0 && i !== data.length-1){
+						row = row + helper.getDateFromUnix(data[i].start) + ',' + helper.getDateFromUnix(data[i].end) + ',' + data[i].block + ',' + data[i].avOwner + ',' + data[i].avRenter + ',' + data[i].avTotal + '\r\n';
+					}
+					else if(i === 0){
+						row = row + '12:00 AM' + ',' + helper.getDateFromUnix(data[i].end) + ',' + data[i].block + ',' + data[i].avOwner + ',' + data[i].avRenter + ',' + data[i].avTotal + '\r\n';
+					}
+					else	{
+						row = row + helper.getDateFromUnix(data[i].start) + ',' + '12:59 PM' + ',' + data[i].block + ',' + data[i].avOwner + ',' + data[i].avRenter + ',' + data[i].avTotal + '\r\n';
+					}
 				}
 				var encodedUri = encodeURI(row);
 				var link = document.createElement("a");
 				link.setAttribute("href", encodedUri);
-				link.setAttribute("download", "my_data.csv");
+				link.setAttribute("download", userRef + '_' + dayRef + '.csv');
 				
 				document.body.appendChild(link); // Required for FF
 				link.click();
@@ -105,7 +139,34 @@ angular.module('madcap-analysis')
         	 var request = {
                      "lat": lat,
                      "lng": lng,
-                     "level": "blocks",
+                     "level": "block",
+                     "variables": [
+                        "H0160011",
+                        "H0160012",
+                        "H0160013",
+                        "H0160014",
+                        "H0160015",
+                        "H0160016",
+                        "H0160017",
+                        
+                        "H0160003",
+                        "H0160004",
+                        "H0160005",
+                        "H0160006",
+                        "H0160007",
+                        "H0160008",
+                        "H0160009",
+                        
+                        "H0130002",
+                        "H0130003",
+                        "H0130004",
+                        "H0130005",
+                        "H0130006",
+                        "H0130007",
+                        "H0130008",
+                     ],
+                     "api": "sf1",
+                     "year": "2010"
                  };
 
         	if(!callAPI)	{
@@ -114,7 +175,9 @@ angular.module('madcap-analysis')
         		}); 
         	}
         	else	{
-        		censusModule.apiRequest(request, callback);
+        		censusModule.apiRequest(request, function(resp)	{
+        			callback(resp, id);
+        		});
         	}
         }
     };

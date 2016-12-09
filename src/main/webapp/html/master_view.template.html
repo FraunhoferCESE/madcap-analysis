@@ -1,28 +1,30 @@
 <div allowed="SEE_GUI" style="width:99%; height:80%;">
 	<header class="navbar navbar-default navbar-fixed-top navbar-inner">
-        <nav class="hidden-xs">
-            <ul class="nav navbar-nav">
-                <a href="#top" role="button" class="navbar-brand">
-                    UI Bootstrap
-                </a>
+        <nav class="hidden-xl">
+            <ul class="nav navbar-nav navbar-left">
+                <a href="#top" role="button" class="navbar-brand">MADCAP Web Application</a>
                 <li class="dropdown" uib-dropdown="">
-                    <a role="button" class="dropdown-toggle" uib-dropdown-toggle="" aria-haspopup="true" aria-expanded="false">
-                        Directives <b class="caret"></b>
-                    </a>
+                    <a role="button" class="dropdown-toggle" uib-dropdown-toggle="" aria-haspopup="true" aria-expanded="false">Jump To<b class="caret"></b></a>
                     <ul class="dropdown-menu">
-                        <li><a href="#accordion">Accordion</a></li><li><a href="#alert">Alert</a></li><li><a href="#buttons">Buttons</a></li><li><a href="#carousel">Carousel</a></li><li><a href="#collapse">Collapse</a></li><li><a href="#dateparser">Dateparser</a></li><li><a href="#datepicker">Datepicker</a></li><li><a href="#datepickerPopup">Datepicker Popup</a></li><li><a href="#dropdown">Dropdown</a></li><li><a href="#modal">Modal</a></li><li><a href="#pager">Pager</a></li><li><a href="#pagination">Pagination</a></li><li><a href="#popover">Popover</a></li><li><a href="#position">Position</a></li><li><a href="#progressbar">Progressbar</a></li><li><a href="#rating">Rating</a></li><li><a href="#tabs">Tabs</a></li><li><a href="#timepicker">Timepicker</a></li><li><a href="#tooltip">Tooltip</a></li><li><a href="#typeahead">Typeahead</a></li>
+                         <li ng-repeat="view in viewControl | visibility_filter">
+                         	<p>{{view.name}}</p>
+                         </li>
                     </ul>
                 </li>
-                <li><a href="#getting_started">Getting started</a></li>
                 <li class="dropdown" uib-dropdown="">
-                    <a role="button" class="dropdown-toggle" uib-dropdown-toggle="" aria-haspopup="true" aria-expanded="false">
-                        Previous docs <b class="caret"></b>
-                    </a>
+                    <a role="button" class="dropdown-toggle" uib-dropdown-toggle="" aria-haspopup="true" aria-expanded="false">Manage views</a>
                     <ul class="dropdown-menu">
-                        <li></li>
+                        <li ng-repeat="view in viewControl">
+                          	<p ng-style="{'background-color':'red'}" ngClick="toggleColor(view.name)">{{view.name}}</p>
+                        </li>
                     </ul>
                 </li>
+        		<img class="navbar-brand logo bararrow" src="../img/right_arrow.png">
+        		<img class="navbar-brand bararrow" src="../img/left_arrow.png">
             </ul>
+            <ul class="nav navbar-nav navbar-right">
+        		<img class="navbar-brand logo" style="margin-right: 20px;" src="../img/ps_logo.png">
+           	</ul>
         </nav>
         <nav class="visible-xs collapse" uib-collapse="!isCollapsed" style="height: 0px;">
             <ul class="nav navbar-nav">
@@ -30,24 +32,21 @@
                 <li><a href="#directives_small" ng-click="isCollapsed = !isCollapsed">Directives</a></li>
             </ul>
         </nav>
-    </div>
-</header>
-	
-	
-	
-	
-	
+	</header>
 	
 	<div id="controllers">
-		<div ng-if="visibilityControl.dateAndSliderControl">
+		<div ng-if="controlControl.dateAndSlider.visible">
+			<map-buttons></map-buttons>
+		</div>
+		<div ng-if="controlControl.dateAndSlider.visible">
 			<date-and-slider></date-and-slider>
 		</div>
 	</div>
 	<div id="views">
-		<div ng-if="visibilityControl.sensorData">
+		<div ng-if="viewControl.usermap.visible">
 			<user-map></user-map>
 		</div>
-		<div ng-if="visibilityControl.timeline">
+		<div ng-if="viewControl.timeline.visible">
 			<timeline></timeline>
 		</div>
 	</div>
