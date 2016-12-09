@@ -2,7 +2,7 @@ angular.
 module('timeline').
   component('timeline', {
     templateUrl: 'html/timeline_view.template.html',
-    controller: function SensorDataPresentationController($scope, $timeout, helper, allowed_directive_service) {
+    controller: function TimelineController($scope, $timeout, helper, allowed_directive_service) {
     	
     	"use strict"; 	
     	
@@ -28,13 +28,32 @@ module('timeline').
     	$scope.userData = {
     			users: [],
     			chosen_user: '',
-    			currentSubject: '101106521377446542291'
+    			currentSubject: '101106521377446542291',
+    			/**
+    	    	 * Handles the change of the chosen user. Updates the user and renders the timeline anew
+    	    	 */
+    	    	userChange: function()	{
+    				if($scope.userData.currentSubject === '')	{
+    					for(var i=0; i<$scope.userData.users.length-1; i++)	{
+    						$scope.userData.users[i] = $scope.userData.users[i+1];
+    					}
+    					delete $scope.userData.users.splice($scope.userData.users.length-1,1);
+    				}
+    				$scope.userData.currentSubject = document.getElementById("chosen_user").options[document.getElementById("chosen_user").selectedIndex].text;
+    				$scope.renderTimeline();
+    	    	}
     		};
     	
     	// Storage for the event data. eventStorage contains all loaded data, eventCache only the currently shown
     	$scope.eventData = {
     		eventStorage: [],
-    		eventCache: []
+    		eventCache: [],
+    		source: 'Activity in Foreground',
+    		sources: ['Activity in Foreground','Kind of Movement'],
+    		sourceChange: function()	{
+    			$scope.eventData.source = document.getElementById("chosen_source").options[document.getElementById("chosen_source").selectedIndex].text;
+				$scope.renderTimeline();
+    		}
     	};
     	
     	// Listener for the datepicker
@@ -63,21 +82,6 @@ module('timeline').
 			$scope.userData.users[0] = 'Please choose a user ...';
 						
 		});
-    
-    	
-    	/**
-    	 * Handles the change of the chosen user. Updates the user and renders the timeline anew
-    	 */
-    	$scope.userChange = function()	{
-			if($scope.userData.currentSubject === '')	{
-				for(var i=0; i<$scope.userData.users.length-1; i++)	{
-					$scope.userData.users[i] = $scope.userData.users[i+1];
-				}
-				delete $scope.userData.users.splice($scope.userData.users.length-1,1);
-			}
-			$scope.userData.currentSubject = document.getElementById("chosen_user").options[document.getElementById("chosen_user").selectedIndex].text;
-			$scope.renderTimeline();
-    	};
 		
 		$scope.slider = {
 				    minValue: 0,
@@ -166,17 +170,41 @@ module('timeline').
 		 *  for the same event into one timeframe.
 		 */
 		$scope.renderTimeline = function()	{
-			$scope.eventData = {
-		    		eventStorage: [],
-		    		eventCache: []
-		    	};
-			gapi.client.analysisEndpoint.getActivityData({"user" : $scope.userData.currentSubject, "start" : $scope.unixRest, "end" : ($scope.unixRest + 86400000)}).execute(function(resp)	{
-				if(resp !== null && resp !== false && typeof resp.items !== 'undefined' && resp.items.length !== 0)	{
+			$scope.eventData.eventStorage = [];
+			$scope.eventData.eventCache = [];
+			
+			var src = $scope.eventData.source;
+			gapi.client.analysisEndpoint.getActivityData({"user" : $scope.userData.currentSubject, "start" : $scope.unixRest, "end" : ($scope.unixRest + 86400000), "source" : src}).execute(function(resp)	{
+				if(resp !== null && resp !== false && typeof resp.result !== 'undefined' && resp.result.length !== 0)	{
 					var rawData = [];
-					for(var i=0; i<resp.items.length; i++){
-						rawData[i] = {};
-     			   		rawData[i].time = resp.items[i].timestamp;
-     			   		rawData[i].block = resp.items[i].packageName;
+					if(src === 'Activity in Foreground')	{
+						for(var i=0; i<resp.returnedFBEE.length; i++){
+							rawData[i] = {};
+     			   			rawData[i].time = resp.returnedFBEE[i].timestamp;
+     			   			rawData[i].block = resp.result.returnedFBEE[i].packageName;
+						}
+					}
+					else if(src = 'Kind of Movement')	{
+						for(var i=0; i<resp.returnedAE.length; i++){
+							rawData[i] = {};
+							rawData[i].time = resp.result.returnedAE[i].timestamp;
+							delete resp.returnedAE[i].id;
+							delete resp.returnedAE[i].userID;
+							delete resp.returnedAE[i].timestamp;
+							delete resp.returnedAE[i].tilting;
+							delete resp.returnedAE[i].onFoot;
+							
+							var max = 'no max';
+							var maxNum = 0;
+							for(var name in resp.returnedAE[i]){
+								var floatCache = parseFloat(resp.returnedAE[i][name]);
+								if(maxNum <= floatCache)	{
+									max = name;
+									maxNum = floatCache;
+								}
+							}
+     			   			rawData[i].block = max;
+						}
 					}
 					var refinedData = helper.refineData(rawData);
 					var count = 0;
@@ -194,18 +222,6 @@ module('timeline').
 							count++;
 						}
 					}
-					
-					$scope.eventData.eventStorage.sort(function(a,b)	{
-						var upperA = a.label.toUpperCase();
-						var upperB = b.label.toUpperCase();
-						if(upperA < upperB){
-							return -1;
-						}
-						else if(upperA > upperB)	{
-							return 1;
-						}
-						return 0;
-					});
 				}
      	   
 				$scope.stopper.renderingFinished = true;

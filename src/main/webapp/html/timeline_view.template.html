@@ -3,11 +3,10 @@
 	<h3 id="timelineloadmessage" style="text-align: center;">Loading Timeline ...</h3>
 	<div ng-if="stopper.showPage">
  	    <div class="row vcenter"  style="margin-bottom: 10px; margin-top: 20px;">
-			<div class="col-md-1" style="text-align:right;">Selected User:</div>
-			<div class="col-md-3">
-				
+   			<div class="col-md-3">
+				<select ng-model="eventData.source" ng-init="setDefault()" id="chosen_source" class="form-control" ng-options="source as source for source in eventData.sources" ng-change="eventData.sourceChange()"></select>
 			</div>
-			<div class="col-md-4">
+			<div class="col-md-5">
 				<div class="container" style="text-allign: center;">
 					<h2></h2>
 				</div>
@@ -15,7 +14,7 @@
 			<div class="col-md-1" style="text-align:right;">Selected User:</div>
 			<div class="col-md-3">
 				<div style="margin-right: 20px;">
-					<select ng-model="userData.chosen_user" ng-init="setDefault()" id="chosen_user" class="form-control" ng-options="user as user for user in userData.users" ng-change="userChange()"></select>
+					<select ng-model="userData.chosen_user" ng-init="setDefault()" id="chosen_user" class="form-control" ng-options="user as user for user in userData.users" ng-change="userData.userChange()"></select>
 				</div>
 			</div>
 		</div>

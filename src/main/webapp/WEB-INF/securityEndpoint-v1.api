@@ -43,27 +43,6 @@
         "body" : "autoTemplate(backendResponse)"
       }
     },
-    "securityEndpoint.getUserPermission" : {
-      "path" : "endpointreturnobject/{elemPer}",
-      "httpMethod" : "GET",
-      "authLevel" : "NONE",
-      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
-      "audiences" : [ ],
-      "clientIds" : [ "611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com" ],
-      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.SecurityEndpoint.getUserPermission",
-      "request" : {
-        "parameters" : {
-          "elemPer" : {
-            "type" : "string",
-            "required" : true
-          }
-        },
-        "body" : "empty"
-      },
-      "response" : {
-        "body" : "autoTemplate(backendResponse)"
-      }
-    },
     "securityEndpoint.login" : {
       "path" : "login/{para}",
       "httpMethod" : "POST",
@@ -75,6 +54,27 @@
       "request" : {
         "parameters" : {
           "para" : {
+            "type" : "string",
+            "required" : true
+          }
+        },
+        "body" : "empty"
+      },
+      "response" : {
+        "body" : "autoTemplate(backendResponse)"
+      }
+    },
+    "securityEndpoint.getUserPermission" : {
+      "path" : "endpointreturnobject/{elemPer}",
+      "httpMethod" : "GET",
+      "authLevel" : "NONE",
+      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
+      "audiences" : [ ],
+      "clientIds" : [ "611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com" ],
+      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.SecurityEndpoint.getUserPermission",
+      "request" : {
+        "parameters" : {
+          "elemPer" : {
             "type" : "string",
             "required" : true
           }
@@ -146,12 +146,12 @@
           "$ref" : "EndpointReturnObject"
         }
       },
-      "org.fraunhofer.cese.madcap.analysis.SecurityEndpoint.getUserPermission" : {
+      "org.fraunhofer.cese.madcap.analysis.SecurityEndpoint.login" : {
         "response" : {
           "$ref" : "EndpointReturnObject"
         }
       },
-      "org.fraunhofer.cese.madcap.analysis.SecurityEndpoint.login" : {
+      "org.fraunhofer.cese.madcap.analysis.SecurityEndpoint.getUserPermission" : {
         "response" : {
           "$ref" : "EndpointReturnObject"
         }
