@@ -25,22 +25,45 @@ module('master').
 				name: 'Map view',
 				visible: false,
 				scope: {},
-				style: 'white'
+				style: 'white',
+				textColor: 'black'
 			},
 			timeline:	{
 				name: 'Timeline view',
 				visible: false,
 				scope: {},
-				style: 'white'
+				style: 'white',
+				textColor: 'black'
 			}
 		};
 		
-		$scope.setColor = function(name)	{
-			$scope.viewControl[name].style = 'grey';
+		$scope.barControl = {
+			toggleColor: function(name, event)	{
+				for(var key in $scope.viewControl){
+					if($scope.viewControl[key].name === name){
+						if($scope.viewControl[key].style === 'white'){
+							$scope.viewControl[key].style = 'rgb(230, 230, 230)';		
+							$scope.viewControl[key].textColor = 'rgb(150, 150, 150)';
+						}
+						else	{
+							$scope.viewControl[key].style = 'white';		
+							$scope.viewControl[key].textColor = 'black';
+						}
+					}
+				}
+			},
+			
+			mouseStyle:	'auto',
+			
+			dropdownHover: function()	{
+				if($scope.barControl.mouseStyle === 'auto')	{
+					$scope.barControl.mouseStyle = 'pointer';
+				}
+				else	{
+					$scope.barControl.mouseStyle = 'auto';
+				}
+			}
 		};
 		
-		$scope.toggleColor = function(name)	{
-			$scope.viewControl[name].style = 'grey';
-		};
     } 
 });

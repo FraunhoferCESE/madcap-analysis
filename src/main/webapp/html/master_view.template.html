@@ -15,7 +15,7 @@
                     <a role="button" class="dropdown-toggle" uib-dropdown-toggle="" aria-haspopup="true" aria-expanded="false">Manage views</a>
                     <ul class="dropdown-menu">
                         <li ng-repeat="view in viewControl">
-                          	<p ng-style="{'background-color':'red'}" ngClick="toggleColor(view.name)">{{view.name}}</p>
+                          	<div ng-style="{'background-color':view.style, color:view.textColor, cursor: barControl.mouseStyle}" ng-mouseover="barControl.dropdownHover()" ng-mouseleave="barControl.dropdownHover()" ng-click="barControl.toggleColor(view.name, $event)">{{view.name}}</div>
                         </li>
                     </ul>
                 </li>

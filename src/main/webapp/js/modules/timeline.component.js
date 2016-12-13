@@ -12,7 +12,9 @@ module('timeline').
     		directiveFinished: false,
     		renderingfinished: false,
     		firstRendering: true,
-    		setScrollListener: false
+    		setScrollListener: false,
+    		isApplicationShow: true,
+    		isActivityShow: false
     	};
     	
     	/* Information about the bars shown right besides the timeline. Shows the information of the bar
@@ -52,8 +54,17 @@ module('timeline').
     		sources: ['Activity in Foreground','Kind of Movement'],
     		sourceChange: function()	{
     			$scope.eventData.source = document.getElementById("chosen_source").options[document.getElementById("chosen_source").selectedIndex].text;
+    			if($scope.eventData.source === 'Activity in Foreground')	{
+    				$scope.stopper.isApplicationShow = true;
+    				$scope.stopper.isActivityShow = false; 
+    			}
+    			else if($scope.eventData.source === 'Kind of Movement')	{
+    				$scope.stopper.isApplicationShow = false;
+    				$scope.stopper.isActivityShow = true; 
+    			}
 				$scope.renderTimeline();
-    		}
+    		},
+    		propability: []
     	};
     	
     	// Listener for the datepicker
@@ -94,19 +105,127 @@ module('timeline').
 			            	return helper.getDateFromUnix(value);
 			            },
 			            onChange: function(sliderId)	{
-			            	$scope.filterAccordingToSlider();        	
+			            	$scope.filterAccordingToSlider($scope.eventData.source);        	
 			            }
 				    },
 				};
 		
 		
+		var time = new Date();
+		$scope.unixRest = time - (time%86400000) + (new Date().getTimezoneOffset()*60000);
+        $scope.eventData.eventStorage = [];
+		$scope.eventData.eventStorage[0] = {};
+		$scope.eventData.eventStorage[0].label = "No data";
+		$scope.eventData.eventStorage[0].times = [];
+		$scope.eventData.eventStorage[0].times[0] = {"starting_time": $scope.unixRest, "ending_time": ($scope.unixRest + 86400000)};
+		
+		
+		/**
+		 * Renders the timeline. Loads the events and filters them by bundling multiple timstamps
+		 *  for the same event into one timeframe.
+		 */
+		$scope.renderTimeline = function()	{
+			$scope.eventData.eventStorage = [];
+			$scope.eventData.eventCache = [];
+			
+			helper.provideOnOffTime($scope.userData.currentSubject, $scope.unixRest, $scope.unixRest + 86400000);
+			var src = $scope.eventData.source;
+			gapi.client.analysisEndpoint.getActivityData({"user" : $scope.userData.currentSubject, "start" : $scope.unixRest, "end" : ($scope.unixRest + 86400000), "source" : src}).execute(function(resp)	{
+				if(resp !== null && resp !== false && (typeof resp.returnedFBEE !== 'undefined' || typeof resp.returnedAE !== 'undefined'))	{
+					var rawData = [];
+					if(src === 'Activity in Foreground')	{
+						for(var i=0; i<resp.returnedFBEE.length; i++){
+							rawData[i] = {};
+     			   			rawData[i].time = resp.returnedFBEE[i].timestamp;
+     			   			rawData[i].block = resp.result.returnedFBEE[i].packageName;
+						}
+					}
+					else if(src === 'Kind of Movement')	{
+						for(var i=0; i<resp.returnedAE.length; i++){
+							rawData[i] = {};
+							rawData[i].time = resp.result.returnedAE[i].timestamp;
+							delete resp.returnedAE[i].id;
+							delete resp.returnedAE[i].userID;
+							delete resp.returnedAE[i].timestamp;
+							delete resp.returnedAE[i].tilting;
+							delete resp.returnedAE[i].onFoot;
+							
+							var max = 'no max';
+							var maxNum = 0;
+							for(var name in resp.returnedAE[i]){
+								var floatCache = parseFloat(resp.returnedAE[i][name]);
+								if(maxNum <= floatCache)	{
+									max = name;
+									maxNum = floatCache;
+								}
+							}
+     			   			rawData[i].block = max;
+     			   			if(typeof $scope.eventData.propability[max] === 'undefined')	{
+         			   			$scope.eventData.propability[max] = {};
+         			   			$scope.eventData.propability[max].time = [];
+         			   			$scope.eventData.propability[max].propability = [];
+     			   			}
+     			   			$scope.eventData.propability[max].time.push(rawData[i].time);     			   			
+     			   			$scope.eventData.propability[max].propability.push(maxNum*100);     			   			
+						}
+					}
+					var refinedData = helper.refineData(rawData);
+					var count = 0;
+					var newJ = 0;
+					var foundIndex = false;
+					for(var i=0; i<refinedData.length-1; i++){
+						for(var j=newJ; j<helper.providedTime.length && helper.providedTime[j].timestamp < refinedData[i+1].start; j++)	{
+							if(refinedData[i].end < helper.providedTime[j].timestamp && helper.providedTime[j].state === 'OFF')	{
+								refinedData[i].end = helper.providedTime[j].timestamp;
+								foundIndex = true;
+								newJ = j;
+							}
+						}
+						if(!foundIndex)	{
+							refinedData[i].end = refinedData[i+1].start;
+							foundIndex = false;
+						}
+					}
+					for(var j=newJ; j<helper.providedTime.length; j++)	{
+						if(refinedData[i].end < helper.providedTime[j].timestamp && helper.providedTime[j].state === 'OFF')	{
+							refinedData[i].end = helper.providedTime[j].timestamp;
+							foundIndex = true;
+						}
+					}
+					if(!foundIndex)	{
+						refinedData[i].end = $scope.unixRest + 86400000;
+					}
+					
+					// Creates the data for the timeline
+					for(var j=0; j<refinedData.length; j++)	{
+						var expendedExisting = false;
+						for(var k=0; k<$scope.eventData.eventStorage.length; k++)	{
+							if(refinedData[j].block === $scope.eventData.eventStorage[k].label)	{
+								$scope.eventData.eventStorage[k].times[$scope.eventData.eventStorage[k].times.length] = {"starting_time": refinedData[j].start, "ending_time": refinedData[j].end};
+								expendedExisting = true;
+							}
+						}
+						if(!expendedExisting)	{
+							$scope.eventData.eventStorage[count] = {label: refinedData[j].block, times: [{"starting_time": refinedData[j].start, "ending_time": refinedData[j].end}]};							
+							count++;
+						}
+					}
+				}
+     	   
+				$scope.stopper.renderingFinished = true;
+				if($scope.stopper.directiveFinished)	{
+      				$scope.filterAccordingToSlider(src);	
+      			}			
+			});
+        };
+        
 		  /**
 		   * Filters the barts according to the slider. This contains two main functionalities:
 		   * 1. add bars to the cache which are in the sliders range in full
 		   * 2. add cutted bars to the cache which are only partially in the sliders range
 		   * Filtering has do be done twodimensional (Many events in storage (D1), many times in events(D2)).
 		   */
-		  $scope.filterAccordingToSlider = function()	{	
+		  $scope.filterAccordingToSlider = function(src)	{	
 				
 			  	$scope.eventData.eventCache = [];
 			  	var sliderStart = $scope.unixRest + $scope.slider.minValue*60*1000;
@@ -153,89 +272,33 @@ module('timeline').
 			  				  			  			  }
 			  		  }
 				  }
-				$scope.callback();
+				$scope.callback(src);
 		  };
 		
-    	var time = new Date();
-		$scope.unixRest = time - (time%86400000) + (new Date().getTimezoneOffset()*60000);
-        $scope.eventData.eventStorage = [];
-		$scope.eventData.eventStorage[0] = {};
-		$scope.eventData.eventStorage[0].label = "No data";
-		$scope.eventData.eventStorage[0].times = [];
-		$scope.eventData.eventStorage[0].times[0] = {"starting_time": $scope.unixRest, "ending_time": ($scope.unixRest + 86400000)};
-		
-		
-		/**
-		 * Renders the timeline. Loads the events and filters them by bundling multiple timstamps
-		 *  for the same event into one timeframe.
-		 */
-		$scope.renderTimeline = function()	{
-			$scope.eventData.eventStorage = [];
-			$scope.eventData.eventCache = [];
-			
-			var src = $scope.eventData.source;
-			gapi.client.analysisEndpoint.getActivityData({"user" : $scope.userData.currentSubject, "start" : $scope.unixRest, "end" : ($scope.unixRest + 86400000), "source" : src}).execute(function(resp)	{
-				if(resp !== null && resp !== false && typeof resp.result !== 'undefined' && resp.result.length !== 0)	{
-					var rawData = [];
-					if(src === 'Activity in Foreground')	{
-						for(var i=0; i<resp.returnedFBEE.length; i++){
-							rawData[i] = {};
-     			   			rawData[i].time = resp.returnedFBEE[i].timestamp;
-     			   			rawData[i].block = resp.result.returnedFBEE[i].packageName;
-						}
-					}
-					else if(src = 'Kind of Movement')	{
-						for(var i=0; i<resp.returnedAE.length; i++){
-							rawData[i] = {};
-							rawData[i].time = resp.result.returnedAE[i].timestamp;
-							delete resp.returnedAE[i].id;
-							delete resp.returnedAE[i].userID;
-							delete resp.returnedAE[i].timestamp;
-							delete resp.returnedAE[i].tilting;
-							delete resp.returnedAE[i].onFoot;
-							
-							var max = 'no max';
-							var maxNum = 0;
-							for(var name in resp.returnedAE[i]){
-								var floatCache = parseFloat(resp.returnedAE[i][name]);
-								if(maxNum <= floatCache)	{
-									max = name;
-									maxNum = floatCache;
-								}
-							}
-     			   			rawData[i].block = max;
-						}
-					}
-					var refinedData = helper.refineData(rawData);
-					var count = 0;
-					// Creates the data for the timeline
-					for(var j=0; j<refinedData.length; j++)	{
-						var expendedExisting = false;
-						for(var k=0; k<$scope.eventData.eventStorage.length; k++)	{
-							if(refinedData[j].block === $scope.eventData.eventStorage[k].label)	{
-								$scope.eventData.eventStorage[k].times[$scope.eventData.eventStorage[k].times.length] = {"starting_time": refinedData[j].start, "ending_time": refinedData[j].end};
-								expendedExisting = true;
-							}
-						}
-						if(!expendedExisting)	{
-							$scope.eventData.eventStorage[count] = {label: refinedData[j].block, times: [{"starting_time": refinedData[j].start, "ending_time": refinedData[j].end}]};							
-							count++;
-						}
-					}
-				}
-     	   
-				$scope.stopper.renderingFinished = true;
-				if($scope.stopper.directiveFinished)	{
-      				$scope.filterAccordingToSlider();	
-      			}			
-			});
-        };
-        
+    	
         
         /**
          * Renders the timeline
          */
-        $scope.callback = function()	{
+        $scope.callback = function(src)	{
+        	
+        	var callbackMethod;
+        	if(src === 'Activity in Foreground')	{
+        		callbackMethod = function (d, i, datum) {
+					$scope.$apply(function()	{
+						$scope.barInfo.label = datum.label;
+						$scope.barInfo.start = helper.getDateFromUnix(Math.ceil((d.starting_time-$scope.unixRest)/60000));
+						$scope.barInfo.end = helper.getDateFromUnix(Math.ceil((d.ending_time-$scope.unixRest)/60000));
+					});
+				}
+        	}
+        	else	{
+        		callbackMethod = function (d, i, datum) {
+					$scope.$apply(function()	{
+						$scope.barInfo.propabilies = $scope.eventData.propability[d.title];
+					});
+				}
+        	}
         	
 			if($scope.stopper.firstRendering){
 				document.getElementById('timelineloadspinner').style.display="none";
@@ -250,15 +313,7 @@ module('timeline').
 			$timeout(function()	{
 				$scope.$apply(function(){
 					d3.select("svg").remove();
-					$scope.chart = d3.timeline().stack().changerange($scope.slider.minValue*60*1000 + $scope.unixRest, $scope.slider.maxValue*60*1000 + $scope.unixRest).hover(
-						function (d, i, datum) {
-							$scope.$apply(function()	{
-								$scope.barInfo.label = datum.label;
-								$scope.barInfo.start = helper.getDateFromUnix(Math.ceil((d.starting_time-$scope.unixRest)/60000));
-								$scope.barInfo.end = helper.getDateFromUnix(Math.ceil((d.ending_time-$scope.unixRest)/60000));
-							});
-						}
-					);
+					$scope.chart = d3.timeline().stack().changerange($scope.slider.minValue*60*1000 + $scope.unixRest, $scope.slider.maxValue*60*1000 + $scope.unixRest).hover(callbackMethod);
 					if(!$scope.stopper.setScrollListener)	{
 						/**
 						 * MAnipulates time slider on scrolling. One scroll tick decreases the timeframe

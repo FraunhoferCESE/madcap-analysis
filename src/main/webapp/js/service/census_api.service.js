@@ -28,24 +28,26 @@ angular.module('madcap-analysis')
 			var self = this;
 			var updateValue = 0;
 			var oldUpdateValue = 0;
-			
+			var threshold = 0;
+			var lock = false;
 			progressUpdate(0);
 
 			/* For every coordinate pair, try to load it from the cache. If that fails, load it from the census.
 			When loaded from the census, the data gets saved into the cache.*/
 			for(var i=0; i<array.length; i++)	{
-				data[i] = {};
-				data[i].time = array[i].time;
-				requestLookup(i);
+				
+					data[i] = {};
+					data[i].time = array[i].time;
+					requestLookup(i);
 			}
 
 			function requestLookup(passedI)	{
 				self.sendRequest(array[passedI].lat, array[passedI].lng, function(resp, id)	{
-							
 					if(typeof resp.data === 'undefined')	{
 						requestLookup(id);
 					}
 					else	{
+						threshold++;		
 						var count = 0;
 						var persons = 0;
 						var households = 0;
@@ -98,16 +100,16 @@ angular.module('madcap-analysis')
 			
 			
 			function createCsv(data)	{
-				var row = 'data:text/csv;charset=utf-8,Day:' + dayRef + ',Subject:' + userRef + '\r\nStart time","End time","Block","Average hosehold size (owner)","Average hosehold size (renter)","Average hosehold size (total)"\r\n';
+				var row = 'data:text/csv;charset=utf-8,"Day","Subject","Start time","End time","Block","Average household size (owner)","Average household size (renter)","Average household size (total)"\r\n';
 				for(var i=0; i<data.length;i++)	{
 					if(i !== 0 && i !== data.length-1){
-						row = row + helper.getDateFromUnix(data[i].start) + ',' + helper.getDateFromUnix(data[i].end) + ',' + data[i].block + ',' + data[i].avOwner + ',' + data[i].avRenter + ',' + data[i].avTotal + '\r\n';
+						row = dayRef + ',' + userRef + ',' + row + helper.getDateFromUnix(data[i].start) + ',' + helper.getDateFromUnix(data[i].end) + ',' + data[i].block + ',' + data[i].avOwner + ',' + data[i].avRenter + ',' + data[i].avTotal + '\r\n';
 					}
 					else if(i === 0){
-						row = row + '12:00 AM' + ',' + helper.getDateFromUnix(data[i].end) + ',' + data[i].block + ',' + data[i].avOwner + ',' + data[i].avRenter + ',' + data[i].avTotal + '\r\n';
+						row = dayRef + ',' + userRef + ',' + row + '00:00:00' + ',' + helper.getDateFromUnix(data[i].end) + ',' + data[i].block + ',' + data[i].avOwner + ',' + data[i].avRenter + ',' + data[i].avTotal + '\r\n';
 					}
 					else	{
-						row = row + helper.getDateFromUnix(data[i].start) + ',' + '12:59 PM' + ',' + data[i].block + ',' + data[i].avOwner + ',' + data[i].avRenter + ',' + data[i].avTotal + '\r\n';
+						row = dayRef + ',' + userRef + ',' + row + helper.getDateFromUnix(data[i].start) + ',' + '23:59:59' + ',' + data[i].block + ',' + data[i].avOwner + ',' + data[i].avRenter + ',' + data[i].avTotal + '\r\n';
 					}
 				}
 				var encodedUri = encodeURI(row);

@@ -13,8 +13,7 @@ angular.module('madcap-analysis')
 	 	*  The same as getDateFromTime, but the other way around
 	 	* @param value: the time in unix
 	 	* @returns the time as String
-	 	*/
-		
+	 	*/		
 		getDateFromUnix : function(value)	{
 			var hour = 12;
 			var decreaser = 0;
@@ -113,6 +112,16 @@ angular.module('madcap-analysis')
 				}
 			}
 			return refinedData;
+		},
+		
+		providedTime : 'no time yet',
+		
+		provideOnOffTime : function(user, start, end)	{
+			gapi.client.analysisEndpoint.getOnOffTime({"user" : user, "start" : start, "end" : end}).execute(function(resp)	{
+				if(resp !== null && resp !== false && typeof resp.items !== 'undefined')	{
+					providedTime = resp.items;
+				}
+			});
 		},
 		
 		datePickerSetup : function(scope)	{

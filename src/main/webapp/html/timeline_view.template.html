@@ -44,13 +44,20 @@
 			<div class="col-md-8" id="timeline_container">
 				<div id="timeline1"></div>
 			</div>
-			<div class="col-md-4" id="timeline_container">
-				<div id="barInfoGreeting:">
-					<h4>Bar information:</h4>
-				</div></br>
-				<div id="barInfoLabel">Application:  {{barInfo.label}}</div></br>
-				<div id="barInfoStart">Starting time:  {{barInfo.start}}</div></br>
-				<div id="barInfoEnd">Ending time:  {{barInfo.end}}</div></br>
+			<div class="col-md-4">
+				<h4>Bar information:</h4></br>
+				<div ng-if="stopper.isApplicationShow">
+					<div id="barInfoLabel">Application:  {{barInfo.label}}</div></br>
+					<div id="barInfoStart">Starting time:  {{barInfo.start}}</div></br>
+					<div id="barInfoEnd">Ending time:  {{barInfo.end}}</div></br>
+				</div>
+				<div ng-if="stopper.isActivityShow">
+ 					<ul>
+    					<li ng-repeat="prop in barInfo.propabilities">
+      						<p>{{prop.timestamp}}     {{prop.propability}}</p>
+    					</li>
+    				</ul>				
+				</div>
 			</div>
 		</div>
 	</div>

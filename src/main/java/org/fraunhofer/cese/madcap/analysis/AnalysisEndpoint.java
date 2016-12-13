@@ -2,11 +2,14 @@ package org.fraunhofer.cese.madcap.analysis;
 
 import java.util.List;
 
+import org.fraunhofer.cese.madcap.analysis.models.ActivityEntry;
 import org.fraunhofer.cese.madcap.analysis.models.BlockCache;
 import org.fraunhofer.cese.madcap.analysis.models.Constants;
+import org.fraunhofer.cese.madcap.analysis.models.DataCollectionEntry;
 import org.fraunhofer.cese.madcap.analysis.models.EndpointArrayReturnObject;
 import org.fraunhofer.cese.madcap.analysis.models.ForegroundBackgroundEventEntry;
 import org.fraunhofer.cese.madcap.analysis.models.LocationEntry;
+import org.fraunhofer.cese.madcap.analysis.models.TimelineReturnContainer;
 
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
@@ -47,6 +50,15 @@ public class AnalysisEndpoint {
 		return result.toArray(new LocationEntry[result.size()]);
 	}
 
+	
+	@ApiMethod(name = "getOnOffTime", httpMethod = ApiMethod.HttpMethod.POST)
+	public DataCollectionEntry[] getOnOffTime(@Named("user") String id, @Named("start") long startTime, @Named("end") long endTime, User user) throws OAuthRequestException{
+		SecurityEndpoint.isUserValid(user);
+		ObjectifyService.begin();
+		List<DataCollectionEntry> result = ofy().load().type(DataCollectionEntry.class).filter("userID =",id).filter("timestamp >=",startTime).filter("timestamp <=",endTime).order("timestamp").list();
+		return result.toArray(new DataCollectionEntry[result.size()]);
+	}
+	
 	
 	/**
 	 * Checks in a transaction if the object is already in the cache to prevent race condition 
@@ -126,11 +138,20 @@ public class AnalysisEndpoint {
 	 * @throws OAuthRequestException
 	 */
 	@ApiMethod(name = "getActivityData", httpMethod = ApiMethod.HttpMethod.GET)
-	public ForegroundBackgroundEventEntry[] getActivityData(@Named("user") String id, @Named("start") long startTime, @Named("end") long endTime, User user) throws OAuthRequestException{
+	public TimelineReturnContainer getActivityData(@Named("user") String id, @Named("start") long startTime, @Named("end") long endTime, @Named("source") String source, User user) throws OAuthRequestException{
 		SecurityEndpoint.isUserValid(user);
 		ObjectifyService.begin();
-		List<ForegroundBackgroundEventEntry> activities = ofy().load().type(ForegroundBackgroundEventEntry.class).filter("userID =",id).filter("timestamp >=",startTime).filter("timestamp <=",endTime).order("timestamp").list();
-		return activities.toArray(new ForegroundBackgroundEventEntry[activities.size()]);
+		if(source.equals("Activity in Foreground")){
+			List<ForegroundBackgroundEventEntry> activities = ofy().load().type(ForegroundBackgroundEventEntry.class).filter("userID =",id).filter("timestamp >=",startTime).filter("timestamp <=",endTime).order("timestamp").list();
+			return new TimelineReturnContainer(activities.toArray(new ForegroundBackgroundEventEntry[activities.size()]));
+		}
+		else if(source.equals("Kind of Movement")){
+			List<ActivityEntry> activities = ofy().load().type(ActivityEntry.class).filter("userID =",id).filter("timestamp >=",startTime).filter("timestamp <=",endTime).order("timestamp").list();
+			return new TimelineReturnContainer(activities.toArray(new ActivityEntry[activities.size()]));
+		}
+		else	{
+			return new TimelineReturnContainer();			
+		}
 	}
 	
 	/**
