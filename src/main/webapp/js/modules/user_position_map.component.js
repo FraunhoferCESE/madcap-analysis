@@ -17,6 +17,7 @@ module('userMap').
     			csvProgress: 0,
     			max: 0
     	};
+    	
     	// All the data we need to show the Google Map, markers and the heatmap layer
     	$scope.mapData = {
     			map: {},
@@ -59,10 +60,6 @@ module('userMap').
 		    data: $scope.mapData.heatmapDataArray,
 		    radius: 100
 		});
-    	
-    	$scope.setDefault = function()	{
-    		$scope.userData.chosen_user = $scope.userData.users[0];
-    	};
 		
     	// Creates a cache of dynamic size (5 currently)
     	var cacheSize = 5;
@@ -77,6 +74,7 @@ module('userMap').
    		}
     	
 		var time = new Date();
+		var offset = time.getTimezoneOffset();
 		$scope.unixRest = time - (time%86400000) + (new Date().getTimezoneOffset()*60000);
 		
 		// Updates to "Load Google Maps"-Spinner
@@ -93,10 +91,10 @@ module('userMap').
 			for(var i=0; i<resp.returned.length; i++)	{
 				$scope.userData.users[i+1] = resp.returned[i]+""; 
 			}
-			$scope.userData.users[0] = 'Please choose a user ...';
-			
-			//$scope.userData.users = resp.returned; 
-			
+			$scope.userData.users[0] = 'Please choose a user ...';	
+			$scope.$apply(function(){
+				$scope.userData.chosen_user = $scope.userData.users[0];	
+			});
 		});		
 		
 		
@@ -299,7 +297,7 @@ module('userMap').
 				$scope.mapData.mvcArray.push(coordinates);
 
 				$scope.mapData.markers[i] = new google.maps.Marker({
-					title: helper.getDateFromUnix(Math.ceil((entries[i].timestamp-$scope.unixRest)/60000))
+					title: helper.getDateFromUnix(entries[i].timestamp)
 				});
 				$scope.mapData.markers[i].addListener('click', function() {
 					$scope.censusData.latitude = this.getPosition().lat();
@@ -396,7 +394,7 @@ module('userMap').
 		    	ceil: 1439,
 		    	disabled: false,
 	            translate: function(value)	{
-	            	return helper.getDateFromUnix(value);
+	            	return helper.getDateFromUnix(value*60000+$scope.unixRest);
 	            },
 	            onChange: function(sliderId)	{
 	            	$scope.filterAccordingToSlider();        	
@@ -416,7 +414,7 @@ module('userMap').
 				and removing at specific indexes is not possible*/
         		$scope.mapData.heatmapDataArray.clear();
         		for(var i=0; i<$scope.mapData.markers.length; i++)	{
-        			var value = helper.getUnixFromDate($scope.mapData.markers[i].getTitle());
+        			var value = Math.floor((helper.getUnixFromDate($scope.mapData.markers[i].getTitle(), $scope.unixRest)-$scope.unixRest)/60000);
         			if(value < $scope.slider.minValue || $scope.slider.maxValue < value){
         				// Only change if the marker is visible while it shall not be
         				if($scope.mapData.markers[i].getVisible())	{
@@ -511,19 +509,36 @@ module('userMap').
 		 */
 		$scope.downloadCSV = function()	{
 	    	$scope.csv.csvProgress = 10;
-			$scope.csv.createCsv = true;
+			if($scope.csv.createCsv === false)	{
+				$scope.csv.createCsv = true;
+			}
+			else	{
+				$scope.csv.createCsv = false;
+    			$scope.csv.csvProgress = 0;
+    			$scope.csv.max = 0;
+    			census_api.cancelDownload();
+				return;
+			}
     		// Prepares data to be passed to (out) census service
 			$scope.userData.chosen_user = $scope.userData.users[2];
 			var coords = [];
 			for(var i=0; i<$scope.mapData.markers.length; i++)	{
 				coords[i] = {};
-				coords[i].time = helper.getUnixFromDate($scope.mapData.markers[i].getTitle());
+				coords[i].time = helper.getUnixFromDate($scope.mapData.markers[i].getTitle(), $scope.unixRest);
 				coords[i].lat = $scope.mapData.markers[i].getPosition().lat();
 				coords[i].lng = $scope.mapData.markers[i].getPosition().lng();
 			}
 			var date = new Date($scope.unixRest);
-			var day = "=\"" + (1+date.getMonth()) + "/" + date.getDate() + "/" + date.getFullYear()+ "\"";
-			census_api.csvDownload(coords, day, $scope.userData.currentSubject, function(percent)	{
+			var day = date.getDate();
+			var month = 1 + date.getMonth();
+			if(day<10)	{
+				day = '0' + day;
+			}
+			if(month<10)	{
+				month = '0' + month;
+			}
+			var dayString = "=\"" + month + "/" + day + "/" + date.getFullYear()+ "\"";
+			census_api.csvDownload(coords, dayString, $scope.userData.currentSubject, function(percent)	{
 		    	
 				var phase = $scope.$root.$$phase;
 				if(phase === '$apply' || phase === '$digest') {
@@ -550,7 +565,7 @@ module('userMap').
 			gapi.client.analysisEndpoint.callForLocationCSV({"user" : subject}).execute(function(resp){
 				var row = 'data:text/csv;charset=utf-8,' + ("=\"user: " + subject + "\"") + '\r\nTime","latitude","longitude","bearing"\r\n';
 				for(var i=0; i<resp.items.length;i++)	{
-					row = row + helper.getDateFromUnix(Math.ceil(resp.items[i].timestamp/60000)) + ',' + resp.items[i].latitude + ',' + resp.items[i].longitude + ',' + resp.items[i].bearing + '\r\n';
+					row = row + helper.getDateFromUnix(resp.items[i].timestamp) + ',' + resp.items[i].latitude + ',' + resp.items[i].longitude + ',' + resp.items[i].bearing + '\r\n';
 				}
 				var encodedUri = encodeURI(row);
 				var link = document.createElement("a");

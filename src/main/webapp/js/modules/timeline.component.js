@@ -2,7 +2,7 @@ angular.
 module('timeline').
   component('timeline', {
     templateUrl: 'html/timeline_view.template.html',
-    controller: function TimelineController($scope, $timeout, helper, allowed_directive_service) {
+    controller: function TimelineController($scope, $timeout, helper, allowed_directive_service, loading_overlay) {
     	
     	"use strict"; 	
     	
@@ -22,7 +22,8 @@ module('timeline').
     	$scope.barInfo = {
     		label: "No activity chosen",
     		start: "No activity chosen",
-    		end: "No activity chosen"
+    		end: "No activity chosen",
+    		probability: []
     	};
     	
     	// All relevant data about the user
@@ -30,12 +31,12 @@ module('timeline').
     	$scope.userData = {
     			users: [],
     			chosen_user: '',
-    			currentSubject: '101106521377446542291',
+    			currentSubject: '',
     			/**
     	    	 * Handles the change of the chosen user. Updates the user and renders the timeline anew
     	    	 */
     	    	userChange: function()	{
-    				if($scope.userData.currentSubject === '')	{
+    	    		if($scope.userData.currentSubject === '')	{
     					for(var i=0; i<$scope.userData.users.length-1; i++)	{
     						$scope.userData.users[i] = $scope.userData.users[i+1];
     					}
@@ -64,13 +65,24 @@ module('timeline').
     			}
 				$scope.renderTimeline();
     		},
-    		propability: []
+    		probability: []
     	};
     	
+    	gapi.client.analysisEndpoint.getUsers().execute(function(resp){
+			for(var i=0; i<resp.returned.length; i++)	{
+				$scope.userData.users[i+1] = resp.returned[i]+""; 
+			}
+			$scope.userData.users[0] = 'Please choose a user ...';
+			$scope.$apply(function(){
+	    		$scope.userData.chosen_user = $scope.userData.users[0];
+			});		
+		});
+		
     	// Listener for the datepicker
     	$scope.$watch('dt.value', function(newValue) { 
 			if(typeof newValue !== 'undefined' && newValue !== 'Please select a date ...')	{
 				$scope.unixRest = newValue.getTime();
+				$scope.renderTimeline();
 			}
 	    });
     	
@@ -86,15 +98,7 @@ module('timeline').
       			}
 		});
     	
-    	gapi.client.analysisEndpoint.getUsers().execute(function(resp){
-			for(var i=0; i<resp.returned.length; i++)	{
-				$scope.userData.users[i+1] = resp.returned[i]+""; 
-			}
-			$scope.userData.users[0] = 'Please choose a user ...';
-						
-		});
-		
-		$scope.slider = {
+    	$scope.slider = {
 				    minValue: 0,
 				    maxValue: 1439,
 				    options: {
@@ -102,7 +106,7 @@ module('timeline').
 				    	ceil: 1439,
 				    	disabled: false,
 			            translate: function(value)	{
-			            	return helper.getDateFromUnix(value);
+			            	return helper.getDateFromUnix(value*60000+$scope.unixRest);
 			            },
 			            onChange: function(sliderId)	{
 			            	$scope.filterAccordingToSlider($scope.eventData.source);        	
@@ -128,6 +132,10 @@ module('timeline').
 			$scope.eventData.eventStorage = [];
 			$scope.eventData.eventCache = [];
 			
+			if(!($scope.stopper.firstRendering))	{
+				var dialog = loading_overlay.createLoadOverlay("Loading data ...", this);
+			}
+			
 			helper.provideOnOffTime($scope.userData.currentSubject, $scope.unixRest, $scope.unixRest + 86400000);
 			var src = $scope.eventData.source;
 			gapi.client.analysisEndpoint.getActivityData({"user" : $scope.userData.currentSubject, "start" : $scope.unixRest, "end" : ($scope.unixRest + 86400000), "source" : src}).execute(function(resp)	{
@@ -139,6 +147,7 @@ module('timeline').
      			   			rawData[i].time = resp.returnedFBEE[i].timestamp;
      			   			rawData[i].block = resp.result.returnedFBEE[i].packageName;
 						}
+						$scope.eventData.probability = ['no Data'];
 					}
 					else if(src === 'Kind of Movement')	{
 						for(var i=0; i<resp.returnedAE.length; i++){
@@ -160,62 +169,124 @@ module('timeline').
 								}
 							}
      			   			rawData[i].block = max;
-     			   			if(typeof $scope.eventData.propability[max] === 'undefined')	{
-         			   			$scope.eventData.propability[max] = {};
-         			   			$scope.eventData.propability[max].time = [];
-         			   			$scope.eventData.propability[max].propability = [];
+     			   			if(typeof $scope.eventData.probability[max] === 'undefined')	{
+         			   			$scope.eventData.probability[max] = {};
+         			   			$scope.eventData.probability[max].time = [];
+         			   			$scope.eventData.probability[max].probability = [];
      			   			}
-     			   			$scope.eventData.propability[max].time.push(rawData[i].time);     			   			
-     			   			$scope.eventData.propability[max].propability.push(maxNum*100);     			   			
+     			   			$scope.eventData.probability[max].time.push(rawData[i].time);     			   			
+     			   			$scope.eventData.probability[max].probability.push(maxNum*100);     			   			
 						}
 					}
 					var refinedData = helper.refineData(rawData);
-					var count = 0;
 					var newJ = 0;
 					var foundIndex = false;
-					for(var i=0; i<refinedData.length-1; i++){
-						for(var j=newJ; j<helper.providedTime.length && helper.providedTime[j].timestamp < refinedData[i+1].start; j++)	{
-							if(refinedData[i].end < helper.providedTime[j].timestamp && helper.providedTime[j].state === 'OFF')	{
-								refinedData[i].end = helper.providedTime[j].timestamp;
-								foundIndex = true;
-								newJ = j;
+					var providedTime = helper.getTime();
+					var startLength = refinedData.length; 
+					for(var i=0; i<startLength; i++){
+						refinedData[i].color_code = -2;
+						if(i < startLength-1)	{
+							for(var j=newJ; j<providedTime.length && providedTime[j].timestamp < refinedData[i+1].start; j++)	{
+								if(refinedData[i].end < providedTime[j].timestamp && providedTime[j].state === 'OFF')	{
+									if(typeof $scope.eventData.eventStorage[0] === 'undefined')	{
+										$scope.eventData.eventStorage.push({label: 'No Data Collected', times: []});	
+										$scope.eventData.probability['No Data Collected'] = {};
+										$scope.eventData.probability['No Data Collected'].time = [];
+										$scope.eventData.probability['No Data Collected'].probability = [];
+									}
+									refinedData[i].end = providedTime[j].timestamp;
+									$scope.eventData.eventStorage[0].times.push({"starting_time": refinedData[i].end, "ending_time": refinedData[i+1].start, "color_code": 101});	
+									$scope.eventData.probability['No Data Collected'].time.push(refinedData[i].end);
+									$scope.eventData.probability['No Data Collected'].probability.push(100);
+									foundIndex = true;
+									newJ = j;
+								}
+							}
+							if(!foundIndex)	{
+								refinedData[i].end = refinedData[i+1].start;
 							}
 						}
-						if(!foundIndex)	{
-							refinedData[i].end = refinedData[i+1].start;
-							foundIndex = false;
+						else	{	
+							for(var j=newJ; j<providedTime.length; j++)	{
+								if(refinedData[i].end < providedTime[j].timestamp && providedTime[j].state === 'OFF')	{
+									if(typeof $scope.eventData.eventStorage[0] === 'undefined')	{
+										$scope.eventData.eventStorage.push({label: 'No Data Collected', times: []});	
+										$scope.eventData.probability['No Data Collected'] = {};
+										$scope.eventData.probability['No Data Collected'].time = [];
+										$scope.eventData.probability['No Data Collected'].probability = [];
+									}
+									refinedData[i].end = providedTime[j].timestamp;
+									$scope.eventData.eventStorage[0].times.push({"starting_time": refinedData[i].end, "ending_time": $scope.unixRest + 86400000, "color_code": 101});	
+									$scope.eventData.probability['No Data Collected'].time.push(refinedData[i].end);
+									$scope.eventData.probability['No Data Collected'].probability.push(100);
+									foundIndex = true;
+								}
+							}
+							if(!foundIndex)	{
+								refinedData[i].end = $scope.unixRest + 86400000;
+							}
 						}
-					}
-					for(var j=newJ; j<helper.providedTime.length; j++)	{
-						if(refinedData[i].end < helper.providedTime[j].timestamp && helper.providedTime[j].state === 'OFF')	{
-							refinedData[i].end = helper.providedTime[j].timestamp;
-							foundIndex = true;
+						
+						foundIndex = false;
+						
+						var thisProbs = $scope.eventData.probability[refinedData[i].block];
+						var enteredFor = false;
+						for(var k=0; typeof thisProbs !== 'undefined' && k<thisProbs.time.length; k++){
+							enteredFor = true;
+							var time = thisProbs.time[k];
+							if(time === refinedData[i].start)	{
+								refinedData[i].color_code = thisProbs.probability[k];
+							}
+							else if(refinedData[i].start < time && time < refinedData[i].end)	{
+								refinedData.push({
+									block: refinedData[i].block,
+									start: time,
+									end: refinedData[i].end,
+									color_code: thisProbs.probability[k]
+								});
+								refinedData[i].end = time;
+							}
+							else	{
+								for(var l=startLength; l<refinedData.length; l++)	{
+									if(refinedData[l].start < time && time < refinedData[l].end)	{
+										refinedData.push({
+											block: refinedData[l].block,
+											start: time,
+											end: refinedData[l].end,
+											color_code: thisProbs.probability[k]
+										});
+										refinedData[l].end = time;
+									}	
+								}
+							}
 						}
-					}
-					if(!foundIndex)	{
-						refinedData[i].end = $scope.unixRest + 86400000;
+						if(!enteredFor)	{
+							refinedData[i].color_code = 50
+						}
 					}
 					
 					// Creates the data for the timeline
 					for(var j=0; j<refinedData.length; j++)	{
-						var expendedExisting = false;
+						var expanded = false;
 						for(var k=0; k<$scope.eventData.eventStorage.length; k++)	{
 							if(refinedData[j].block === $scope.eventData.eventStorage[k].label)	{
-								$scope.eventData.eventStorage[k].times[$scope.eventData.eventStorage[k].times.length] = {"starting_time": refinedData[j].start, "ending_time": refinedData[j].end};
-								expendedExisting = true;
+								$scope.eventData.eventStorage[k].times.push({"starting_time": refinedData[j].start, "ending_time": refinedData[j].end, "color_code": refinedData[j].color_code});
+								expanded = true;
 							}
 						}
-						if(!expendedExisting)	{
-							$scope.eventData.eventStorage[count] = {label: refinedData[j].block, times: [{"starting_time": refinedData[j].start, "ending_time": refinedData[j].end}]};							
-							count++;
+						if(!expanded)	{
+							$scope.eventData.eventStorage.push({label: refinedData[j].block, times: [{"starting_time": refinedData[j].start, "ending_time": refinedData[j].end, "color_code": refinedData[j].color_code}]});	
 						}
 					}
 				}
-     	   
+				
 				$scope.stopper.renderingFinished = true;
 				if($scope.stopper.directiveFinished)	{
       				$scope.filterAccordingToSlider(src);	
-      			}			
+      			}
+				if(!($scope.stopper.firstRendering))	{
+					dialog.close();
+				}
 			});
         };
         
@@ -228,8 +299,8 @@ module('timeline').
 		  $scope.filterAccordingToSlider = function(src)	{	
 				
 			  	$scope.eventData.eventCache = [];
-			  	var sliderStart = $scope.unixRest + $scope.slider.minValue*60*1000;
-				var sliderEnd = $scope.unixRest + $scope.slider.maxValue*60*1000;
+			  	var sliderStart = $scope.unixRest + $scope.slider.minValue*60000;
+				var sliderEnd = $scope.unixRest + $scope.slider.maxValue*60000;
 			  	// Go through all events
 				for(var i=0; i<$scope.eventData.eventStorage.length; i++){					
 					  $scope.eventData.eventCache[i] = {};
@@ -251,17 +322,20 @@ module('timeline').
 			  				$scope.eventData.eventCache[i].times[j-skippedTimes] = {};
 			  				  $scope.eventData.eventCache[i].times[j-skippedTimes].starting_time = $scope.eventData.eventStorage[i].times[j].starting_time;
 			  				  $scope.eventData.eventCache[i].times[j-skippedTimes].ending_time = sliderEnd;
+			  				  $scope.eventData.eventCache[i].times[j-skippedTimes].color_code = $scope.eventData.eventStorage[i].times[j].color_code;
 			  			  }
 			  			  // Bars start is outside the range. Cut start
 			  			  else if(sliderStart > timeframe.starting_time && timeframe.ending_time < sliderEnd)	{
 			  				  $scope.eventData.eventCache[i].times[j-skippedTimes] = {};
 			  				  $scope.eventData.eventCache[i].times[j-skippedTimes].ending_time = $scope.eventData.eventStorage[i].times[j].ending_time;
+			  				  $scope.eventData.eventCache[i].times[j-skippedTimes].color_code = $scope.eventData.eventStorage[i].times[j].color_code;
 			  				  $scope.eventData.eventCache[i].times[j-skippedTimes].starting_time = sliderStart;						  
 			  			  }
 			  			  // Bars start and end are outside the range. Cut on both ends
 			  			  else if(sliderStart > timeframe.starting_time && timeframe.ending_time > sliderEnd)	{
-				  				$scope.eventData.eventCache[i].times[j-skippedTimes] = {};
+				  			  $scope.eventData.eventCache[i].times[j-skippedTimes] = {};
 			  				  $scope.eventData.eventCache[i].times[j-skippedTimes].starting_time = sliderStart;						  
+			  				  $scope.eventData.eventCache[i].times[j-skippedTimes].color_code = $scope.eventData.eventStorage[i].times[j].color_code;
 			  				  $scope.eventData.eventCache[i].times[j-skippedTimes].ending_time = sliderEnd;						  
 			  			  }
 			  			  // Bars is in range. Copy from storage to cache
@@ -269,7 +343,7 @@ module('timeline').
 			  				$scope.eventData.eventCache[i].times[j-skippedTimes] = {};
 			  				$scope.eventData.eventCache[i].times[j-skippedTimes].ending_time = $scope.eventData.eventStorage[i].times[j].ending_time;
 			  				$scope.eventData.eventCache[i].times[j-skippedTimes].starting_time = $scope.eventData.eventStorage[i].times[j].starting_time;
-			  				  			  			  }
+			  				$scope.eventData.eventCache[i].times[j-skippedTimes].color_code = $scope.eventData.eventStorage[i].times[j].color_code;			  				  			  			  }
 			  		  }
 				  }
 				$scope.callback(src);
@@ -287,15 +361,22 @@ module('timeline').
         		callbackMethod = function (d, i, datum) {
 					$scope.$apply(function()	{
 						$scope.barInfo.label = datum.label;
-						$scope.barInfo.start = helper.getDateFromUnix(Math.ceil((d.starting_time-$scope.unixRest)/60000));
-						$scope.barInfo.end = helper.getDateFromUnix(Math.ceil((d.ending_time-$scope.unixRest)/60000));
+						$scope.barInfo.start = helper.getDateFromUnix(d.starting_time);
+						$scope.barInfo.end = helper.getDateFromUnix(d.ending_time);
 					});
-				}
+				};
         	}
         	else	{
         		callbackMethod = function (d, i, datum) {
 					$scope.$apply(function()	{
-						$scope.barInfo.propabilies = $scope.eventData.propability[d.title];
+						$scope.barInfo.probability = [];
+						for(var i=0; i<$scope.eventData.probability[datum.label].time.length; i++)	{
+							if($scope.eventData.probability[datum.label].time[i] === d.starting_time+'')	{
+								$scope.barInfo.probability[0] = {};
+								$scope.barInfo.probability[0].time = helper.getDateFromUnix($scope.eventData.probability[datum.label].time[i]);
+								$scope.barInfo.probability[0].prop = $scope.eventData.probability[datum.label].probability[i];
+							}
+						};
 					});
 				}
         	}
@@ -312,11 +393,30 @@ module('timeline').
 			
 			$timeout(function()	{
 				$scope.$apply(function(){
+					
+					function componentToHex(c) {
+					    var hex = c.toString(16);
+					    return hex.length == 1 ? "0" + hex : hex;
+					}
+
+					function rgbToHex(r, g, b) {
+					    return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+					}
+					
 					d3.select("svg").remove();
-					$scope.chart = d3.timeline().stack().changerange($scope.slider.minValue*60*1000 + $scope.unixRest, $scope.slider.maxValue*60*1000 + $scope.unixRest).hover(callbackMethod);
+					var arrayNum = [];
+					var arrayColors = [];
+					for(var i=1; i<101; i++)	{
+						arrayNum[i] = i;
+						arrayColors[i] = rgbToHex(Math.floor(255-(255/100*i)),Math.floor(255-(255/100*i)),180);
+					}
+					arrayNum[101] = 101;
+					arrayColors[101] = rgbToHex(150,150,150);
+					var colorScale = d3.scale.ordinal().range(arrayColors).domain(arrayNum);
+					$scope.chart = d3.timeline().stack().colors(colorScale).colorProperty('color_code').changerange($scope.slider.minValue*60*1000 + $scope.unixRest, $scope.slider.maxValue*60*1000 + $scope.unixRest).hover(callbackMethod);
 					if(!$scope.stopper.setScrollListener)	{
 						/**
-						 * MAnipulates time slider on scrolling. One scroll tick decreases the timeframe
+						 * Manipulates time slider on scrolling. One scroll tick decreases the timeframe
 						 * by 5 Minutes on each side of the slider
 						 */
 						document.getElementById("timeline1").addEventListener('wheel',function(event){

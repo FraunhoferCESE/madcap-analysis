@@ -8,9 +8,14 @@ angular.module('madcap-analysis')
 	  	  
 	  var key = 'no key';
 	  var censusModule = 0;
+	  var canceled = false;
 	  
 	  return	{
 	  	
+		cancelDownload : function()	{
+			canceled = true;
+		},
+		
 		  /**
 		   * Gets the census data, refines it and offers it as download. Census data gets either loaded from
 		   * the census bureau or the cache when data with the same coordinates has been loaded before.
@@ -20,6 +25,7 @@ angular.module('madcap-analysis')
 		   * 				Can be used to update a progress bar for example
 		   */
 		csvDownload : function(array, day, user, updater)	{
+			canceled = false;
 			var calls = array.length;
 			var progressUpdate = updater;
 			var data = [];
@@ -29,16 +35,26 @@ angular.module('madcap-analysis')
 			var updateValue = 0;
 			var oldUpdateValue = 0;
 			var threshold = 0;
-			var lock = false;
+			var progress = 0;
+			var stepSize = 100;
 			progressUpdate(0);
-
+			sendBatchRequest(progress, stepSize);
+			
 			/* For every coordinate pair, try to load it from the cache. If that fails, load it from the census.
 			When loaded from the census, the data gets saved into the cache.*/
-			for(var i=0; i<array.length; i++)	{
-				
+			function sendBatchRequest(start, size)	{
+				progress = start;
+				if(start + size <array.length)	{
+					threshold = start + size;
+				}
+				else	{
+					threshold = array.length;
+				}
+				for(var i=progress; i<threshold; i++)	{
 					data[i] = {};
 					data[i].time = array[i].time;
 					requestLookup(i);
+				}
 			}
 
 			function requestLookup(passedI)	{
@@ -47,7 +63,7 @@ angular.module('madcap-analysis')
 						requestLookup(id);
 					}
 					else	{
-						threshold++;		
+						progress++;		
 						var count = 0;
 						var persons = 0;
 						var households = 0;
@@ -76,12 +92,18 @@ angular.module('madcap-analysis')
 						data[id].avOwner = averages[0]; 
 						data[id].avRenter = averages[1];
 						data[id].avTotal = averages[2]; 
-						gapi.client.analysisEndpoint.writeInCache({"lat" : array[id].lat, "lng" : array[id].lng, "block" : data[id].block}).execute();
+						//gapi.client.analysisEndpoint.writeInCache({"lat" : array[id].lat, "lng" : array[id].lng, "block" : data[id].block}).execute();
 					
 						if(--calls === 0){
 							createCsv(helper.refineData(data));
 						}
 						updateDuringFetch();
+					}
+					
+					if(progress===threshold){
+						if(!canceled)	{
+							sendBatchRequest(progress, stepSize);
+						}
 					}
 				}, true, passedI);					
 			}
@@ -103,19 +125,19 @@ angular.module('madcap-analysis')
 				var row = 'data:text/csv;charset=utf-8,"Day","Subject","Start time","End time","Block","Average household size (owner)","Average household size (renter)","Average household size (total)"\r\n';
 				for(var i=0; i<data.length;i++)	{
 					if(i !== 0 && i !== data.length-1){
-						row = dayRef + ',' + userRef + ',' + row + helper.getDateFromUnix(data[i].start) + ',' + helper.getDateFromUnix(data[i].end) + ',' + data[i].block + ',' + data[i].avOwner + ',' + data[i].avRenter + ',' + data[i].avTotal + '\r\n';
+						row = row + dayRef + ',"' + userRef + '",' + helper.getDateFromUnix(data[i].start) + ',' + helper.getDateFromUnix(data[i].end) + ',' + data[i].block + ',' + data[i].avOwner + ',' + data[i].avRenter + ',' + data[i].avTotal + '\r\n';
 					}
 					else if(i === 0){
-						row = dayRef + ',' + userRef + ',' + row + '00:00:00' + ',' + helper.getDateFromUnix(data[i].end) + ',' + data[i].block + ',' + data[i].avOwner + ',' + data[i].avRenter + ',' + data[i].avTotal + '\r\n';
+						row = row + dayRef + ',"' + userRef + '",' + '00:00:00' + ',' + helper.getDateFromUnix(data[i].end) + ',' + data[i].block + ',' + data[i].avOwner + ',' + data[i].avRenter + ',' + data[i].avTotal + '\r\n';
 					}
 					else	{
-						row = dayRef + ',' + userRef + ',' + row + helper.getDateFromUnix(data[i].start) + ',' + '23:59:59' + ',' + data[i].block + ',' + data[i].avOwner + ',' + data[i].avRenter + ',' + data[i].avTotal + '\r\n';
+						row = row + dayRef + ',"' + userRef + '",' + helper.getDateFromUnix(data[i].start) + ',' + '23:59:59' + ',' + data[i].block + ',' + data[i].avOwner + ',' + data[i].avRenter + ',' + data[i].avTotal + '\r\n';
 					}
 				}
 				var encodedUri = encodeURI(row);
 				var link = document.createElement("a");
 				link.setAttribute("href", encodedUri);
-				link.setAttribute("download", userRef + '_' + dayRef + '.csv');
+				link.setAttribute("download", userRef + '_' + dayRef.substring(2,4) + '_' + dayRef.substring(5,7) + '_' + dayRef.substring(8,12) + '.csv');
 				
 				document.body.appendChild(link); // Required for FF
 				link.click();

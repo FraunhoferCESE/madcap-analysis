@@ -24,4 +24,8 @@
         <property name="userID" direction="asc" />
         <property name="timestamp" direction="asc" />
     </datastore-index>
+    <datastore-index kind="PowerEntry" ancestor="false">
+        <property name="userID" direction="asc" />
+        <property name="timestamp" direction="asc" />
+    </datastore-index>
 </datastore-indexes>

@@ -7,6 +7,8 @@ angular.module('madcap-analysis')
 .factory('helper', function(){
 	"use strict";
 	
+	var providedTime = 'no time yet';
+	
 	return	{
 	
 		/**
@@ -15,7 +17,16 @@ angular.module('madcap-analysis')
 	 	* @returns the time as String
 	 	*/		
 		getDateFromUnix : function(value)	{
-			var hour = 12;
+			var date = new Date();
+			date.setTime(value);
+			var timeSet = [date.getHours(), date.getMinutes(), date.getSeconds()];
+			for(var i=0; i<timeSet.length; i++){
+				if((timeSet[i]+'').length === 1)	{
+					timeSet[i] = '0' + timeSet[i];
+				}
+			}
+			return timeSet[0] + ':' + timeSet[1] + ':' + timeSet[2];
+			/*var hour = 12;
 			var decreaser = 0;
 			var daytime = ' am';
 			for(var i=value; 59<i; i = i-60)	{
@@ -36,7 +47,7 @@ angular.module('madcap-analysis')
 				stringValue = '0'+value;
 			}
 			var timeString = '' + (hour - decreaser*12) + ':' + stringValue + daytime;
-			return timeString;
+			return timeString;*/
 		},
 	
 		/**
@@ -44,8 +55,15 @@ angular.module('madcap-analysis')
 		 * @param title: the time as string
 		 * @return the time in unix
 		 */
-		getUnixFromDate : function(title)	{
-			var hourShifter = 0;
+		getUnixFromDate : function(title, unixRest)	{
+			var date = new Date();
+			date.setUTCHours(title.substring(0,2),title.substring(3,5),title.substring(6,8));
+			date.setUTCDate(1);
+			date.setUTCMonth(0);
+			date.setUTCFullYear(1970);
+			var time = date.getTime()
+			return time + unixRest;
+			/*var hourShifter = 0;
 		
 			if(title.substring(2,3) === ':')	{
 				hourShifter = 1;
@@ -64,7 +82,7 @@ angular.module('madcap-analysis')
 			}
 			else	{
 				return minute+720;				
-			}
+			}*/
 		},
 		
 		/**
@@ -114,7 +132,7 @@ angular.module('madcap-analysis')
 			return refinedData;
 		},
 		
-		providedTime : 'no time yet',
+		getTime : function()	{return providedTime;},
 		
 		provideOnOffTime : function(user, start, end)	{
 			gapi.client.analysisEndpoint.getOnOffTime({"user" : user, "start" : start, "end" : end}).execute(function(resp)	{
@@ -125,6 +143,7 @@ angular.module('madcap-analysis')
 		},
 		
 		datePickerSetup : function(scope)	{
+			
 			//-------------------------Stuff for the Datepicker------------------------------------
 			scope.today = function() {
 			    scope.dt = new Date();
@@ -182,6 +201,7 @@ angular.module('madcap-analysis')
 			scope.toggleMax();
 			scope.format = 'MM/dd/yyyy';
 			scope.altInputFormats = ['M!/d!/yyyy'];
+			scope.dt.value = scope.dt;
 			
 			var tomorrow = new Date();
 			tomorrow.setDate(tomorrow.getDate() + 1);
@@ -197,7 +217,6 @@ angular.module('madcap-analysis')
 			      status: 'partially'
 			    }
 			  ];
-			
 			return scope;
 			//----------------End for the stuff of the Datepicker--------------------------------------	
 		}

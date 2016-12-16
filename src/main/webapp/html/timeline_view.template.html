@@ -4,7 +4,7 @@
 	<div ng-if="stopper.showPage">
  	    <div class="row vcenter"  style="margin-bottom: 10px; margin-top: 20px;">
    			<div class="col-md-3">
-				<select ng-model="eventData.source" ng-init="setDefault()" id="chosen_source" class="form-control" ng-options="source as source for source in eventData.sources" ng-change="eventData.sourceChange()"></select>
+				<select ng-model="eventData.source" id="chosen_source" class="form-control" ng-options="source as source for source in eventData.sources" ng-change="eventData.sourceChange()"></select>
 			</div>
 			<div class="col-md-5">
 				<div class="container" style="text-allign: center;">
@@ -14,7 +14,7 @@
 			<div class="col-md-1" style="text-align:right;">Selected User:</div>
 			<div class="col-md-3">
 				<div style="margin-right: 20px;">
-					<select ng-model="userData.chosen_user" ng-init="setDefault()" id="chosen_user" class="form-control" ng-options="user as user for user in userData.users" ng-change="userData.userChange()"></select>
+					<select ng-model="userData.chosen_user" id="chosen_user" class="form-control" ng-options="user as user for user in userData.users" ng-change="userData.userChange()"></select>
 				</div>
 			</div>
 		</div>
@@ -32,7 +32,7 @@
 			<div class="col-md-3" style="margin-top: 15px;">
         		<div style="margin-right: 20px;">
         	 		<p class="input-group">
-          	 			<input type="text" class="form-control" uib-datepicker-popup ng-model="dt.value" is-open="popup.opened" datepicker-options="dateOptions" ng-init="dt.value = 'Please select a date ...';" ng-required="true" close-text="Close"/>
+          	 			<input type="text" class="form-control" uib-datepicker-popup ng-model="dt.value" is-open="popup.opened" datepicker-options="dateOptions" ng-required="true" close-text="Close"/>
           				<span class="input-group-btn">
             				<button type="button" class="btn btn-default" ng-click="open()"><i class="glyphicon glyphicon-calendar"></i></button>
           				</span>
@@ -53,8 +53,8 @@
 				</div>
 				<div ng-if="stopper.isActivityShow">
  					<ul>
-    					<li ng-repeat="prop in barInfo.propabilities">
-      						<p>{{prop.timestamp}}     {{prop.propability}}</p>
+    					<li ng-repeat="prob in barInfo.probability">
+      						<p>Time: {{prob.time}}     Probability:{{prob.prop}}%</p>
     					</li>
     				</ul>				
 				</div>

@@ -11,6 +11,7 @@
 					<button type="submit" class="btn btn-success" ng-click="downloadCSV()">Download blocks as CSV
 						<div ng-if="csv.createCsv">
    					 		<uib-progressbar max="csv.max" value="csv.csvProgress"><b>{{csv.csvProgress}}%</b></uib-progressbar>
+							<div>Cancel download</div>
 						</div>
 					</button>	
 				</div>
@@ -23,7 +24,7 @@
 			<div class="col-md-1" style="text-align:right;">Selected User:</div>
 			<div class="col-md-3">
 				<div style="margin-right: 20px;">
-					<select ng-model="userData.chosen_user" ng-init="setDefault()" id="chosen_user" class="form-control" ng-options="user as user for user in userData.users" ng-change="userData.userChange()"></select>
+					<select ng-model="userData.chosen_user" id="chosen_user" class="form-control" ng-options="user as user for user in userData.users" ng-change="userData.userChange()"></select>
 				</div>
 			</div>
 		</div>
@@ -41,7 +42,7 @@
 			<div class="col-md-3" style="margin-top: 15px;">
         		<div style="margin-right: 20px;">
         	 		<p class="input-group">
-          	 			<input type="text" class="form-control" uib-datepicker-popup ng-model="dt.value" is-open="popup.opened" datepicker-options="dateOptions" ng-init="dt.value = 'Please select a date ...';" ng-required="true" close-text="Close"/>
+          	 			<input type="text" class="form-control" uib-datepicker-popup ng-model="dt.value" is-open="popup.opened" datepicker-options="dateOptions" ng-required="true" close-text="Close"/>
           				<span class="input-group-btn">
             				<button type="button" class="btn btn-default" ng-click="open()"><i class="glyphicon glyphicon-calendar"></i></button>
           				</span>
