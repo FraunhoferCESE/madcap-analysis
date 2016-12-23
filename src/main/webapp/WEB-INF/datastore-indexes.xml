@@ -20,6 +20,14 @@
         <property name="userID" direction="asc" />
         <property name="timestamp" direction="asc" />
     </datastore-index>
+    <datastore-index kind="ForegroundBackgroundEventEntry" ancestor="false">
+        <property name="userID" direction="asc" />
+        <property name="timestamp" direction="desc" />
+    </datastore-index>
+    <datastore-index kind="ActivityEntry" ancestor="false">
+        <property name="userID" direction="asc" />
+        <property name="timestamp" direction="desc" />
+    </datastore-index>
     <datastore-index kind="DataCollectionEntry" ancestor="false">
         <property name="userID" direction="asc" />
         <property name="timestamp" direction="asc" />

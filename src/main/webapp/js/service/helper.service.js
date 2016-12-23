@@ -7,7 +7,6 @@ angular.module('madcap-analysis')
 .factory('helper', function(){
 	"use strict";
 	
-	var providedTime = 'no time yet';
 	
 	return	{
 	
@@ -26,28 +25,6 @@ angular.module('madcap-analysis')
 				}
 			}
 			return timeSet[0] + ':' + timeSet[1] + ':' + timeSet[2];
-			/*var hour = 12;
-			var decreaser = 0;
-			var daytime = ' am';
-			for(var i=value; 59<i; i = i-60)	{
-				hour++;
-				if(hour % 12 === 1)	{
-					decreaser++;
-				}
-				if(23<hour)	{
-					daytime = ' pm';
-				}
-			}
-			value = i;
-			var stringValue;
-			if(value>9)	{
-				stringValue = value;
-			}
-			else	{
-				stringValue = '0'+value;
-			}
-			var timeString = '' + (hour - decreaser*12) + ':' + stringValue + daytime;
-			return timeString;*/
 		},
 	
 		/**
@@ -61,28 +38,8 @@ angular.module('madcap-analysis')
 			date.setUTCDate(1);
 			date.setUTCMonth(0);
 			date.setUTCFullYear(1970);
-			var time = date.getTime()
+			var time = date.getTime();
 			return time + unixRest;
-			/*var hourShifter = 0;
-		
-			if(title.substring(2,3) === ':')	{
-				hourShifter = 1;
-			}
-			var hour = parseInt(title.substring(0,1+hourShifter));
-			var minute = parseInt(title.substring(2+hourShifter,4+hourShifter));
-			var dayTime = title.substring(5+hourShifter,7+hourShifter);
-			if(dayTime === 'am' && hour !== 12){
-				return hour*60+minute;
-			}
-			else if(dayTime === 'am'){
-				return minute;
-			}
-			else if(dayTime === 'pm' && hour !== 12){
-				return hour*60+minute+720;
-			}
-			else	{
-				return minute+720;				
-			}*/
 		},
 		
 		/**
@@ -104,11 +61,25 @@ angular.module('madcap-analysis')
 		 * 			2:50pm-4:00pm, Block 2099
 		 * 			4:50pm-8:50pm, Block 2020 
 		 */
-		refineData : function(thisData)	{
+		refineData : function(thisData, onOffTimes, grouper)	{
+			
 			var refinedData = [];
 			var locationCounter = 0;
-			for(var i=0; i<thisData.length; i++){
-				if(refinedData.length !== 0 && refinedData[locationCounter].block === thisData[i].block)	{
+			var onIntervalAt = -1;
+			var start = 'NO_ON_OFF_DATA';
+			for(var i=0; i<thisData.length; i++){				
+				var lastOnInterval = onIntervalAt;
+				thisData[i].time = parseInt(thisData[i].time);
+				for(var j=0; onOffTimes !== null && j<onOffTimes.length-1 && onIntervalAt === lastOnInterval; j++)	{
+					onOffTimes[j].timestamp = parseInt(onOffTimes[j].timestamp);
+					onOffTimes[j+1].timestamp = parseInt(onOffTimes[j+1].timestamp);
+					if(onOffTimes[j].state === 'ON' && onOffTimes[j].timestamp < thisData[i].time && thisData[i].time < onOffTimes[j+1].timestamp)	{
+						onIntervalAt = j;
+						start = onOffTimes[0].state;
+					}
+				}
+				
+				if((onIntervalAt === lastOnInterval || lastOnInterval === -1) && refinedData.length !== 0 && refinedData[locationCounter][grouper] === thisData[i][grouper])	{	
 					if(refinedData[locationCounter].start > thisData[i].time)	{
 						refinedData[locationCounter].start = thisData[i].time;
 					}
@@ -116,30 +87,50 @@ angular.module('madcap-analysis')
 						refinedData[locationCounter].end = thisData[i].time;							
 					}
 				}
-				else	{
+				else if(onIntervalAt !== -1)	{
+					if(typeof refinedData[locationCounter] !== 'undefined')	{
+						refinedData[locationCounter].end = Math.min(thisData[i].time, onOffTimes[lastOnInterval+1].timestamp);
+					}
 					if(refinedData.length !== 0)	{
 						locationCounter++;
 					}
 					refinedData[locationCounter] = {};
-					for(var prop in thisData[i])	{
-						refinedData[locationCounter][prop] = thisData[i][prop];
+					for(var property in thisData[i])	{
+						refinedData[locationCounter][property] = thisData[i][property];
 					}
 					refinedData[locationCounter].start = thisData[i].time;
-					refinedData[locationCounter].end = thisData[i].time;
-					
+					refinedData[locationCounter].end = thisData[i].time;					
 				}
 			}
+			
+			
 			return refinedData;
 		},
-		
-		getTime : function()	{return providedTime;},
-		
-		provideOnOffTime : function(user, start, end)	{
-			gapi.client.analysisEndpoint.getOnOffTime({"user" : user, "start" : start, "end" : end}).execute(function(resp)	{
-				if(resp !== null && resp !== false && typeof resp.items !== 'undefined')	{
-					providedTime = resp.items;
-				}
-			});
+						
+		provideOnOffTime : function(user, start, end, callback)	{
+			if(user !== '')	{
+				gapi.client.analysisEndpoint.getOnOffTime({"user" : user, "start" : start, "end" : end}).execute(function(resp)	{
+					var providedTime = {};
+					if(resp !== null && resp !== false && typeof resp.items !== 'undefined')	{
+						providedTime = resp.items;
+					}
+					else	{
+						providedTime = false;
+					}
+					callback(providedTime);
+				});
+			}
+			else	{
+				providedTime = [{
+				    	timestamp: start,
+				    	state: 'ON'
+				    },
+					{
+				    	timestamp: end,
+				    	state: 'ON'
+					}];
+				callback(providedTime);
+			}
 		},
 		
 		datePickerSetup : function(scope)	{

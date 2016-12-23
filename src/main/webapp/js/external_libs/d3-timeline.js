@@ -52,8 +52,8 @@
         chartData = {},
         
         containerMargin = 0,
-        manualRange = false;
-      ;
+        manualRange = false,
+        opaqueArray = {};
 
     var appendTimeAxis = function(g, xAxis, yPosition) {
 
@@ -288,6 +288,13 @@
                 }
               }
               return colorCycle(index);
+            }).style("opacity", function(d, i){
+            	if(typeof d.opaque === 'undefined')	{
+            		return 1.0;
+            	}
+            	else	{
+            		return opaqueArray[d.opaque];
+            	}
             })
             .on("mousemove", function (d, i) {
               hover(d, index, datum);
@@ -713,6 +720,11 @@
     	return timeline;
     }
 
+    timeline.opaque = function(op)	{
+    	opaqueArray = op;
+    	return timeline;
+    }
+    
     return timeline;
   };
 })();

@@ -23,7 +23,8 @@ public class DataCollectionEntry implements Comparable<DataCollectionEntry> {
     @Index
     private String userID;
 
-    public DataCollectionEntry(){}
+    public DataCollectionEntry(){
+    }
 
     @Override
     public int compareTo(DataCollectionEntry o) {

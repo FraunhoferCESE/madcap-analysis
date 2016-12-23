@@ -42,7 +42,7 @@ public class AnalysisEndpoint {
 	 * @return all locations for that user in that time frame
 	 * @throws OAuthRequestException
 	 */
-	@ApiMethod(name = "getInWindow", httpMethod = ApiMethod.HttpMethod.POST)
+	@ApiMethod(name = "getInWindow", httpMethod = ApiMethod.HttpMethod.GET)
 	public LocationEntry[] getInWindow(@Named("user") String id, @Named("start") long startTime, @Named("end") long endTime, User user) throws OAuthRequestException{
 		SecurityEndpoint.isUserValid(user);
 		ObjectifyService.begin();
@@ -51,7 +51,7 @@ public class AnalysisEndpoint {
 	}
 
 	
-	@ApiMethod(name = "getOnOffTime", httpMethod = ApiMethod.HttpMethod.POST)
+	@ApiMethod(name = "getOnOffTime", httpMethod = ApiMethod.HttpMethod.GET)
 	public DataCollectionEntry[] getOnOffTime(@Named("user") String id, @Named("start") long startTime, @Named("end") long endTime, User user) throws OAuthRequestException{
 		SecurityEndpoint.isUserValid(user);
 		ObjectifyService.begin();
@@ -138,15 +138,27 @@ public class AnalysisEndpoint {
 	 * @throws OAuthRequestException
 	 */
 	@ApiMethod(name = "getActivityData", httpMethod = ApiMethod.HttpMethod.GET)
-	public TimelineReturnContainer getActivityData(@Named("user") String id, @Named("start") long startTime, @Named("end") long endTime, @Named("source") String source, User user) throws OAuthRequestException{
+	public TimelineReturnContainer getActivityData(@Named("user") String id, @Named("start") long startTime, @Named("end") long endTime, @Named("source") String source, @Named("include_first") boolean shallFirst, User user) throws OAuthRequestException{
 		SecurityEndpoint.isUserValid(user);
 		ObjectifyService.begin();
 		if(source.equals("Activity in Foreground")){
 			List<ForegroundBackgroundEventEntry> activities = ofy().load().type(ForegroundBackgroundEventEntry.class).filter("userID =",id).filter("timestamp >=",startTime).filter("timestamp <=",endTime).order("timestamp").list();
+			if(!activities.isEmpty() && shallFirst)	{
+				ForegroundBackgroundEventEntry firstActivity = ofy().load().type(ForegroundBackgroundEventEntry.class).filter("userID =",id).filter("timestamp <",startTime).order("-timestamp").first().now();				
+				if(firstActivity != null){
+					activities.add(0, firstActivity);
+				}
+			}
 			return new TimelineReturnContainer(activities.toArray(new ForegroundBackgroundEventEntry[activities.size()]));
 		}
 		else if(source.equals("Kind of Movement")){
 			List<ActivityEntry> activities = ofy().load().type(ActivityEntry.class).filter("userID =",id).filter("timestamp >=",startTime).filter("timestamp <=",endTime).order("timestamp").list();
+			if(!activities.isEmpty() && shallFirst)	{
+				ActivityEntry firstActivity = ofy().load().type(ActivityEntry.class).filter("userID =",id).filter("timestamp <",startTime).order("-timestamp").first().now();				
+				if(firstActivity != null){
+					activities.add(0, firstActivity);
+				}
+			}
 			return new TimelineReturnContainer(activities.toArray(new ActivityEntry[activities.size()]));
 		}
 		else	{

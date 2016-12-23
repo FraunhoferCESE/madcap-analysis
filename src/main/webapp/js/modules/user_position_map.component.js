@@ -26,6 +26,7 @@ module('userMap').
     			heatmap : {},
     			isHeat: false,
     			markers: [],
+    			center: new google.maps.LatLng(38.97, -76.92)
     	};
     	
     	// All data regarding the usable users
@@ -74,7 +75,6 @@ module('userMap').
    		}
     	
 		var time = new Date();
-		var offset = time.getTimezoneOffset();
 		$scope.unixRest = time - (time%86400000) + (new Date().getTimezoneOffset()*60000);
 		
 		// Updates to "Load Google Maps"-Spinner
@@ -103,7 +103,8 @@ module('userMap').
 		 */
 		$scope.$watch('dt.value', function(newValue) { 
 			if(typeof newValue !== 'undefined' && newValue !== 'Please select a date ...')	{
-				$scope.initializeRefresh(newValue.getTime());
+				$scope.unixRest = newValue - (newValue%86400000) + (newValue.getTimezoneOffset()*60000);
+				$scope.initializeRefresh('date');
 			}
 	    });
 		/**
@@ -134,9 +135,6 @@ module('userMap').
 			
 			if(source === 'user'){
 				$scope.userData.currentSubject = document.getElementById("chosen_user").options[document.getElementById("chosen_user").selectedIndex].text;
-			}
-			else	{
-				$scope.unixRest = source;
 			}
 			
 			//Step 2: Restoring "factory mode"
@@ -243,7 +241,7 @@ module('userMap').
 			gapi.client.analysisEndpoint.getInWindow({'user' : strUser, 'start' : $scope.unixRest , 'end' : ($scope.unixRest + 86400000)}).execute(function(resp) {
         	   dialog.close();
         	   //Checks to see if the returned object is valid and usable
-        	   if(resp !== false && typeof resp.result !== 'undefined' && resp.result.length !== 0)	{	   		
+        	   if(resp !== false && typeof resp.items !== 'undefined' && resp.items.length !== 0)	{	   		
         	   		$scope.noData = false;
         	   		showOnMap(resp.items);
         	   	}
@@ -287,7 +285,7 @@ module('userMap').
 		 * @param entries: the LocationEntries
 		 */
 		function showOnMap(entries)	{
-			for(var i=0; i<entries.length; i++)	{
+			for(var i=0; typeof entries !== 'undefined' && i<entries.length; i++)	{
 				
 				var location = [];
 				location[0] = entries[i].latitude;
@@ -312,8 +310,12 @@ module('userMap').
 				}	
 				$scope.bounds.extend($scope.mapData.markers[i].getPosition());
 			}
-			$scope.mapData.map.fitBounds($scope.bounds);
-			$scope.mapData.map.setCenter($scope.bounds.getCenter());
+			
+			if(typeof entries !== 'undefined')	{
+				$scope.centerMap();
+			}
+			
+			
 			$scope.filterAccordingToSlider();
 			
 		}
