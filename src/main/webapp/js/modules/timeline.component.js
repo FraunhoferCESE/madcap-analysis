@@ -5,7 +5,7 @@ module('timeline').
     controller: function TimelineController($scope, $timeout, helper, allowed_directive_service, loading_overlay) {
     	
     	"use strict"; 	
-    	
+    	    	
     	// Various flags to synchronize the multiple callbacks during initialization
     	$scope.stopper = {
     	    showPage: false,
@@ -201,7 +201,7 @@ module('timeline').
 						*
 						*
 						*/
-						helper.provideOnOffTime($scope.userData.currentSubject, parseInt(rawData[0].time), parseInt($scope.unixRest + 86400000), function(providedTime)	{
+						helper.provideOnOffTime($scope.userData.currentSubject, parseInt(rawData[0].time), parseInt($scope.unixRest + 86400000), true, function(providedTime)	{
 							if(providedTime !== false)	{
 								
 								var state = 'START';
@@ -249,14 +249,20 @@ module('timeline').
 	
 								for(var i=0; i<startLength; i++){
 									
-									if(refinedData[i].end > highest.time){
+									if(refinedData[i].end >= highest.time){
 										highest.time = refinedData[i].end;
 										highest.index = i;
 									}
 									
-									if(refinedData.end < $scope.unixRest)	{
-										refinedData[i].shift();
-										i--;
+									if(refinedData[i].end < $scope.unixRest)	{
+										refinedData.shift();
+										if(0<refinedData.length)	{
+											i--;
+											startLength--;
+										}
+										else	{
+											createFiller();
+										}
 									}
 									else if(refinedData[i].start < $scope.unixRest)	{
 										refinedData[i].start = $scope.unixRest+1;
@@ -315,53 +321,55 @@ module('timeline').
 										}
 									}
 								}
-																
-								if(refinedData[0].start > $scope.unixRest+1){
-									refinedData.push({
-										label: 'No Data Collected',
-										start: $scope.unixRest + 1,
-										end: refinedData[0].start,
-										opaque: 100
-									});
-									$scope.eventData.probability['No Data Collected'][$scope.unixRest] = 100;
-								}
-								for(var k = 0; k<onOffTimes.length-1; k++){
-									if(onOffTimes[k].state === 'OFF' && onOffTimes[k] > highest.time)	{
-										highest.used = true;
-										refinedData[highest.index].end = onOffTimes[k].timestamp;
+								if(0<refinedData.length)	{								
+									if(refinedData[0].start > $scope.unixRest+1){
 										refinedData.push({
 											label: 'No Data Collected',
-											start: onOffTimes[k].timestamp,
-											end: $scope.unixRest + 86400000-1,
+											start: $scope.unixRest + 1,
+											end: refinedData[0].start,
 											opaque: 100
 										});
-										$scope.eventData.probability['No Data Collected'][onOffTimes[k].timestamp] = 100;
+										$scope.eventData.probability['No Data Collected'][$scope.unixRest] = 100;
 									}
-								}
-								if(!highest.used){
-									refinedData[highest.index].end = $scope.unixRest + 86400000-1;
-								}
-															
-								// Creates the data for the timeline
-								for(var j=0; j<refinedData.length; j++)	{
-									var expanded = false;
-									var start = refinedData[j].start;
-									var colorCode = 1;
-									for(var k=0; k<$scope.eventData.eventStorage.length; k++)	{
-										colorCode = 1;
-										if(refinedData[j].label === $scope.eventData.eventStorage[k].label)	{
+									for(var k = 0; k<onOffTimes.length-1; k++){
+										if(onOffTimes[k].state === 'OFF' && onOffTimes[k].timestamp > highest.time)	{
+											highest.used = true;
+											refinedData[highest.index].end = onOffTimes[k].timestamp;
+											refinedData.push({
+												label: 'No Data Collected',
+												start: onOffTimes[k].timestamp,
+												end: $scope.unixRest + 86400000-1,
+												opaque: 100
+											});
+											$scope.eventData.probability['No Data Collected'][onOffTimes[k].timestamp] = 100;
+											refinedData[highest.index].end = onOffTimes[k].timestamp;
+										}
+									}
+									if(!highest.used){
+										refinedData[highest.index].end = $scope.unixRest + 86400000-1;
+									}
+																
+									// Creates the data for the timeline
+									for(var j=0; j<refinedData.length; j++)	{
+										var expanded = false;
+										var start = refinedData[j].start;
+										var colorCode = 1;
+										for(var k=0; k<$scope.eventData.eventStorage.length; k++)	{
+											colorCode = 1;
+											if(refinedData[j].label === $scope.eventData.eventStorage[k].label)	{
+												if(refinedData[j].label === 'No Data Collected')	{
+													colorCode = 2;
+												}
+												$scope.eventData.eventStorage[k].times.push({"starting_time": start, "ending_time": refinedData[j].end, "color_code": colorCode, "opaque": refinedData[j].opaque});
+												expanded = true;
+											}
+										}
+										if(!expanded)	{
 											if(refinedData[j].label === 'No Data Collected')	{
 												colorCode = 2;
 											}
-											$scope.eventData.eventStorage[k].times.push({"starting_time": start, "ending_time": refinedData[j].end, "color_code": colorCode, "opaque": refinedData[j].opaque});
-											expanded = true;
+											$scope.eventData.eventStorage.push({label: refinedData[j].label, times: [{"starting_time": start, "ending_time": refinedData[j].end, "color_code": colorCode, "opaque": refinedData[j].opaque}]});	
 										}
-									}
-									if(!expanded)	{
-										if(refinedData[j].label === 'No Data Collected')	{
-											colorCode = 2;
-										}
-										$scope.eventData.eventStorage.push({label: refinedData[j].label, times: [{"starting_time": start, "ending_time": refinedData[j].end, "color_code": colorCode, "opaque": refinedData[j].opaque}]});	
 									}
 								}
 							}
@@ -400,72 +408,71 @@ module('timeline').
 			}
 		};
         
-		  /**
-		   * Filters the barts according to the slider. This contains two main functionalities:
-		   * 1. add bars to the cache which are in the sliders range in full
-		   * 2. add cutted bars to the cache which are only partially in the sliders range
-		   * Filtering has do be done twodimensional (Many events in storage (D1), many times in events(D2)).
-		   */
-		  $scope.filterAccordingToSlider = function(src)	{	
+		/**
+		 * Filters the barts according to the slider. This contains two main functionalities:
+		 * 1. add bars to the cache which are in the sliders range in full
+		 * 2. add cutted bars to the cache which are only partially in the sliders range
+		 * Filtering has do be done twodimensional (Many events in storage (D1), many times in events(D2)).
+		 */
+		$scope.filterAccordingToSlider = function(src)	{	
+			
+			$scope.eventData.eventCache = [];
+			var sliderStart = $scope.unixRest + $scope.slider.minValue*60000;
+			var sliderEnd = $scope.unixRest + $scope.slider.maxValue*60000;
+			// Go through all events
+			for(var i=0; i<$scope.eventData.eventStorage.length; i++){					
+				$scope.eventData.eventCache[i] = {};
+				$scope.eventData.eventCache[i].times = [];
+				$scope.eventData.eventCache[i].label = $scope.eventData.eventStorage[i].label;
 				
-			  	$scope.eventData.eventCache = [];
-			  	var sliderStart = $scope.unixRest + $scope.slider.minValue*60000;
-				var sliderEnd = $scope.unixRest + $scope.slider.maxValue*60000;
-			  	// Go through all events
-				for(var i=0; i<$scope.eventData.eventStorage.length; i++){					
-					  $scope.eventData.eventCache[i] = {};
-					  $scope.eventData.eventCache[i].times = [];
-					  $scope.eventData.eventCache[i].label = $scope.eventData.eventStorage[i].label;
-					  
-					  var skippedTimes = 0;
-					  // Go through all times in an event
-			  		  for(var j=0; j<$scope.eventData.eventStorage[i].times.length; j++){
-			  			  var timeframe = $scope.eventData.eventStorage[i].times[j];
-			  			  timeframe.starting_time = parseInt(timeframe.starting_time);
-			  			  timeframe.ending_time = parseInt(timeframe.ending_time);
-			  			  // Bar is not in range. Skip it
-			  			  if(sliderEnd < timeframe.starting_time || sliderStart > timeframe.ending_time)	{
-			  				  skippedTimes++;
-			  			  }
-			  			  // Bars end is outside the range. Cut end
-			  			  else if(sliderStart < timeframe.starting_time && timeframe.ending_time > sliderEnd)	{
-			  				$scope.eventData.eventCache[i].times[j-skippedTimes] = {};
-			  				  $scope.eventData.eventCache[i].times[j-skippedTimes].starting_time = $scope.eventData.eventStorage[i].times[j].starting_time;
-			  				  $scope.eventData.eventCache[i].times[j-skippedTimes].ending_time = sliderEnd;
-			  				  $scope.eventData.eventCache[i].times[j-skippedTimes].color_code = $scope.eventData.eventStorage[i].times[j].color_code;
-			  				  $scope.eventData.eventCache[i].times[j-skippedTimes].opaque = $scope.eventData.eventStorage[i].times[j].opaque;
-			  			  }
-			  			  // Bars start is outside the range. Cut start
-			  			  else if(sliderStart > timeframe.starting_time && timeframe.ending_time < sliderEnd)	{
-			  				  $scope.eventData.eventCache[i].times[j-skippedTimes] = {};
-			  				  $scope.eventData.eventCache[i].times[j-skippedTimes].starting_time = sliderStart;						  
-			  				  $scope.eventData.eventCache[i].times[j-skippedTimes].ending_time = $scope.eventData.eventStorage[i].times[j].ending_time;
-			  				  $scope.eventData.eventCache[i].times[j-skippedTimes].color_code = $scope.eventData.eventStorage[i].times[j].color_code;
-			  				  $scope.eventData.eventCache[i].times[j-skippedTimes].opaque = $scope.eventData.eventStorage[i].times[j].opaque;
-			  			  }
-			  			  // Bars start and end are outside the range. Cut on both ends
-			  			  else if(sliderStart > timeframe.starting_time && timeframe.ending_time > sliderEnd)	{
-				  			  $scope.eventData.eventCache[i].times[j-skippedTimes] = {};
-			  				  $scope.eventData.eventCache[i].times[j-skippedTimes].starting_time = sliderStart;						  
-			  				  $scope.eventData.eventCache[i].times[j-skippedTimes].ending_time = sliderEnd;						  
-			  				  $scope.eventData.eventCache[i].times[j-skippedTimes].color_code = $scope.eventData.eventStorage[i].times[j].color_code;
-			  				  $scope.eventData.eventCache[i].times[j-skippedTimes].opaque = $scope.eventData.eventStorage[i].times[j].opaque;
-			  			  }
-			  			  // Bars is in range. Copy from storage to cache
-			  			  else if(sliderStart < timeframe.starting_time && timeframe.ending_time < sliderEnd)	{
-			  				$scope.eventData.eventCache[i].times[j-skippedTimes] = {};
-			  				$scope.eventData.eventCache[i].times[j-skippedTimes].starting_time = $scope.eventData.eventStorage[i].times[j].starting_time;
-			  				$scope.eventData.eventCache[i].times[j-skippedTimes].ending_time = $scope.eventData.eventStorage[i].times[j].ending_time;
-			  				$scope.eventData.eventCache[i].times[j-skippedTimes].color_code = $scope.eventData.eventStorage[i].times[j].color_code;			  				  	
-		  				    $scope.eventData.eventCache[i].times[j-skippedTimes].opaque = $scope.eventData.eventStorage[i].times[j].opaque;
-	  
-			  			  }
-			  		  }
-				  }
-				$scope.callback(src);
-		  };
-		
-    	
+				var skippedTimes = 0;
+				// Go through all times in an event
+				for(var j=0; j<$scope.eventData.eventStorage[i].times.length; j++){
+					var timeframe = $scope.eventData.eventStorage[i].times[j];
+					timeframe.starting_time = parseInt(timeframe.starting_time);
+					timeframe.ending_time = parseInt(timeframe.ending_time);
+					// Bar is not in range. Skip it
+					if(sliderEnd < timeframe.starting_time || sliderStart > timeframe.ending_time)	{
+						skippedTimes++;
+					}
+					// Bars end is outside the range. Cut end
+					else if(sliderStart <= timeframe.starting_time && timeframe.ending_time > sliderEnd)	{
+						$scope.eventData.eventCache[i].times[j-skippedTimes] = {};
+						$scope.eventData.eventCache[i].times[j-skippedTimes].starting_time = $scope.eventData.eventStorage[i].times[j].starting_time;
+						$scope.eventData.eventCache[i].times[j-skippedTimes].ending_time = sliderEnd;
+						$scope.eventData.eventCache[i].times[j-skippedTimes].color_code = $scope.eventData.eventStorage[i].times[j].color_code;
+						$scope.eventData.eventCache[i].times[j-skippedTimes].opaque = $scope.eventData.eventStorage[i].times[j].opaque;
+					}
+					// Bars start is outside the range. Cut start
+					else if(sliderStart > timeframe.starting_time && timeframe.ending_time <= sliderEnd)	{
+						$scope.eventData.eventCache[i].times[j-skippedTimes] = {};
+						$scope.eventData.eventCache[i].times[j-skippedTimes].starting_time = sliderStart;						  
+						$scope.eventData.eventCache[i].times[j-skippedTimes].ending_time = $scope.eventData.eventStorage[i].times[j].ending_time;
+						$scope.eventData.eventCache[i].times[j-skippedTimes].color_code = $scope.eventData.eventStorage[i].times[j].color_code;
+						$scope.eventData.eventCache[i].times[j-skippedTimes].opaque = $scope.eventData.eventStorage[i].times[j].opaque;
+					}
+					// Bars start and end are outside the range. Cut on both ends
+					else if(sliderStart > timeframe.starting_time && timeframe.ending_time > sliderEnd)	{
+						$scope.eventData.eventCache[i].times[j-skippedTimes] = {};
+						$scope.eventData.eventCache[i].times[j-skippedTimes].starting_time = sliderStart;						  
+						$scope.eventData.eventCache[i].times[j-skippedTimes].ending_time = sliderEnd;						  
+						$scope.eventData.eventCache[i].times[j-skippedTimes].color_code = $scope.eventData.eventStorage[i].times[j].color_code;
+						$scope.eventData.eventCache[i].times[j-skippedTimes].opaque = $scope.eventData.eventStorage[i].times[j].opaque;
+					}
+					// Bars is in range. Copy from storage to cache
+					else if(sliderStart <= timeframe.starting_time && timeframe.ending_time <= sliderEnd)	{
+						$scope.eventData.eventCache[i].times[j-skippedTimes] = {};
+						$scope.eventData.eventCache[i].times[j-skippedTimes].starting_time = $scope.eventData.eventStorage[i].times[j].starting_time;
+						$scope.eventData.eventCache[i].times[j-skippedTimes].ending_time = $scope.eventData.eventStorage[i].times[j].ending_time;
+						$scope.eventData.eventCache[i].times[j-skippedTimes].color_code = $scope.eventData.eventStorage[i].times[j].color_code;			  				  	
+						$scope.eventData.eventCache[i].times[j-skippedTimes].opaque = $scope.eventData.eventStorage[i].times[j].opaque;
+						
+					}
+				}
+			}
+			$scope.callback(src);
+		};	
+	
         
         /**
          * Renders the timeline

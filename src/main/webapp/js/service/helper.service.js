@@ -107,9 +107,9 @@ angular.module('madcap-analysis')
 			return refinedData;
 		},
 						
-		provideOnOffTime : function(user, start, end, callback)	{
+		provideOnOffTime : function(user, start, end, shallFirst, callback)	{
 			if(user !== '')	{
-				gapi.client.analysisEndpoint.getOnOffTime({"user" : user, "start" : start, "end" : end}).execute(function(resp)	{
+				gapi.client.analysisEndpoint.getOnOffTime({"user" : user, "start" : start, "end" : end, "first" : true}).execute(function(resp)	{
 					var providedTime = {};
 					if(resp !== null && resp !== false && typeof resp.items !== 'undefined')	{
 						providedTime = resp.items;

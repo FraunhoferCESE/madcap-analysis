@@ -51,15 +51,6 @@ public class AnalysisEndpoint {
 	}
 
 	
-	@ApiMethod(name = "getOnOffTime", httpMethod = ApiMethod.HttpMethod.GET)
-	public DataCollectionEntry[] getOnOffTime(@Named("user") String id, @Named("start") long startTime, @Named("end") long endTime, User user) throws OAuthRequestException{
-		SecurityEndpoint.isUserValid(user);
-		ObjectifyService.begin();
-		List<DataCollectionEntry> result = ofy().load().type(DataCollectionEntry.class).filter("userID =",id).filter("timestamp >=",startTime).filter("timestamp <=",endTime).order("timestamp").list();
-		return result.toArray(new DataCollectionEntry[result.size()]);
-	}
-	
-	
 	/**
 	 * Checks in a transaction if the object is already in the cache to prevent race condition 
 	 * and writes it into the cache if it is not already in there.
@@ -143,7 +134,7 @@ public class AnalysisEndpoint {
 		ObjectifyService.begin();
 		if(source.equals("Activity in Foreground")){
 			List<ForegroundBackgroundEventEntry> activities = ofy().load().type(ForegroundBackgroundEventEntry.class).filter("userID =",id).filter("timestamp >=",startTime).filter("timestamp <=",endTime).order("timestamp").list();
-			if(!activities.isEmpty() && shallFirst)	{
+			if(shallFirst)	{
 				ForegroundBackgroundEventEntry firstActivity = ofy().load().type(ForegroundBackgroundEventEntry.class).filter("userID =",id).filter("timestamp <",startTime).order("-timestamp").first().now();				
 				if(firstActivity != null){
 					activities.add(0, firstActivity);
@@ -179,5 +170,20 @@ public class AnalysisEndpoint {
 		ObjectifyService.begin();
 		List<LocationEntry> activities = ofy().load().type(LocationEntry.class).filter("userID =",id).order("-timestamp").limit(1000).list();
 		return activities.toArray(new LocationEntry[activities.size()]);
+	}
+	
+	
+	@ApiMethod(name = "getOnOffTime", httpMethod = ApiMethod.HttpMethod.GET)
+	public DataCollectionEntry[] getOnOffTime(@Named("user") String id, @Named("start") long startTime, @Named("end") long endTime, @Named("first") boolean shallFirst, User user) throws OAuthRequestException{
+		SecurityEndpoint.isUserValid(user);
+		ObjectifyService.begin();
+		List<DataCollectionEntry> result = ofy().load().type(DataCollectionEntry.class).filter("userID =",id).filter("timestamp >=",startTime).filter("timestamp <=",endTime).order("timestamp").list();
+		if(shallFirst)	{
+			DataCollectionEntry firstTime = ofy().load().type(DataCollectionEntry.class).filter("userID =",id).filter("timestamp <",startTime).order("-timestamp").first().now();				
+			if(firstTime != null){
+				result.add(0, firstTime);
+			}
+		}
+		return result.toArray(new DataCollectionEntry[result.size()]);
 	}
 }
