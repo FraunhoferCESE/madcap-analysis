@@ -43,8 +43,12 @@ angular.module('madcap-analysis')
 		},
 		
 		/**
-		 * Takes all the data for each block and bundles it into one data set. 
-		 * For example:
+		 * Groups data under a common attribute. The attribute can be any string value.
+		 * Changes the data according to an ON/OFF event chain before returning it.
+		 * Grouping without providing an ON/OFF chain has not been tested, but will likely not work.
+		 * 
+		 * Examples for grouping data under the attribute "block":
+		 * 
 		 * 1:30pm, Block 2020
 		 * 2:30pm, Block 2020
 		 * 2:50pm, Block 2020
@@ -66,19 +70,19 @@ angular.module('madcap-analysis')
 			var refinedData = [];
 			var locationCounter = 0;
 			var onIntervalAt = -1;
-			var start = 'NO_ON_OFF_DATA';
 			for(var i=0; i<thisData.length; i++){				
 				var lastOnInterval = onIntervalAt;
 				thisData[i].time = parseInt(thisData[i].time);
+				// Determines in which ON interval the current timestamp resides in
 				for(var j=0; onOffTimes !== null && j<onOffTimes.length-1 && onIntervalAt === lastOnInterval; j++)	{
 					onOffTimes[j].timestamp = parseInt(onOffTimes[j].timestamp);
 					onOffTimes[j+1].timestamp = parseInt(onOffTimes[j+1].timestamp);
 					if(onOffTimes[j].state === 'ON' && onOffTimes[j].timestamp < thisData[i].time && thisData[i].time < onOffTimes[j+1].timestamp)	{
 						onIntervalAt = j;
-						start = onOffTimes[0].state;
 					}
 				}
 				
+				//Extends a bar if the grouper attribute match and the timestamp is in the same ON intervall
 				if((onIntervalAt === lastOnInterval || lastOnInterval === -1) && refinedData.length !== 0 && refinedData[locationCounter][grouper] === thisData[i][grouper])	{	
 					if(refinedData[locationCounter].start > thisData[i].time)	{
 						refinedData[locationCounter].start = thisData[i].time;
@@ -88,12 +92,15 @@ angular.module('madcap-analysis')
 					}
 				}
 				else if(onIntervalAt !== -1)	{
+					
+					// Extends the end of a bar to the start of its successor
 					if(typeof refinedData[locationCounter] !== 'undefined')	{
 						refinedData[locationCounter].end = Math.min(thisData[i].time, onOffTimes[lastOnInterval+1].timestamp);
 					}
 					if(refinedData.length !== 0)	{
 						locationCounter++;
 					}
+					// Create the new bar
 					refinedData[locationCounter] = {};
 					for(var property in thisData[i])	{
 						refinedData[locationCounter][property] = thisData[i][property];
@@ -101,12 +108,13 @@ angular.module('madcap-analysis')
 					refinedData[locationCounter].start = thisData[i].time;
 					refinedData[locationCounter].end = thisData[i].time;					
 				}
-			}
-			
-			
+			}	
 			return refinedData;
 		},
-						
+		
+		/**
+		 * Provides the DataCollectionEntries for a timeframe and initializes a callback after that.
+		 */
 		provideOnOffTime : function(user, start, end, shallFirst, callback)	{
 			if(user !== '')	{
 				gapi.client.analysisEndpoint.getOnOffTime({"user" : user, "start" : start, "end" : end, "first" : true}).execute(function(resp)	{

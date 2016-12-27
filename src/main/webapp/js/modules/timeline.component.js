@@ -141,6 +141,7 @@ module('timeline').
 				gapi.client.analysisEndpoint.getActivityData({"user" : $scope.userData.currentSubject, "start" : $scope.unixRest, "end" : ($scope.unixRest + 86400000), "source" : src, "include_first" : true}).execute(function(resp)	{
 					if(resp !== null && resp !== false && (typeof resp.returnedFBEE !== 'undefined' || typeof resp.returnedAE !== 'undefined'))	{
 
+						// Fills the rawData array with data from the corresponding member of resp
 						var rawData = [];
 						if(src === 'Activity in Foreground')	{
 							for(var i=0; i<resp.returnedFBEE.length; i++){
@@ -180,30 +181,11 @@ module('timeline').
 						}
 						/*Gets the ON/OFF events in the intervall we got data for. Start is not the beginning of the day,
 						but the timestamp of the last event of the previous day to be able to deliver data for the interval before
-						the first actiity event off the chosen day. The structure of the method is as following in pseudo-code:
-						
-						*
-						*for(original entries + new created entries)	{
-						*	
-						*	if(original entry but nott last one)	{	
-						*
-						*		expand bar to start of next entry or OFF timestamp;
-						*
-						*	}
-						*	
-						*	else if(last original entry)	{
-						*
-						*		expand bar to end of day or OFF timestamp
-						*
-						*	}
-						*	
-						*	
-						*
-						*
-						*/
+						the first activity event off the chosen day.*/
 						helper.provideOnOffTime($scope.userData.currentSubject, parseInt(rawData[0].time), parseInt($scope.unixRest + 86400000), true, function(providedTime)	{
 							if(providedTime !== false)	{
 								
+								//Creates an array of timestamps defining the ON->OFF->ON->OFF->... rythm of the timeframe the data resides in
 								var state = 'START';
 								var onOffTimes = [{}];	
 								for(var i=0; i<providedTime.length; i++){
@@ -212,6 +194,7 @@ module('timeline').
 										onOffTimes.push(providedTime[i]);
 									}
 								}
+								//Add ON tag at first index when necessary
 								if(onOffTimes[1].state === 'ON'){
 									onOffTimes.shift();
 									onOffTimes[0].timestamp = parseInt(rawData[0].time)-1;
@@ -223,6 +206,7 @@ module('timeline').
 									} 
 								}
 								
+								// Adds ON/OFF tag at the end of the day to create an interval between last ON tag and end of the day.
 								onOffTimes.push({
 									state: toggleOnOff(onOffTimes[onOffTimes.length-1].state),
 									timestamp: $scope.unixRest + 86400000
@@ -249,11 +233,13 @@ module('timeline').
 	
 								for(var i=0; i<startLength; i++){
 									
+									//Determines the index to be expanded at the end
 									if(refinedData[i].end >= highest.time){
 										highest.time = refinedData[i].end;
 										highest.index = i;
 									}
 									
+									// Removes data if it lies completely outside of the days timeframe
 									if(refinedData[i].end < $scope.unixRest)	{
 										refinedData.shift();
 										if(0<refinedData.length)	{
@@ -261,6 +247,7 @@ module('timeline').
 											startLength--;
 										}
 										else	{
+											// Creates filler if all data has been removed
 											createFiller();
 										}
 									}
@@ -286,6 +273,8 @@ module('timeline').
 										}
 										
 										var indexWhereEndIs = i;
+										
+										// Cuts the bar and pushes the new "part-bars" seperately onto the refinedData array. Adds probablitity for new bars too
 										if(enteredFor){
 											cuttedAt.push(refinedData[i].end);
 											for(var k=0; k<cuttedAt.length;k++)	{
@@ -299,6 +288,7 @@ module('timeline').
 													$scope.eventData.probability[refinedData[i].label][cuttedAt[k]] = $scope.eventData.probability[refinedData[i].label][cuttedAt[k]];
 												}
 											}
+											// Changes highest index if highest have been cut
 											if(highest.time === refinedData[i].end)	{
 												highest.index = refinedData.length-1;
 											}
@@ -321,6 +311,8 @@ module('timeline').
 										}
 									}
 								}
+								
+								// Adds "no data" bar when first data event is after the beginning of the day
 								if(0<refinedData.length)	{								
 									if(refinedData[0].start > $scope.unixRest+1){
 										refinedData.push({
@@ -332,6 +324,7 @@ module('timeline').
 										$scope.eventData.probability['No Data Collected'][$scope.unixRest] = 100;
 									}
 									for(var k = 0; k<onOffTimes.length-1; k++){
+										//Adds no data bar when the data collection was turned of before the end of the day and wasn't turned back on
 										if(onOffTimes[k].state === 'OFF' && onOffTimes[k].timestamp > highest.time)	{
 											highest.used = true;
 											refinedData[highest.index].end = onOffTimes[k].timestamp;
@@ -345,8 +338,9 @@ module('timeline').
 											refinedData[highest.index].end = onOffTimes[k].timestamp;
 										}
 									}
+									// Expends the last bar to the end of the day if data collection wasn't turned off. Cuts the bar when it would end in the future
 									if(!highest.used){
-										refinedData[highest.index].end = $scope.unixRest + 86400000-1;
+										refinedData[highest.index].end = Math.min($scope.unixRest + 86400000-1, new Date());
 									}
 																
 									// Creates the data for the timeline
@@ -390,6 +384,9 @@ module('timeline').
 				afterDataLoad();
 			}
 		
+			/**
+			 * Creates a filler bar to be shown when data is not available or insufficient
+			 */
 			function createFiller()	{
 				$scope.eventData.eventStorage.push({label: 'No Data Collected', times: []});	
 				$scope.eventData.probability['No Data Collected'] = [];
@@ -397,6 +394,9 @@ module('timeline').
 				$scope.eventData.probability['No Data Collected'][$scope.unixRest] = 100;
 			}
 		
+			/**
+			 * Starts filtering and closes dialog if one had been opened before
+			 */
 			function afterDataLoad()	{
 				$scope.stopper.renderingFinished = true;
 				if($scope.stopper.directiveFinished)	{
@@ -497,6 +497,8 @@ module('timeline').
 						
 						var rightTime = -1;
 						var difference = -1;
+						/* Bars start change when the range of the timeline changes. Therefore, the nearest, prior probability is chosen for the bar
+						if none matches the bars start timestamp */
 						for(var estimation in $scope.eventData.probability[datum.label]){
 							if(estimation <= d.starting_time && ((difference !== -1 && d.starting_time - estimation < difference) || difference === -1))	{
 								difference = d.starting_time - estimation;
