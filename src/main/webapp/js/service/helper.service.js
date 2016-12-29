@@ -10,6 +10,33 @@ angular.module('madcap-analysis')
 	
 	return	{
 	
+		
+		refineDataOld : function(thisData)	{
+			var refinedData = [];
+			var locationCounter = 0;
+			for(var i=0; i<thisData.length; i++){
+				if(refinedData.length !== 0 && refinedData[locationCounter].block === thisData[i].block)	{
+					if(refinedData[locationCounter].start > thisData[i].time)	{
+						refinedData[locationCounter].start = thisData[i].time;
+					}
+					else if (refinedData[locationCounter].end < thisData[i].time)	{
+						refinedData[locationCounter].end = thisData[i].time;							
+					}
+				}
+				else	{
+					if(refinedData.length !== 0)	{
+						locationCounter++;
+					}
+					refinedData[locationCounter] = {};
+					refinedData[locationCounter].block = thisData[i].block;
+					refinedData[locationCounter].start = thisData[i].time;
+					refinedData[locationCounter].end = thisData[i].time;
+				}
+			}
+			return refinedData;
+		},
+		
+		
 		/**
 	 	*  The same as getDateFromTime, but the other way around
 	 	* @param value: the time in unix

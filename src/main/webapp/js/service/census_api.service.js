@@ -95,7 +95,7 @@ angular.module('madcap-analysis')
 						//gapi.client.analysisEndpoint.writeInCache({"lat" : array[id].lat, "lng" : array[id].lng, "block" : data[id].block}).execute();
 					
 						if(--calls === 0){
-							createCsv(helper.refineData(data));
+							createCsv(helper.refineDataOld(data));
 						}
 						updateDuringFetch();
 					}

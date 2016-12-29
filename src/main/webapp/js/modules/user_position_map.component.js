@@ -103,8 +103,7 @@ module('userMap').
 		 */
 		$scope.$watch('dt.value', function(newValue) { 
 			if(typeof newValue !== 'undefined' && newValue !== 'Please select a date ...')	{
-				$scope.unixRest = newValue - (newValue%86400000) + (newValue.getTimezoneOffset()*60000);
-				$scope.initializeRefresh('date');
+				$scope.initializeRefresh(newValue);
 			}
 	    });
 		/**
@@ -135,6 +134,9 @@ module('userMap').
 			
 			if(source === 'user'){
 				$scope.userData.currentSubject = document.getElementById("chosen_user").options[document.getElementById("chosen_user").selectedIndex].text;
+			}
+			else if(typeof source === 'object')	{
+				$scope.unixRest = source - (source%86400000) + (source.getTimezoneOffset()*60000);
 			}
 			
 			//Step 2: Restoring "factory mode"
