@@ -89,7 +89,7 @@ module('timeline').
 			}
 	    });
     	
-    	// passes the callback t the permission check directive
+    	// passes the callback to the permission check directive
     	allowed_directive_service.passDirectiveCallback(function()	{
       			
     		document.getElementById('timelineloadspinner').style.display="block";
@@ -252,16 +252,19 @@ module('timeline').
 										}
 									}
 									else if(refinedData[i].start < $scope.unixRest)	{
-										refinedData[i].start = $scope.unixRest+1;
 										if(src === 'Kind of Movement')	{
-											$scope.eventData.probability[refinedData[i].label][$scope.unixRest+1+''] = $scope.eventData.probability[refinedData[i].label][parseInt(refinedData[i].start)];
+											$scope.eventData.probability[refinedData[i].label][$scope.unixRest+1] = $scope.eventData.probability[refinedData[i].label][parseInt(refinedData[i].start)];
+											refinedData[i].opaque = $scope.eventData.probability[refinedData[i].label][$scope.unixRest+1];
 										}
+										refinedData[i].start = $scope.unixRest+1;
 									}
 									else	{
 										//Collects the timestamps where the probability changes in the bar. While doing that, also sets the opacity of each bar
 										var enteredFor = false;
 										var cuttedAt = [];
+										var hasProbability = false;
 										for(var k=0; typeof $scope.eventData.probability[refinedData[i].label] !== 'undefined' && k<Object.keys($scope.eventData.probability[refinedData[i].label]).length; k++){
+											hasProbability = true
 											var time = parseInt(Object.keys($scope.eventData.probability[refinedData[i].label])[k]);
 											if(time === refinedData[i].start)	{
 												refinedData[i].opaque = $scope.eventData.probability[refinedData[i].label][time];
@@ -297,7 +300,7 @@ module('timeline').
 											
 										}
 										// Sets the opacity when there is no probability fetched
-										else	{
+										if(!hasProbability)	{
 											refinedData[i].opaque = 100;
 										}
 										if(i < startLength-1 && refinedData[indexWhereEndIs].end !== refinedData[i+1].start){
@@ -321,7 +324,7 @@ module('timeline').
 											end: refinedData[0].start,
 											opaque: 100
 										});
-										$scope.eventData.probability['No Data Collected'][$scope.unixRest] = 100;
+										$scope.eventData.probability['No Data Collected'][$scope.unixRest+1] = 100;
 									}
 									for(var k = 0; k<onOffTimes.length-1; k++){
 										//Adds no data bar when the data collection was turned of before the end of the day and wasn't turned back on
@@ -505,7 +508,7 @@ module('timeline').
 								rightTime = estimation;
 							}
 						}
-						$scope.barInfo.probability[0].time = helper.getDateFromUnix(rightTime+'');
+						$scope.barInfo.probability[0].time = helper.getDateFromUnix(d.starting_time+'');
 						$scope.barInfo.probability[0].prop = $scope.eventData.probability[datum.label][rightTime+''] + '%';
 					});
 				};
