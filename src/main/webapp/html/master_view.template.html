@@ -1,53 +1,63 @@
-<div allowed="SEE_GUI" style="width:99%; height:80%;">
-	<header class="navbar navbar-default navbar-fixed-top navbar-inner">
-        <nav class="hidden-xl">
-            <ul class="nav navbar-nav navbar-left">
-                <a href="#top" role="button" class="navbar-brand">MADCAP Web Application</a>
-                <li class="dropdown" uib-dropdown="">
-                    <a role="button" class="dropdown-toggle" uib-dropdown-toggle="" aria-haspopup="true" aria-expanded="false">Jump To<b class="caret"></b></a>
-                    <ul class="dropdown-menu">
-                         <li ng-repeat="view in viewControl | visibility_filter">
-                         	<p>{{view.name}}</p>
-                         </li>
-                    </ul>
-                </li>
-                <li class="dropdown" uib-dropdown="">
-                    <a role="button" class="dropdown-toggle" uib-dropdown-toggle="" aria-haspopup="true" aria-expanded="false">Manage views</a>
-                    <ul class="dropdown-menu">
-                        <li ng-repeat="view in viewControl">
-                          	<div ng-style="{'background-color':view.style, color:view.textColor, cursor: barControl.mouseStyle}" ng-mouseover="barControl.dropdownHover()" ng-mouseleave="barControl.dropdownHover()" ng-click="barControl.toggleColor(view.name, $event)">{{view.name}}</div>
-                        </li>
-                    </ul>
-                </li>
-        		<img class="navbar-brand logo bararrow" src="../img/right_arrow.png">
-        		<img class="navbar-brand bararrow" src="../img/left_arrow.png">
-            </ul>
-            <ul class="nav navbar-nav navbar-right">
-        		<img class="navbar-brand logo" style="margin-right: 20px;" src="../img/ps_logo.png">
-           	</ul>
-        </nav>
-        <nav class="visible-xs collapse" uib-collapse="!isCollapsed" style="height: 0px;">
-            <ul class="nav navbar-nav">
-                <li><a href="#getting_started" ng-click="isCollapsed = !isCollapsed">Getting started</a></li>
-                <li><a href="#directives_small" ng-click="isCollapsed = !isCollapsed">Directives</a></li>
-            </ul>
-        </nav>
-	</header>
-	
-	<div id="controllers">
-		<div ng-if="controlControl.dateAndSlider.visible">
-			<map-buttons></map-buttons>
+<div allowed="SEE_GUI">
+	<div class="row">
+	  	<div class="row col-md-12">
+		  	<nav class="navbar navbar-default navbar-fixed-top navbar-inner">
+				<div class="navbar-header">
+					<a class="navbar-brand" href="#">MADCAP Web Application</a>
+					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse" aria-expanded="false">
+        				<span class="sr-only">Toggle navigation</span>
+       				 	<span class="icon-bar"></span>
+       				 	<span class="icon-bar"></span>
+       				 	<span class="icon-bar"></span>
+      				</button>
+				</div>		        
+		        <div class="collapse navbar-collapse" id="navbar-collapse">
+			        <ul class="nav navbar-nav navbar-left">	        
+			            <li class="dropdown" uib-dropdown="">
+			                <a role="button" class="dropdown-toggle" uib-dropdown-toggle="" aria-haspopup="true" aria-expanded="false">
+			                	Jump To                    
+			                	<b class="caret"></b>
+			                </a>
+			                <ul class="dropdown-menu">
+			                     <li ng-repeat="viewname in viewControl | visibility_filter">
+			                     	<div>{{viewname}}</div>
+			                     </li>
+			                </ul>
+			            </li>
+			            <li class="dropdown" uib-dropdown="">
+			                <a role="button" class="dropdown-toggle" uib-dropdown-toggle="" aria-haspopup="true" aria-expanded="false">
+			                    Manage views
+			                	<b class="caret"></b>
+			                </a>
+			              	<ul class="dropdown-menu">
+			                    <li ng-repeat="view in viewControl">
+			                    	<div ng-style="{'background-color':view.style, color:view.textColor, cursor: barControl.mouseStyle}" ng-mouseover="barControl.dropdownHover()" ng-mouseleave="barControl.dropdownHover()" ng-click="barControl.toggleColor(view.name, $event)">{{view.name}}</div>
+			                    </li>
+			                </ul>
+			            </li>
+			        </ul>
+		        	<ul class="hidden-xs nav navbar-nav navbar-right">
+		        		<img class="navbar-brand logo" style="margin-right: 20px;" src="../img/ps_logo.png">
+		    		</ul>
+		    	</div>	
+		    </nav>
 		</div>
-		<div ng-if="controlControl.dateAndSlider.visible">
-			<date-and-slider></date-and-slider>
-		</div>
-	</div>
-	<div id="views">
-		<div ng-if="viewControl.usermap.visible">
-			<user-map></user-map>
-		</div>
-		<div ng-if="viewControl.timeline.visible">
-			<timeline></timeline>
+		<div id="views" style="margin:70px 20px 0px 20px;">
+			<div uib-collapse="!viewControl.timeline.visible" expanded="rerenderSlider()">
+				<div class="well well-sg">
+					<control-unit-v2></control-unit-v2>
+				</div>
+			</div>
+			<div uib-collapse="!viewControl.usermap.visible">
+				<div style="height: 100%;" class="well well-sg">
+					<map-v2></map-v2>
+				</div>
+			</div>
+				<div uib-collapse="!viewControl.timeline.visible">
+				<div class="well well-sg">
+					<timeline-v2></timeline-v2>
+				</div>
+			</div>
 		</div>
 	</div>
 </div>
