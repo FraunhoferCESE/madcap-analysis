@@ -4,3 +4,4 @@ build/
 .project
 target/
 src/main/java/org/fraunhofer/cese/madcap/analysis/models/Constants.java
+node_modules/
