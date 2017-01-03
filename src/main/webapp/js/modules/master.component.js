@@ -9,31 +9,46 @@ module('master').
     controller: function masterController($scope) {
     	"use strict"; 	
 		document.getElementById('siteloadspinner').style.display="block";	
-		
+				
 		$scope.controlControl = {
-			mapButtons:	{
-				visible: false
-			},
-			dateAndSlider: {
-				visible: false
-			},
+			unitVisible: false,
+			mapButtonsVisible: false,
+			timelineDatapickerVisible: false,
+			userpickerVisible: false,
+			datepickerVisible: false,
+			sliderVisible: false
+		};
+				
+		$scope.computeControlViewStructure = function()	{
+			var usermapVisible = $scope.viewControl.usermap.visible;
+			var timelineVisible = $scope.viewControl.usermap.visible;
+			
+			if(usermapVisible || timelineVisible)	{
+				$scope.controlControl.unitVisible = true;
+				$scope.controlControl.sliderVisible = true;
+			}
+			else	{
+				$scope.controlControl.unitVisible = false;
+				$scope.controlControl.sliderVisible = false;
+			}
 		};
 		
+
 		$scope.viewControl = {		
 						
 			usermap:	{
 				name: 'Map view',
 				visible: false,
 				scope: {},
-				style: 'white',
-				textColor: 'black'
+				style: 'rgb(230, 230, 230)',
+				textColor: 'rgb(150, 150, 150)'
 			},
 			timeline:	{
 				name: 'Timeline view',
 				visible: false,
 				scope: {},
-				style: 'white',
-				textColor: 'black'
+				style: 'rgb(230, 230, 230)',
+				textColor: 'rgb(150, 150, 150)'
 			}
 		};
 		
@@ -44,17 +59,17 @@ module('master').
 						if($scope.viewControl[key].style === 'white'){
 							$scope.viewControl[key].style = 'rgb(230, 230, 230)';		
 							$scope.viewControl[key].textColor = 'rgb(150, 150, 150)';
+							$scope.viewControl[key].visible = false;
 						}
 						else	{
 							$scope.viewControl[key].style = 'white';		
 							$scope.viewControl[key].textColor = 'black';
+							$scope.viewControl[key].visible = true;
 						}
 					}
 				}
 			},
-			
 			mouseStyle:	'auto',
-			
 			dropdownHover: function()	{
 				if($scope.barControl.mouseStyle === 'auto')	{
 					$scope.barControl.mouseStyle = 'pointer';
@@ -65,5 +80,8 @@ module('master').
 			}
 		};
 		
+		$scope.rerenderSlider = function()	{
+    		$scope.$broadcast('rzSliderForceRender');
+    	};		
     } 
 });

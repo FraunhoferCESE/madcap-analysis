@@ -3,10 +3,9 @@ angular.module('madcap-analysis').
 	return function(items) {
 		var returner = [];
 		var counter = 0;
-		for(key in items)	{
+		for(var key in items)	{
 			if(items[key].visible)	{
-				returner[counter] = {}
-				returner[counter].name = items[key].name;
+				returner[counter] = items[key].name;
 				counter++;
 			}
 		}

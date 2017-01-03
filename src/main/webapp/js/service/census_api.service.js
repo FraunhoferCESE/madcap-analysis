@@ -70,23 +70,25 @@ angular.module('madcap-analysis')
 						var averages = [];
 						
 						for(var num in resp.data[0])	{
+							if(num !== 'NAME')	{
 							
-							persons = persons + parseInt(resp.data[0][num])*(count+1);
-							households = households + parseInt(resp.data[0][num]);
-							count = count % 6;
-							if(count === 0){
-								if(households !== 0)	{
-									averages[averages.length] = persons/households;
+								persons = persons + parseInt(resp.data[0][num])*(count+1);
+								households = households + parseInt(resp.data[0][num]);
+							
+								count++;
+								
+								if(count === 7){
+									if(households !== 0)	{
+										averages[averages.length] = Number((persons/households).toFixed(1));
+									}
+									else	{
+										averages[averages.length] = 0;
+									}
+									persons = 0;
+									households = 0;
+									count = 0;
 								}
-								else	{
-									averages[averages.length] = 0;
-								}
-								persons = 0;
-								households = 0;
 							}
-						
-							count++;
-							count = count % 7;
 						}
 						data[id].block = resp.block; 
 						data[id].avOwner = averages[0]; 
@@ -122,7 +124,7 @@ angular.module('madcap-analysis')
 			
 			
 			function createCsv(data)	{
-				var row = 'data:text/csv;charset=utf-8,"Day","Subject","Start time","End time","Block","Average household size (owner)","Average household size (renter)","Average household size (total)"\r\n';
+				var row = 'data:text/csv;charset=utf-8,"Day","User","Start time","End time","Block","Average household size (owner)","Average household size (renter)","Average household size (total)"\r\n';
 				for(var i=0; i<data.length;i++)	{
 					if(i !== 0 && i !== data.length-1){
 						row = row + dayRef + ',"' + userRef + '",' + helper.getDateFromUnix(data[i].start) + ',' + helper.getDateFromUnix(data[i].end) + ',' + data[i].block + ',' + data[i].avOwner + ',' + data[i].avRenter + ',' + data[i].avTotal + '\r\n';
@@ -137,7 +139,7 @@ angular.module('madcap-analysis')
 				var encodedUri = encodeURI(row);
 				var link = document.createElement("a");
 				link.setAttribute("href", encodedUri);
-				link.setAttribute("download", userRef + '_' + dayRef.substring(2,4) + '_' + dayRef.substring(5,7) + '_' + dayRef.substring(8,12) + '.csv');
+				link.setAttribute("download", 'location_blocks_' + userRef + '_' + dayRef.substring(2,4) + '_' + dayRef.substring(5,7) + '_' + dayRef.substring(8,12) + '.csv');
 				
 				document.body.appendChild(link); // Required for FF
 				link.click();

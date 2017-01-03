@@ -49,14 +49,20 @@
 			<div class="col-md-4">
 				<h4>Bar information:</h4></br>
 				<div ng-if="stopper.isApplicationShow">
-					<div id="barInfoLabel">Application:  {{barInfo.label}}</div></br>
-					<div id="barInfoStart">Starting time:  {{barInfo.start}}</div></br>
-					<div id="barInfoEnd">Ending time:  {{barInfo.end}}</div></br>
+					<div id="barInfoLabel">Application:  {{barInfo.label}}</div>
+					</br>
+					<div id="barInfoStart">Starting time:  {{barInfo.start}}</siv>
+					</br>
+					<div id="barInfoEnd">Ending time:  {{barInfo.end}}</div>
 				</div>
 				<div ng-if="stopper.isActivityShow">
  					<ul>
     					<li ng-repeat="prob in barInfo.probability">
-      						<p>Time: {{prob.time}}     Probability:{{prob.prop}}</p>
+      						<div>Starting Time: {{prob.endingTime}}</div>
+      						<br>
+      						<div>Ending Time: {{prob.startingTime}}</div>
+      						<br>
+      						<div>Probability:{{prob.probability}}</div>
     					</li>
     				</ul>				
 				</div>

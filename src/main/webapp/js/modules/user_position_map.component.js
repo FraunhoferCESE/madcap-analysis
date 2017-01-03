@@ -467,6 +467,7 @@ module('userMap').
 		 * EXTENSION: Will update a window with longitude, latitude and time of the marker.
 		 */
 		$scope.showCensus = function(time, lat, lng)	{	
+			var dialog = loading_overlay.createLoadOverlay("Loading census data ...", this);
 			census_api.sendRequest(lat, lng,
 			function(resp, id)	{
 				
@@ -474,34 +475,56 @@ module('userMap').
 				var persons = 0;
 				var households = 0;
 				var averages = [];
-				for(var num in resp.data[0])	{
+				if(typeof resp.data !== 'undefined')	{
 				
-					persons = persons + parseInt(resp.data[0][num])*(count+1);
-					households = households + parseInt(resp.data[0][num]);
-					if(count === 6){
-						if(households !== 0){
-							averages[averages.length] = persons/households;
+					for(var num in resp.data[0])	{
+					
+						persons = persons + parseInt(resp.data[0][num])*(count+1);
+						households = households + parseInt(resp.data[0][num]);
+						if(count === 6){
+							if(households !== 0){
+								averages[averages.length] = Number((persons/households).toFixed(1));
+							}
+							else	{
+								averages[averages.length] = 0;
+							}
+							persons = 0;
+							households = 0;
 						}
-						else	{
-							averages[averages.length] = 0;
-						}
-						persons = 0;
-						households = 0;
+						
+						count++;
+						count = count % 7;
 					}
 					
-					count++
-					count = count % 7;
+					$scope.censusData.blockData = resp;
+					delete $scope.censusData.blockData.variables;
+					delete $scope.censusData.blockData.data;
+					for(var index in $scope.censusData.blockData){
+						if($scope.censusData.blockData[index] === null){
+							$scope.censusData.blockData[index] = "No information in census response"
+						}
+					} 
+				}
+				else	{
+					$scope.censusData.blockData = {};
+					$scope.censusData.blockData.state = "No response from census";
+					$scope.censusData.blockData.county = "No response from census";
+					$scope.censusData.blockData.tract = "No response from census";
+					$scope.censusData.blockData.blockGroup = "No response from census";
+					$scope.censusData.blockData.block = "No response from census";
+					$scope.censusData.blockData.place_name = "No response from census";
+					for(var i=0; i<3; i++)	{
+						averages[i] = "No response from census";
+					}
 				}
 				
 				// Necessary to trigger immediate update in Angular
-				$scope.$apply(function()	{
-					$scope.censusData.blockData = resp;
-					delete $scope.censusData.blockData.variables;
-					delete $scope.censusData.blockData.data;					
+				$scope.$apply(function()	{					
 					$scope.censusData.averages = {};
 					$scope.censusData.averages.owner = averages[0]; 
 					$scope.censusData.averages.renter = averages[1]; 
-					$scope.censusData.averages.total = averages[2]; 
+					$scope.censusData.averages.total = averages[2];
+					dialog.close();
 				});
 			}, true, -1);
 		};
@@ -566,15 +589,24 @@ module('userMap').
 		 */
 		$scope.downloadLocationCSV = function()	{
 			var subject = $scope.userData.currentSubject;
+			var date = new Date($scope.unixRest);
+			var day = date.getDate();
+			var month = 1 + date.getMonth();
+			if(day<10)	{
+				day = '0' + day;
+			}
+			if(month<10)	{
+				month = '0' + month;
+			}
 			gapi.client.analysisEndpoint.callForLocationCSV({"user" : subject}).execute(function(resp){
-				var row = 'data:text/csv;charset=utf-8,' + ("=\"user: " + subject + "\"") + '\r\nTime","latitude","longitude","bearing"\r\n';
-				for(var i=0; i<resp.items.length;i++)	{
-					row = row + helper.getDateFromUnix(resp.items[i].timestamp) + ',' + resp.items[i].latitude + ',' + resp.items[i].longitude + ',' + resp.items[i].bearing + '\r\n';
+				var row = 'data:text/csv;charset=utf-8,' + '"User","Time","latitude","longitude","bearing"\r\n';
+				for(var i=resp.items.length-1; 0<=i; i--)	{
+					row = row + '"' + subject + '",' + helper.getDateFromUnix(resp.items[i].timestamp) + ',' + resp.items[i].latitude + ',' + resp.items[i].longitude + ',' + resp.items[i].bearing + '\r\n';
 				}
 				var encodedUri = encodeURI(row);
 				var link = document.createElement("a");
 				link.setAttribute("href", encodedUri);
-				link.setAttribute("download", "my_data.csv");
+				link.setAttribute("download", "location_export_" + subject + "_" + month + "_" + day + "_" + date.getFullYear() + ".csv");
 				document.body.appendChild(link);
 				link.click();
 				document.body.removeChild(link);

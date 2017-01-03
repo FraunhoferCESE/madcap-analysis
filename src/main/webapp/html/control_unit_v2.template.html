@@ -1,0 +1,44 @@
+<div class="row vcenter">
+	<div class="col-xs-12">
+		<b> Time range filter</b>
+	</div>
+</div>
+<div class="row vcenter">
+	<div class="col-xs-12">
+		<rzslider rz-slider-model="slider.minValue" rz-slider-high="slider.maxValue" rz-slider-options="slider.options"></rzslider>
+	</div>
+</div>
+<div class="row vcenter" style="margin-top:10px;">
+	<div class="col-xs-2">
+		<b>Selected User</b>
+	</div>
+	<div class="col-xs-2">
+		<b>Selected Date</b>
+	</div>
+	<div class="col-xs-2">
+		<b>Map Control</b>
+	</div>
+</div>
+<div class="row vcenter">
+	<div class="col-xs-2">
+		<select ng-model="eventData.source" id="chosen_source" class="form-control"
+			ng-options="source as source for source in eventData.sources" ng-change="eventData.sourceChange()"></select>
+	</div>
+	<div class="col-xs-2">
+		<div class="input-group">
+			<input type="text" class="form-control" uib-datepicker-popup ng-model="dt.value" is-open="popup.opened"
+				datepicker-options="dateOptions" ng-required="true" close-text="Close" /> 
+			<span class="input-group-btn">
+				<button type="button" class="btn btn-default" ng-click="open()">
+					<i class="glyphicon glyphicon-calendar" style="line-height: 20px;"></i>
+				</button>
+			</span>
+		</div>
+	</div>
+	<div class="col-xs-3">
+			<div class="btn-group" role="group" aria-label="Basic example">
+				<button type="submit" class="btn btn-default" id="heatmap_toggle" ng-model="heatmap_toggle" ng-click="toggleHeatmap()">Show Heatmap</button>
+				<button type="submit" class="btn btn-default" id="center_map" ng-model="center_map" ng-click="centerMap()">Center Map</button>	
+			</div>
+		</div>
+</div>

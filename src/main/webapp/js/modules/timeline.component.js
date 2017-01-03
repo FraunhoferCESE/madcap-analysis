@@ -508,8 +508,9 @@ module('timeline').
 								rightTime = estimation;
 							}
 						}
-						$scope.barInfo.probability[0].time = helper.getDateFromUnix(d.starting_time+'');
-						$scope.barInfo.probability[0].prop = $scope.eventData.probability[datum.label][rightTime+''] + '%';
+						$scope.barInfo.probability[0].startingTime = helper.getDateFromUnix(d.starting_time+'');
+						$scope.barInfo.probability[0].endingTime = helper.getDateFromUnix(d.ending_time+'');
+						$scope.barInfo.probability[0].probability = $scope.eventData.probability[datum.label][rightTime+''] + '%';
 					});
 				};
         	}

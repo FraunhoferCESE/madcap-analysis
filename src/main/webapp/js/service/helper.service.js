@@ -28,6 +28,9 @@ angular.module('madcap-analysis')
 						locationCounter++;
 					}
 					refinedData[locationCounter] = {};
+					for(var property in thisData[i])	{
+						refinedData[locationCounter][property] = thisData[i][property];
+					}
 					refinedData[locationCounter].block = thisData[i].block;
 					refinedData[locationCounter].start = thisData[i].time;
 					refinedData[locationCounter].end = thisData[i].time;
