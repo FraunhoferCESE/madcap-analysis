@@ -1,6 +1,6 @@
 <div allowed="SEE_GUI">
 	<div class="row">
-	  	<div class="row col-md-12">
+	  	<div class="col-md-12">
 		  	<nav class="navbar navbar-default navbar-fixed-top navbar-inner">
 				<div class="navbar-header">
 					<a class="navbar-brand" href="#">MADCAP Web Application</a>
@@ -43,17 +43,17 @@
 		    </nav>
 		</div>
 		<div id="views" style="margin:70px 20px 0px 20px;">
-			<div uib-collapse="!viewControl.timeline.visible" expanded="rerenderSlider()">
+			<div uib-collapse="!controlControl.unitVisible" expanded="rerenderSlider()">
 				<div class="well well-sg">
 					<control-unit-v2></control-unit-v2>
 				</div>
 			</div>
-			<div uib-collapse="!viewControl.usermap.visible">
+			<div uib-collapse="!viewControl.usermap.visible" ng-if="viewControl.usermap.alreadyLoaded">
 				<div style="height: 100%;" class="well well-sg">
 					<map-v2></map-v2>
 				</div>
 			</div>
-				<div uib-collapse="!viewControl.timeline.visible">
+				<div uib-collapse="!viewControl.timeline.visible" ng-if="viewControl.timeline.alreadyLoaded">
 				<div class="well well-sg">
 					<timeline-v2></timeline-v2>
 				</div>

@@ -12,30 +12,11 @@ module('master').
 				
 		$scope.controlControl = {
 			unitVisible: false,
-			mapButtonsVisible: false,
-			timelineDatapickerVisible: false,
-			userpickerVisible: false,
-			datepickerVisible: false,
-			sliderVisible: false
-		};
-				
-		$scope.computeControlViewStructure = function()	{
-			var usermapVisible = $scope.viewControl.usermap.visible;
-			var timelineVisible = $scope.viewControl.usermap.visible;
-			
-			if(usermapVisible || timelineVisible)	{
-				$scope.controlControl.unitVisible = true;
-				$scope.controlControl.sliderVisible = true;
-			}
-			else	{
-				$scope.controlControl.unitVisible = false;
-				$scope.controlControl.sliderVisible = false;
-			}
+			unitAlreadyLoaded: false,
+			childScope: {}
 		};
 		
-
-		$scope.viewControl = {		
-						
+		$scope.viewControl = {				
 			usermap:	{
 				name: 'Map view',
 				visible: false,
@@ -46,12 +27,29 @@ module('master').
 			timeline:	{
 				name: 'Timeline view',
 				visible: false,
+				alreadyLoaded: false,
 				scope: {},
 				style: 'rgb(230, 230, 230)',
 				textColor: 'rgb(150, 150, 150)'
 			}
 		};
-		
+		$scope.$watchGroup(['viewControl.timeline.visible','viewControl.usermap.visible'], function()	{
+			var usermapVisible = $scope.viewControl.usermap.visible;
+			var timelineVisible = $scope.viewControl.timeline.visible;
+			
+			$scope.controlControl.unitVisible = ($scope.viewControl.usermap.visible || $scope.viewControl.timeline.visible);
+			
+			if($scope.controlControl.unitVisible)	{
+				$scope.controlControl.childScope.control.sliderVisible = (usermapVisible || timelineVisible);
+				$scope.controlControl.childScope.control.userpickerVisible = (usermapVisible || timelineVisible);
+				$scope.controlControl.childScope.control.datepickerVisible = (usermapVisible || timelineVisible);
+				$scope.controlControl.childScope.control.timelineDatapickerVisible = timelineVisible;
+				$scope.controlControl.childScope.control.mapButtonsVisible = usermapVisible;
+				$scope.controlControl.childScope.control.csvButtonsVisible = usermapVisible;
+				$scope.rerenderSlider();
+			}
+		});		
+
 		$scope.barControl = {
 			toggleColor: function(name, event)	{
 				for(var key in $scope.viewControl){
@@ -65,6 +63,7 @@ module('master').
 							$scope.viewControl[key].style = 'white';		
 							$scope.viewControl[key].textColor = 'black';
 							$scope.viewControl[key].visible = true;
+							$scope.viewControl[key].alreadyLoaded = true;
 						}
 					}
 				}
@@ -82,6 +81,6 @@ module('master').
 		
 		$scope.rerenderSlider = function()	{
     		$scope.$broadcast('rzSliderForceRender');
-    	};		
+    	};	
     } 
 });

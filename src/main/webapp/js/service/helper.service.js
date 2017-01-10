@@ -138,10 +138,63 @@ angular.module('madcap-analysis')
 					refinedData[locationCounter].start = thisData[i].time;
 					refinedData[locationCounter].end = thisData[i].time;					
 				}
-			}	
+			}
 			return refinedData;
 		},
 		
+		cacheData : function(cache, value, identifier)	{
+    		var isCached = false;
+			var cachedAt = -1;
+			
+			if(cache === null){
+				cache = {
+			    	content: {},
+			    	meta: [],
+			   		pointer: 0,
+			   		size: 5
+			   	};
+			}
+			
+			// determines if these markers is already cached
+			for(var i=0; !isCached && i< cache.size; i++){
+				cachedAt++;
+				if(identifier === cache.meta[i])	{
+					isCached = true;
+				}
+			}
+			
+			//Moving of data inside the cache when entry is already cached
+			if(isCached){
+				if(cache.pointer<cachedAt){
+					for(var j=cachedAt; cache.pointer < j; j--){
+						for(var index in cache.content)	{
+							cache.content[index][j] = cache.content[index][j-1];	
+						}
+						cache.meta[j] = cache.meta[j-1];
+					}
+				}
+				else if(cache.pointer>cachedAt)	{
+					for(var m=cachedAt+cache.size; cache.pointer < m; m--){
+						var k = m % cache.size;
+						var l = (m-1) % cache.size;						
+						for(var index in cache.content)	{
+							cache.content[index][k] = cache.content[index][l];	
+						}
+						cache.meta[k] = cache.meta[l];
+					}
+				}
+			}
+			
+			// Caching of the data
+			for(var index in value)	{
+				cache.content[index][cache.pointer] = value[index];	
+			}
+			cache.meta[cache.pointer] = identifier;
+			// Increasing and reseting of the cachepointer when it gets bigger than the cache itself
+			cache.pointer = (++(cache.pointer)) % cache.size;
+			return cache;
+    	},
+    	
 		/**
 		 * Provides the DataCollectionEntries for a timeframe and initializes a callback after that.
 		 */

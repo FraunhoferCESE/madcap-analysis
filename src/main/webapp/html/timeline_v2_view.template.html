@@ -1,0 +1,50 @@
+<div allowed="SEE_GUI">
+	<div id="timelineloadspinner" class="loader" style="display: block; margin-left: auto; margin-right: auto;"></div>
+	<h3 id="timelineloadmessage" style="text-align: center;">Loading Timeline ...</h3>
+	<div ng-if="stopper.showPage">
+ 	    <div class="row">
+			<div class="col-xs-12 col-md-9" id="timeline_container" style="padding-right: 15px; padding-left: 15px;">
+				<div id="timeline1"></div>
+			</div>
+			<div class="col-xs-12 col-md-3">
+				<h4><b>Bar Information</b></h4>
+			</div>
+			<div class="col-xs-12 col-md-3">
+				<div ng-if="stopper.isApplicationShow">
+					<div class="col-xs-3 col-md-12">
+						<b>Application:</b>
+						</br>
+						<div>{{barInfo.label}}</div>
+					</div>
+					<div class="col-xs-3 col-md-12">
+						<b>Starting time</b>
+						</br>
+						<div>{{barInfo.start}}</div>
+					</div>
+					<div class="col-xs-3 col-md-12">
+						<b>Ending time</b>
+						</br>
+						<div>{{barInfo.end}}</div>
+					</div>
+				</div>
+				<div ng-if="stopper.isActivityShow">
+      				<div class="col-xs-3 col-md-12">
+						<b>Starting Time</b>
+      					</br>
+      					<div> {{barInfo.start}}</div>
+      				</div>
+      				<div class="col-xs-3 col-md-12">
+						<b>Ending Time</b> 
+      					</br>
+      					<div>{{barInfo.end}}</div>
+      				</div>
+      				<div class="col-xs-3 col-md-12">
+						<b>Probability</b>
+      					</br>
+      					<div>{{barInfo.probability}}</div>	
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

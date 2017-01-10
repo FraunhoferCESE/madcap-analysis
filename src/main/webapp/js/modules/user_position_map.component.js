@@ -10,7 +10,6 @@ module('userMap').
     	"use strict"; 	
  
     	$scope.noData = false;
-    	$scope.cache = [];
     	$scope.bounds = new google.maps.LatLngBounds();
     	$scope.csv = {
     			createCsv: false,
@@ -62,17 +61,15 @@ module('userMap').
 		    radius: 100
 		});
 		
-    	// Creates a cache of dynamic size (5 currently)
-    	var cacheSize = 5;
-    	for(var i=0; i<cacheSize; i++)	{
-    		$scope.cache[i] = [];
-    	}
-    	$scope.cache.meta = [];
-   		$scope.cache.mvc = [];
-   		$scope.cache.pointer = 0;
-   		for(var j=0; i<cacheSize; i++)	{
-   			$scope.meta[j] = '';
-   		}
+    	$scope.cache =	{
+    		content: {
+    			mvc: [],
+    			marker: []
+    		},
+    		meta: [],
+    		pointer: 0,
+    		size: 5
+    	};
     	
 		var time = new Date();
 		$scope.unixRest = time - (time%86400000) + (new Date().getTimezoneOffset()*60000);
@@ -129,9 +126,12 @@ module('userMap').
 			
 			//Step 1: Caching data
 			if($scope.userData.currentSubject !== '' && !($scope.noData))	{
-				cacheMarkers();
+				$scope.cache = helper.cacheData($scope.cache, {
+					marker: $scope.mapData.markers,
+					mvc: $scope.mapData.mvcArray
+				}, $scope.userData.currentSubject + $scope.unixRest);
 			}
-			
+						
 			if(source === 'user'){
 				$scope.userData.currentSubject = document.getElementById("chosen_user").options[document.getElementById("chosen_user").selectedIndex].text;
 			}
@@ -163,17 +163,15 @@ module('userMap').
 					$scope.mapData.heatmap.setMap(null);				
 				}
 			
-				var isCached = false;
 				var cachedAt = -1;
-				
 				// Checks if the key is in the cache
-				for(var j=0; !isCached && j< $scope.cache.length; j++){
-					cachedAt++;
+				for(var j=0; cachedAt === -1 && j< $scope.cache.size; j++){
 					if($scope.userData.currentSubject + $scope.unixRest === $scope.cache.meta[j])	{
-						isCached = true;
+						cachedAt = j;
 					}
 				}
-				if(!isCached)	{
+				
+				if(cachedAt === -1)	{
 					// Load data anew
 					$scope.showMarkers();
 				}
@@ -183,52 +181,6 @@ module('userMap').
 				}
 			}
 		};
-		
-		/**
-		 * This method caches the markers and their relevant data, before they get replaced with new ones in the map.
-		 * The cache always contains the last shown markers. If already cached dataset shall get cached,
-		 * it will get deleted from it's old position in the cache and moved to the top of the cache.
-		 * */
-		function cacheMarkers()	{
-			var isCached = false;
-			var cachedAt = -1;
-			
-			// determines if these markers is already cached
-			for(var i=0; !isCached && i< $scope.cache.length; i++){
-				cachedAt++;
-				if(($scope.userData.currentSubject + $scope.unixRest) === $scope.cache.meta[i])	{
-					isCached = true;
-				}
-			}
-			
-			//Caching of the data
-			if(isCached){
-				if($scope.cache.pointer<cachedAt){
-					for(var j=cachedAt; $scope.cache.pointer < j; j--){
-						$scope.cache[j] = $scope.cache[j-1];
-						$scope.cache.meta[j] = $scope.cache.meta[j-1];
-						$scope.cache.mvc[j] = $scope.cache.mvc[j-1];
-					}
-					$scope.cache[$scope.cache.pointer] = $scope.mapData.markers;
-					$scope.cache.meta[$scope.cache.pointer] = $scope.userData.currentSubject + $scope.unixRest;
-					$scope.cache.mvc[$scope.cache.pointer] = $scope.mapData.mvcArray;
-				}
-				else if($scope.cache.pointer>cachedAt)	{
-					for(var m=cachedAt+$scope.cache.length; $scope.cache.pointer < m; m--){
-						var k = m % $scope.cache.length;
-						var l = (m-1) % $scope.cache.length;						
-						$scope.cache[k] = $scope.cache[l];
-						$scope.cache.meta[k] = $scope.cache.meta[l];
-						$scope.cache.mvc[k] = $scope.cache.mvc[l];
-					}
-				}
-			}
-			$scope.cache[$scope.cache.pointer] = $scope.mapData.markers;
-			$scope.cache.meta[$scope.cache.pointer] = $scope.userData.currentSubject + $scope.unixRest;
-			$scope.cache.mvc[$scope.cache.pointer] = $scope.mapData.mvcArray;
-			// Increasing and reseting of the cachepointer when it gets bigger than the cache itself
-			$scope.cache.pointer = (++($scope.cache.pointer)) % $scope.cache.length;
-		}
 		
 		
 		/**
@@ -258,8 +210,8 @@ module('userMap').
 		 * @param index: The index where the markers reside in the cache
 		 */
 		function loadFromCache(index)	{
-			$scope.mapData.markers = $scope.cache[index];
-			$scope.mapData.mvcArray = $scope.cache.mvc[index];
+			$scope.mapData.markers = $scope.cache.content.marker[index];
+			$scope.mapData.mvcArray = $scope.cache.content.mvc[index];
 			for(var i=0; i<$scope.mapData.markers.length; i++){
 				$scope.mapData.markers[i].setMap($scope.mapData.map);
 				if($scope.mapData.isHeat){
@@ -599,9 +551,9 @@ module('userMap').
 				month = '0' + month;
 			}
 			gapi.client.analysisEndpoint.callForLocationCSV({"user" : subject}).execute(function(resp){
-				var row = 'data:text/csv;charset=utf-8,' + '"User","Time","latitude","longitude","bearing"\r\n';
+				var row = 'data:text/csv;charset=utf-8,' + '"User","Time","latitude","longitude","bearing","accuracy"\r\n';
 				for(var i=resp.items.length-1; 0<=i; i--)	{
-					row = row + '"' + subject + '",' + helper.getDateFromUnix(resp.items[i].timestamp) + ',' + resp.items[i].latitude + ',' + resp.items[i].longitude + ',' + resp.items[i].bearing + '\r\n';
+					row = row + '"' + subject + '",' + helper.getDateFromUnix(resp.items[i].timestamp) + ',' + resp.items[i].latitude + ',' + resp.items[i].longitude + ',' + resp.items[i].bearing + ',' + resp.items[i].accuracy + '\r\n';
 				}
 				var encodedUri = encodeURI(row);
 				var link = document.createElement("a");

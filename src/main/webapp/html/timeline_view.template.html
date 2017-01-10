@@ -51,20 +51,16 @@
 				<div ng-if="stopper.isApplicationShow">
 					<div id="barInfoLabel">Application:  {{barInfo.label}}</div>
 					</br>
-					<div id="barInfoStart">Starting time:  {{barInfo.start}}</siv>
+					<div id="barInfoStart">Starting time:  {{barInfo.start}}</div>
 					</br>
 					<div id="barInfoEnd">Ending time:  {{barInfo.end}}</div>
 				</div>
 				<div ng-if="stopper.isActivityShow">
- 					<ul>
-    					<li ng-repeat="prob in barInfo.probability">
-      						<div>Starting Time: {{prob.endingTime}}</div>
-      						<br>
-      						<div>Ending Time: {{prob.startingTime}}</div>
-      						<br>
-      						<div>Probability:{{prob.probability}}</div>
-    					</li>
-    				</ul>				
+      				<div>Starting Time: {{barInfo.start}}</div>
+      				<br>
+      				<div>Ending Time: {{barInfo.end}}</div>
+      				<br>
+      				<div>Probability:{{barInfo.probability}}</div>	
 				</div>
 			</div>
 		</div>

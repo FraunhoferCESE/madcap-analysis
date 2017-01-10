@@ -23,10 +23,7 @@ module('timeline').
     		label: "No activity chosen",
     		start: "No activity chosen",
     		end: "No activity chosen",
-    		probability: [{
-   		    	time: 'No time chosen',
-   		    	prop: 'No probability to show'
-   			}]
+    		probability: 'No probability to show'
     	};
     	
     	// All relevant data about the user
@@ -224,21 +221,22 @@ module('timeline').
 								//Refines the data
 								var refinedData = helper.refineData(rawData, onOffTimes, 'label');
 								var startLength = refinedData.length; 
-								var highest =	{
-									time: -1,
-									index: -1,
-									used: false
-								};
+								
 								$scope.eventData.probability['No Data Collected'] = [];
 	
-								for(var i=0; i<startLength; i++){
-									
-									//Determines the index to be expanded at the end
-									if(refinedData[i].end >= highest.time){
-										highest.time = refinedData[i].end;
-										highest.index = i;
+								//Expands the last bar so that the expanded parts can get cutted top
+								var cuttedLastBarAt = -1;
+								refinedData[refinedData.length-1].end = Math.min($scope.unixRest + 86400000-1, new Date());
+								for(var k=0; k<onOffTimes.length; k++)	{
+									if(onOffTimes[k].state === 'OFF' && refinedData[refinedData.length-1] < onOffTimes[k].timestamp && onOffTimes[k].timestamp < $scope.unixRest + 86400000)	{
+										cuttedLastBarAr = k;
+										refinedData[refinedData.length-1].end = onOffTimes[k].timestamp; 
+										$scope.eventData.probability['No Data Collected'][onOffTimes[k].timestamp] = 100;
 									}
-									
+								}
+	
+								for(var i=0; i<startLength; i++){
+
 									// Removes data if it lies completely outside of the days timeframe
 									if(refinedData[i].end < $scope.unixRest)	{
 										refinedData.shift();
@@ -291,10 +289,6 @@ module('timeline').
 													$scope.eventData.probability[refinedData[i].label][cuttedAt[k]] = $scope.eventData.probability[refinedData[i].label][cuttedAt[k]];
 												}
 											}
-											// Changes highest index if highest have been cut
-											if(highest.time === refinedData[i].end)	{
-												highest.index = refinedData.length-1;
-											}
 											indexWhereEndIs = refinedData.length-1;
 											refinedData[i].end = cuttedAt[0];
 											
@@ -314,7 +308,7 @@ module('timeline').
 										}
 									}
 								}
-								
+																
 								// Adds "no data" bar when first data event is after the beginning of the day
 								if(0<refinedData.length)	{								
 									if(refinedData[0].start > $scope.unixRest+1){
@@ -326,47 +320,37 @@ module('timeline').
 										});
 										$scope.eventData.probability['No Data Collected'][$scope.unixRest+1] = 100;
 									}
-									for(var k = 0; k<onOffTimes.length-1; k++){
-										//Adds no data bar when the data collection was turned of before the end of the day and wasn't turned back on
-										if(onOffTimes[k].state === 'OFF' && onOffTimes[k].timestamp > highest.time)	{
-											highest.used = true;
-											refinedData[highest.index].end = onOffTimes[k].timestamp;
-											refinedData.push({
-												label: 'No Data Collected',
-												start: onOffTimes[k].timestamp,
-												end: $scope.unixRest + 86400000-1,
-												opaque: 100
-											});
-											$scope.eventData.probability['No Data Collected'][onOffTimes[k].timestamp] = 100;
-											refinedData[highest.index].end = onOffTimes[k].timestamp;
-										}
+									//Adds last 'No Data' bar after cutting so that it doesn't gets cutted
+									if(cuttedLastBarAt !== -1)	{
+										refinedData.push({
+											label: 'No Data Collected',
+											start: onOffTimes[cutedLastBarAt].timestamp,
+											end: $scope.unixRest + 86400000-1,
+											opaque: 100
+										});
 									}
-									// Expends the last bar to the end of the day if data collection wasn't turned off. Cuts the bar when it would end in the future
-									if(!highest.used){
-										refinedData[highest.index].end = Math.min($scope.unixRest + 86400000-1, new Date());
-									}
-																
-									// Creates the data for the timeline
-									for(var j=0; j<refinedData.length; j++)	{
-										var expanded = false;
-										var start = refinedData[j].start;
-										var colorCode = 1;
-										for(var k=0; k<$scope.eventData.eventStorage.length; k++)	{
-											colorCode = 1;
-											if(refinedData[j].label === $scope.eventData.eventStorage[k].label)	{
-												if(refinedData[j].label === 'No Data Collected')	{
-													colorCode = 2;
-												}
-												$scope.eventData.eventStorage[k].times.push({"starting_time": start, "ending_time": refinedData[j].end, "color_code": colorCode, "opaque": refinedData[j].opaque});
-												expanded = true;
-											}
-										}
-										if(!expanded)	{
+								}
+															
+								// Creates the data for the timeline
+								for(var j=0; j<refinedData.length; j++)	{
+									var expanded = false;
+									var start = refinedData[j].start;
+									var colorCode = 1;
+									for(var k=0; k<$scope.eventData.eventStorage.length; k++)	{
+										colorCode = 1;
+										if(refinedData[j].label === $scope.eventData.eventStorage[k].label)	{
 											if(refinedData[j].label === 'No Data Collected')	{
 												colorCode = 2;
 											}
-											$scope.eventData.eventStorage.push({label: refinedData[j].label, times: [{"starting_time": start, "ending_time": refinedData[j].end, "color_code": colorCode, "opaque": refinedData[j].opaque}]});	
+											$scope.eventData.eventStorage[k].times.push({"starting_time": start, "ending_time": refinedData[j].end, "color_code": colorCode, "opaque": refinedData[j].opaque});
+											expanded = true;
 										}
+									}
+									if(!expanded)	{
+										if(refinedData[j].label === 'No Data Collected')	{
+											colorCode = 2;
+										}
+										$scope.eventData.eventStorage.push({label: refinedData[j].label, times: [{"starting_time": start, "ending_time": refinedData[j].end, "color_code": colorCode, "opaque": refinedData[j].opaque}]});	
 									}
 								}
 							}
@@ -489,14 +473,13 @@ module('timeline').
 						$scope.barInfo.label = datum.label;
 						$scope.barInfo.start = helper.getDateFromUnix(d.starting_time);
 						$scope.barInfo.end = helper.getDateFromUnix(d.ending_time);
+						$scope.barInfo.probability = 0;
 					});
 				};
         	}
         	else if(src === 'Kind of Movement')	{
         		callbackMethod = function (d, i, datum) {
 					$scope.$apply(function()	{
-						$scope.barInfo.probability = [];
-						$scope.barInfo.probability[0] = {};
 						
 						var rightTime = -1;
 						var difference = -1;
@@ -508,9 +491,10 @@ module('timeline').
 								rightTime = estimation;
 							}
 						}
-						$scope.barInfo.probability[0].startingTime = helper.getDateFromUnix(d.starting_time+'');
-						$scope.barInfo.probability[0].endingTime = helper.getDateFromUnix(d.ending_time+'');
-						$scope.barInfo.probability[0].probability = $scope.eventData.probability[datum.label][rightTime+''] + '%';
+						$scope.barInfo.label = '';
+						$scope.barInfo.start = helper.getDateFromUnix(d.starting_time+'');
+						$scope.barInfo.end = helper.getDateFromUnix(d.ending_time+'');
+						$scope.barInfo.probability = $scope.eventData.probability[datum.label][rightTime+''] + '%';
 					});
 				};
         	}
@@ -551,14 +535,12 @@ module('timeline').
 					$scope.chart = d3.timeline().stack().opaque(arrayOpaque).colors(colorScale).colorProperty('color_code').changerange($scope.slider.minValue*60*1000 + $scope.unixRest, $scope.slider.maxValue*60*1000 + $scope.unixRest).hover(callbackMethod).mouseout(
 						function(d,i,datum)	{
 							$scope.$apply(function()	{
+								
 								$scope.barInfo = {
-									label: "No activity chosen",
-									start: "No activity chosen",
-									end: "No activity chosen",
-									probability: [{
-										time: 'No time chosen',
-										prop: 'No probability to show'
-									}]
+									label: "No bar chosen",
+									start: "No bar chosen",
+									end: "No bar chosen",
+									probability:'No probability to show'
 								};
 							});
 						}

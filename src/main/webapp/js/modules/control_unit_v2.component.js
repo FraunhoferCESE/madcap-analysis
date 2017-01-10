@@ -5,22 +5,49 @@ module('controlUnitV2').
     controller: function controlController($scope, $timeout, helper) {
     	"use strict"; 	
     	
+    	$scope.eventTrigger = '';
     	
     	$scope.userData = {
        		users: [],
-       		chosen_user: '',
+       		chosen_user_for_gui: '',
        		currentSubject: '',
-       		/**
-       	  	 * Handles the change of the chosen user. Updates the user and renders the timeline anew
-          	 */
-        	userChange: function()	{
-
-        	}
+       		lastSubject: '',
+       		userChange: function()	{
+       			$scope.eventTrigger = 'user';
+       			if($scope.userData.currentSubject === '')	{
+ 					for(var i=0; i<$scope.userData.users.length-1; i++)	{
+ 						$scope.userData.users[i] = $scope.userData.users[i+1];
+ 					}
+ 					delete $scope.userData.users.splice($scope.userData.users.length-1,1);
+					}
+       			$scope.userData.lastSubject = $scope.userData.currentSubject;
+ 				$scope.userData.currentSubject = document.getElementById("chosen_user").options[document.getElementById("chosen_user").selectedIndex].text;
+       	 	}
         };
+    	   	
+    	$scope.control = {
+    		mapButtonsVisible: false,
+    		csvButtonsVisible: false,
+   			timelineDatapickerVisible: false,
+    		userpickerVisible: false,
+    		datepickerVisible: false,
+    		sliderVisible: false
+    	};
     	
-    	var time = new Date();
-		$scope.unixRest = time - (time%86400000) + (time.getTimezoneOffset()*60000);
-       
+    	$scope.sourceData = {
+        	timeline_source_for_gui: 'Activity in Foreground',
+    		lastTimelineSource: '',
+    		timelineSource: 'Activity in Foreground',
+          	timelineSources: ['Activity in Foreground','Kind of Movement'],
+            timelineSourceChange: function()	{
+            	$scope.eventTrigger = 'timelineSource';
+           		$scope.sourceData.lastTimelineSource = $scope.sourceData.timelineSource;
+            	$scope.sourceData.timelineSource = document.getElementById("chosen_source").options[document.getElementById("chosen_source").selectedIndex].text;
+           	}	
+        }
+        	
+    	$scope.$parent.controlControl.childScope = $scope;
+    	
     	$scope.slider = {
         	minValue: 0,
         	maxValue: 1439,
@@ -29,19 +56,37 @@ module('controlUnitV2').
     			ceil: 1439,
     			disabled: false,
     			translate: function(value)	{
-			    	return helper.getDateFromUnix(value*60000+$scope.unixRest);
-    			},
-    			onChange: function(sliderId)	{
-    			    var x=0;        	
+			    	return helper.getDateFromUnix(value*60000+$scope.dateData.unixRest);
     			}
     		},
     	};
     	
+    	$scope.dateData = {
+    		unixRest: 0,
+    		lastUnixRest: 0
+    	};
+    	
+    	var time = new Date();
+		$scope.dateData.unixRest = time - (time%86400000) + (time.getTimezoneOffset()*60000);
+       
     	$scope.$watch('dt.value', function(newValue) { 
-			if(typeof newValue !== 'undefined' && newValue !== 'Please select a date ...')	{
-				$scope.unixRest = newValue - (newValue%86400000) + (newValue.getTimezoneOffset()*60000);
+			$scope.eventTrigger = 'date';
+    		if(typeof newValue !== 'undefined' && newValue !== 'Please select a date ...')	{
+				$scope.dateData.lastUnixRest = $scope.dateData.unixRest; 
+				$scope.dateData.unixRest = newValue - (newValue%86400000) + (newValue.getTimezoneOffset()*60000);
 			}
 	    });
+    	
+    	//Requests a list of all users, which are connected to LocationEntries. Also inserts a filler value when no user is chosen.
+		gapi.client.analysisEndpoint.getUsers().execute(function(resp){
+			for(var i=0; i<resp.returned.length; i++)	{
+				$scope.userData.users[i+1] = resp.returned[i]+""; 
+			}
+			$scope.userData.users[0] = 'Please choose a user ...';	
+			$scope.$apply(function(){
+				$scope.userData.chosen_user_for_gui = $scope.userData.users[0];	
+			});
+		});	
     	
 		//-------------------------Stuff for the Datepicker------------------------------------
 		$scope.today = function() {

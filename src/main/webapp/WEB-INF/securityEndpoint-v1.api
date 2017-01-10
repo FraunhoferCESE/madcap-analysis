@@ -64,21 +64,6 @@
         "body" : "autoTemplate(backendResponse)"
       }
     },
-    "securityEndpoint.getJs" : {
-      "path" : "stringcollection",
-      "httpMethod" : "GET",
-      "authLevel" : "NONE",
-      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
-      "audiences" : [ ],
-      "clientIds" : [ "611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com" ],
-      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.SecurityEndpoint.getJsSources",
-      "request" : {
-        "body" : "empty"
-      },
-      "response" : {
-        "body" : "autoTemplate(backendResponse)"
-      }
-    },
     "securityEndpoint.isRegistered" : {
       "path" : "isUserRegistered",
       "httpMethod" : "POST",
@@ -87,6 +72,21 @@
       "audiences" : [ ],
       "clientIds" : [ "611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com" ],
       "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.SecurityEndpoint.isUserRegistered",
+      "request" : {
+        "body" : "empty"
+      },
+      "response" : {
+        "body" : "autoTemplate(backendResponse)"
+      }
+    },
+    "securityEndpoint.getJs" : {
+      "path" : "stringcollection",
+      "httpMethod" : "GET",
+      "authLevel" : "NONE",
+      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
+      "audiences" : [ ],
+      "clientIds" : [ "611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com" ],
+      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.SecurityEndpoint.getJsSources",
       "request" : {
         "body" : "empty"
       },
@@ -151,14 +151,14 @@
           "$ref" : "EndpointReturnObject"
         }
       },
-      "org.fraunhofer.cese.madcap.analysis.SecurityEndpoint.getJsSources" : {
-        "response" : {
-          "$ref" : "StringCollection"
-        }
-      },
       "org.fraunhofer.cese.madcap.analysis.SecurityEndpoint.isUserRegistered" : {
         "response" : {
           "$ref" : "EndpointReturnObject"
+        }
+      },
+      "org.fraunhofer.cese.madcap.analysis.SecurityEndpoint.getJsSources" : {
+        "response" : {
+          "$ref" : "StringCollection"
         }
       },
       "org.fraunhofer.cese.madcap.analysis.SecurityEndpoint.getUserPermission" : {
