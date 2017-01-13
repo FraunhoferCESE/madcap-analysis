@@ -27,11 +27,15 @@ module('controlUnitV2').
     	   	
     	$scope.control = {
     		mapButtonsVisible: false,
-    		csvButtonsVisible: false,
+    		csvMapButtonsVisible: false,
+    		csvTimelineButtonsVisible: false,
    			timelineDatapickerVisible: false,
     		userpickerVisible: false,
     		datepickerVisible: false,
-    		sliderVisible: false
+    		sliderVisible: false,
+    		timelineCsvTrigger: false,
+    		locationCsvTrigger: false,
+    		blockCsvTrigger: false  		
     	};
     	
     	$scope.sourceData = {
@@ -45,7 +49,7 @@ module('controlUnitV2').
             	$scope.sourceData.timelineSource = document.getElementById("chosen_source").options[document.getElementById("chosen_source").selectedIndex].text;
            	}	
         }
-        	
+        
     	$scope.$parent.controlControl.childScope = $scope;
     	
     	$scope.slider = {
@@ -64,6 +68,40 @@ module('controlUnitV2').
     	$scope.dateData = {
     		unixRest: 0,
     		lastUnixRest: 0
+    	};
+    	
+    	$scope.csvTrigger = {
+    		startTimelineCsv: function()	{
+    			$scope.control.timelineCsvTrigger = true;
+    		},
+    		startBlockCsv: function()	{
+    			$scope.control.blockCsvTrigger = true;
+    		},
+    		startLocationCsv: function()	{
+    			$scope.control.locationCsvTrigger = true;
+    		}
+        };
+    	
+    	$scope.csvParameter = {
+    			createCsvMap: false,
+    			maxMap: 0,
+    			csvProgress: 0
+    	};
+    	
+    	$scope.mapControlData =	{
+    		isHeat: false,
+    		centerMapOrder: false,
+    		toggleHeatmap: function()	{
+    			if($scope.mapControlData.isHeat)	{
+    				$scope.mapControlData.isHeat = false;
+    			}
+    			else	{
+    				$scope.mapControlData.isHeat = true;
+    			}
+    		},
+    		centerMap: function()	{
+    			$scope.mapControlData.centerMapOrder = true;
+    		}
     	};
     	
     	var time = new Date();

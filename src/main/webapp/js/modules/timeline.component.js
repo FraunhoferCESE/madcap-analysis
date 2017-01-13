@@ -131,7 +131,7 @@ module('timeline').
 			if($scope.userData.currentSubject !== '')	{
 				
 				if(!($scope.stopper.firstRendering))	{
-					var dialog = loading_overlay.createLoadOverlay("Loading data ...", this);
+					var dialog = loading_overlay.createLoadOverlay("Loading data ...", this, 'old_timeline_content');
 				}
 				
 				//Loads the data to display in the timeline
@@ -390,7 +390,7 @@ module('timeline').
 					$scope.filterAccordingToSlider(src);	
 				}
 				if(!($scope.stopper.firstRendering) && typeof dialog !== 'undefined')	{
-					dialog.close();
+					dialog.remove();
 				}
 			}
 		};

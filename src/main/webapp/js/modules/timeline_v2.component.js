@@ -16,7 +16,6 @@ module('timelineV2').
     		directiveFinished: false,
     		renderingfinished: false,
     		firstRendering: true,
-    		setScrollListener: false,
     		isApplicationShow: true,
     		isActivityShow: false
     	};
@@ -50,22 +49,40 @@ module('timelineV2').
     	
     	// Listener for the datepicker
     	$scope.$watch('controlScope.dateData.unixRest', function(newValue) { 
-			if(typeof newValue !== 'undefined' && newValue !== 'Please select a date ...')	{
+			if($scope.$parent.viewControl.timeline.visible && typeof newValue !== 'undefined' && newValue !== 'Please select a date ...')	{
 				$scope.renderTimeline();
 			}
 	    });
     	
     	// Listener for the userpicker
     	$scope.$watch('controlScope.userData.currentSubject', function(newValue) { 
-			$scope.renderTimeline();
+			if($scope.$parent.viewControl.timeline.visible)	{
+				$scope.renderTimeline();
+			}
 	    });
     	
+    	// Listener for the timeline csv download button
+    	$scope.$watch('controlScope.control.timelineCsvTrigger', function(newValue) { 
+			if($scope.controlScope.control.timelineCsvTrigger)	{
+				$scope.controlScope.control.timelineCsvTrigger = false;
+				$scope.downloadTimelineCsv();
+			}
+	    });
+    	
+    	// Listener for the timeline csv download button
+    	$scope.$parent.$watch('viewControl.timeline.visible', function(newValue) { 
+			if($scope.$parent.viewControl.timeline.visible)	{
+				$scope.renderTimeline();
+			}
+	    });
+
+    	
     	$scope.$watch('controlScope.sourceData.timelineSource', function(value)	{
-    		if(value === 'Activity in Foreground')	{
+    		if($scope.$parent.viewControl.timeline.visible && value === 'Activity in Foreground')	{
 				$scope.stopper.isApplicationShow = true;
 				$scope.stopper.isActivityShow = false; 
 			}
-			else if(value === 'Kind of Movement')	{
+			else if($scope.$parent.viewControl.timeline.visible && value === 'Kind of Movement')	{
 				$scope.stopper.isApplicationShow = false;
 				$scope.stopper.isActivityShow = true; 
 			}
@@ -140,7 +157,7 @@ module('timelineV2').
 				}
 				else	{
 					if(!($scope.stopper.firstRendering))	{
-						var dialog = loading_overlay.createLoadOverlay("Loading data ...", this);
+						var dialog = loading_overlay.createLoadOverlay("Loading data ...", this, "timeline_content");
 					}
 					//Loads the data to display in the timeline
 					gapi.client.analysisEndpoint.getActivityData({"user" : $scope.controlScope.userData.currentSubject, "start" : $scope.controlScope.dateData.unixRest, "end" : ($scope.controlScope.dateData.unixRest + 86400000), "source" : src, "include_first" : true}).execute(function(resp)	{
@@ -341,24 +358,26 @@ module('timelineV2').
 									}
 									// Creates the data for the timeline
 									for(var j=0; j<refinedData.length; j++)	{
-										var expanded = false;
-										var start = refinedData[j].start;
-										var colorCode = 1;
-										for(var k=0; k<$scope.eventData.eventStorage.length; k++)	{
-											colorCode = 1;
-											if(refinedData[j].label === $scope.eventData.eventStorage[k].label)	{
+										if(refinedData[j].start < refinedData[j].end){
+											var expanded = false;
+											var start = refinedData[j].start;
+											var colorCode = 1;
+											for(var k=0; k<$scope.eventData.eventStorage.length; k++)	{
+												colorCode = 1;
+												if(refinedData[j].label === $scope.eventData.eventStorage[k].label)	{
+													if(refinedData[j].label === 'No Data Collected')	{
+														colorCode = 2;
+													}
+													$scope.eventData.eventStorage[k].times.push({"starting_time": start, "ending_time": refinedData[j].end, "color_code": colorCode, "opaque": refinedData[j].opaque});
+													expanded = true;
+												}
+											}
+											if(!expanded)	{
 												if(refinedData[j].label === 'No Data Collected')	{
 													colorCode = 2;
 												}
-												$scope.eventData.eventStorage[k].times.push({"starting_time": start, "ending_time": refinedData[j].end, "color_code": colorCode, "opaque": refinedData[j].opaque});
-												expanded = true;
+												$scope.eventData.eventStorage.push({label: refinedData[j].label, times: [{"starting_time": start, "ending_time": refinedData[j].end, "color_code": colorCode, "opaque": refinedData[j].opaque}]});	
 											}
-										}
-										if(!expanded)	{
-											if(refinedData[j].label === 'No Data Collected')	{
-												colorCode = 2;
-											}
-											$scope.eventData.eventStorage.push({label: refinedData[j].label, times: [{"starting_time": start, "ending_time": refinedData[j].end, "color_code": colorCode, "opaque": refinedData[j].opaque}]});	
 										}
 									}
 									$scope.noData = false;
@@ -400,7 +419,7 @@ module('timelineV2').
 					$scope.filterAccordingToSlider(src);	
 				}
 				if(!($scope.stopper.firstRendering) && typeof dialog !== 'undefined')	{
-					dialog.close();
+					dialog.remove();
 				}
 			}
 		};
@@ -552,7 +571,37 @@ module('timelineV2').
 					
 					$scope.renderOnScreen = function()	{
 						d3.select("svg").remove();
-						$scope.chart = d3.timeline().stack().opaque(arrayOpaque).colors(colorScale).colorProperty('color_code').changerange($scope.controlScope.slider.minValue*60*1000 + $scope.controlScope.dateData.unixRest, $scope.controlScope.slider.maxValue*60*1000 + $scope.controlScope.dateData.unixRest).hover(callbackMethod).mouseout(
+						$scope.chart = d3.timeline().stack().opaque(arrayOpaque).colors(colorScale).colorProperty('color_code').changerange($scope.controlScope.slider.minValue*60*1000 + $scope.controlScope.dateData.unixRest, $scope.controlScope.slider.maxValue*60*1000 + $scope.controlScope.dateData.unixRest).hover(callbackMethod).scroll(function(event){
+							if(event.deltaY < 0)	{
+								if($scope.controlScope.slider.minValue < $scope.controlScope.slider.maxValue+5)	{
+									$scope.controlScope.slider.maxValue = $scope.controlScope.slider.maxValue - 5;
+								}
+								else{
+									$scope.controlScope.slider.maxValue = $scope.controlScope.slider.minValue + 1;
+							}
+								if($scope.controlScope.slider.minValue-5 < $scope.controlScope.slider.maxValue)	{
+									$scope.controlScope.slider.minValue = $scope.controlScope.slider.minValue + 5;
+								}
+								else	{
+									$scope.controlScope.slider.minValue = $scope.controlScope.slider.maxValue - 1;
+								}
+							}
+							else if(event.deltaY > 0)	{
+								if(4 < $scope.controlScope.slider.minValue){
+									$scope.controlScope.slider.minValue = $scope.controlScope.slider.minValue - 5;
+							}
+								else	{
+									$scope.controlScope.slider.minValue = 0;
+								}
+								if($scope.controlScope.slider.maxValue<1435)	{
+									$scope.controlScope.slider.maxValue = $scope.controlScope.slider.maxValue + 5;
+								}
+								else	{
+									$scope.controlScope.slider.maxValue = 1439;
+								}
+							}
+				           	$scope.filterAccordingToSlider($scope.controlScope.sourceData.timelineSource);        	
+						}).mouseout(
 							function(d,i,datum)	{
 								$scope.$apply(function()	{
 									$scope.barInfo = {
@@ -564,44 +613,10 @@ module('timelineV2').
 								});
 							}
 						);
-						if(!$scope.stopper.setScrollListener)	{
-							/**
-							 * Manipulates time slider on scrolling. One scroll tick decreases the timeframe
-							 * by 5 Minutes on each side of the slider
-							 */
-							document.getElementById("timeline1").addEventListener('wheel',function(event){
-								if(event.deltaY < 0)	{
-									if($scope.controlScope.slider.minValue < $scope.controlScope.slider.maxValue+5)	{
-										$scope.controlScope.slider.maxValue = $scope.controlScope.slider.maxValue - 5;
-									}
-									else{
-										$scope.controlScope.slider.maxValue = $scope.controlScope.slider.minValue + 1;
-									}
-									if($scope.controlScope.slider.minValue-5 < $scope.controlScope.slider.maxValue)	{
-										$scope.controlScope.slider.minValue = $scope.controlScope.slider.minValue + 5;
-									}
-									else	{
-										$scope.controlScope.slider.minValue = $scope.controlScope.slider.maxValue - 1;
-									}
-								}
-								else if(event.deltaY > 0)	{
-									if(4 < $scope.controlScope.slider.minValue){
-										$scope.controlScope.slider.minValue = $scope.controlScope.slider.minValue - 5;
-									}
-									else	{
-										$scope.controlScope.slider.minValue = 0;
-									}
-									if($scope.controlScope.slider.maxValue<1435)	{
-										$scope.controlScope.slider.maxValue = $scope.controlScope.slider.maxValue + 5;
-									}
-									else	{
-										$scope.controlScope.slider.maxValue = 1439;
-									}
-								}
-								$scope.stopper.setScrollListener = true;
-				            	$scope.filterAccordingToSlider($scope.controlScope.sourceData.timelineSource);        	
-							});
-						}
+						/**
+						 * Manipulates time slider on scrolling. One scroll tick decreases the timeframe
+						 * by 5 Minutes on each side of the slider
+						 */
 						var container = document.getElementById("timeline_container");
 						$scope.r = d3.select("#timeline1").append("svg").attr("id","timelineSVG").attr("preserveAspectRatio","none").attr("width", container.offsetWidth  - parseInt(container.style.paddingLeft) - parseInt(container.style.paddingRight)).datum($scope.eventData.eventCache).call($scope.chart);
 					}
@@ -610,6 +625,32 @@ module('timelineV2').
 					
 				});
 			}, 0);
+        };
+        
+        $scope.downloadTimelineCsv = function()	{
+        	var subject = $scope.controlScope.userData.currentSubject;
+			var date = new Date($scope.controlScope.dateData.unixRest);
+			var day = date.getDate();
+			var month = 1 + date.getMonth();
+			if(day<10)	{
+				day = '0' + day;
+			}
+			if(month<10)	{
+				month = '0' + month;
+			}
+			var row = 'data:text/csv;charset=utf-8,' + '"User","Start time","End time","Activity"\r\n';
+			for(var i=$scope.eventData.eventStorage.length-1; 0<=i; i--)	{
+				for(var j=0; j<$scope.eventData.eventStorage[i].times.length; j++)	{
+					row = row + '"' + subject + '",' + $scope.eventData.eventStorage[i].times[j].starting_time + ',' + $scope.eventData.eventStorage[i].times[j].ending_time + "," + $scope.eventData.eventStorage[i].label + '\r\n';
+				}
+			}
+			var encodedUri = encodeURI(row);
+			var link = document.createElement("a");
+			link.setAttribute("href", encodedUri);
+			link.setAttribute("download", "timeline_export_" + subject + "_" + month + "_" + day + "_" + date.getFullYear() + ".csv");
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
         };
     }
   }

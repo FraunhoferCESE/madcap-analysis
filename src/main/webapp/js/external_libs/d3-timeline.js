@@ -53,7 +53,9 @@
         
         containerMargin = 0,
         manualRange = false,
-        opaqueArray = {};
+        opaqueArray = {},
+        addScroll = false,
+        scrollFunction = null;
 
     var appendTimeAxis = function(g, xAxis, yPosition) {
 
@@ -162,6 +164,14 @@
 
     function timeline (gParent) {
       var g = gParent.append("g");
+      
+      if(addScroll)	{
+    	gParent.on('wheel', function()	{
+    		d3.event.preventDefault();
+    		scrollFunction(d3.event);
+    	})
+      }
+      
       var gParentSize = gParent[0][0].getBoundingClientRect();
 
       var gParentItem = d3.select(gParent[0][0]);
@@ -718,12 +728,18 @@
     	ending = end;
     	manualRange = true;
     	return timeline;
-    }
+    };
 
     timeline.opaque = function(op)	{
     	opaqueArray = op;
     	return timeline;
-    }
+    };
+    
+    timeline.scroll = function(f)	{
+    	addScroll = true;
+    	scrollFunction = f;
+    	return timeline;
+    };
     
     return timeline;
   };

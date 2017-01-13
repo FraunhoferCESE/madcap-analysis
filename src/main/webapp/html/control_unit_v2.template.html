@@ -27,7 +27,6 @@
 			</span>
 		</div>
 	</div>
-	
 	<div class="col-xs-12 col-sm-6 col-md-2" uib-collapse="!control.timelineDatapickerVisible">
 		<b>Selected Data Kind (Timeline)</b>
 		</br>
@@ -39,20 +38,27 @@
 		<b>Map Control</b>
 		</br>
 		<div class="btn-group" role="group" aria-label="Basic example">
-			<button type="submit" class="btn btn-default" id="heatmap_toggle" ng-model="heatmap_toggle" ng-click="toggleHeatmap()">Show Heatmap</button>
-			<button type="submit" class="btn btn-default" id="center_map" ng-model="center_map" ng-click="centerMap()">Center Map</button>	
+			<button type="submit" class="btn btn-default" id="heatmap_toggle" ng-model="heatmap_toggle" ng-click="mapControlData.toggleHeatmap()">Show Heatmap</button>
+			<button type="submit" class="btn btn-default" id="center_map" ng-model="center_map" ng-click="mapControlData.centerMap()">Center Map</button>	
 		</div>
 	</div>
 	
-	<div class="col-xs-12 col-sm-6 col-md-4" uib-collapse="!control.csvButtonsVisible">
-		<b>CSV Export</b>
+	<div class="col-xs-12 col-sm-6 col-md-4" uib-collapse="!control.csvMapButtonsVisible">
+		<b>CSV Export (Map)</b>
 		</br>
 		<div class="btn-group" role="group" aria-label="Basic example">
-			<button type="submit" class="btn btn-default" ng-click="downloadLocationCSV()">Export Locations</button>
-			<button type="submit" class="btn btn-default" ng-click="downloadCSV()">Export Blocks</button>
-		<div ng-if="csv.createCsv">
-   			<uib-progressbar max="csv.max" value="csv.csvProgress"><b>{{csv.csvProgress}}%</b></uib-progressbar>
-			<div>Cancel download</div>
-		</div>	
+			<button type="submit" class="btn btn-default" ng-click="csvTrigger.startLocationCsv()">Export Locations</button>
+			<button type="submit" class="btn btn-default" ng-click="csvTrigger.startBlockCsv()">Export Blocks</button>
+			<div ng-if="csvParameter.createCsvMap">
+   				<uib-progressbar max="csvParameter.maxMap" value="csvParametert.csvProgressMap"><b>{{csvParameter.csvProgressMap}}%</b></uib-progressbar>
+				<div>Cancel download</div>
+			</div>	
+		</div>
+	</div>
+	
+	<div class="col-xs-12 col-sm-6 col-md-4" uib-collapse="!control.csvTimelineButtonsVisible">
+		<b>CSV Export (Timeline)</b>
+		</br>
+		<button type="submit" class="btn btn-default" ng-click="csvTrigger.startTimelineCsv()">Export fetched data</button>
 	</div>
 </div>

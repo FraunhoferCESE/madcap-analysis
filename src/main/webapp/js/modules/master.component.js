@@ -13,13 +13,15 @@ module('master').
 		$scope.controlControl = {
 			unitVisible: false,
 			unitAlreadyLoaded: false,
-			childScope: {}
+			childScope: {},
+			generalRenderTrigger: false
 		};
 		
 		$scope.viewControl = {				
 			usermap:	{
 				name: 'Map view',
 				visible: false,
+				alreadyloaded: false,
 				scope: {},
 				style: 'rgb(230, 230, 230)',
 				textColor: 'rgb(150, 150, 150)'
@@ -44,8 +46,9 @@ module('master').
 				$scope.controlControl.childScope.control.userpickerVisible = (usermapVisible || timelineVisible);
 				$scope.controlControl.childScope.control.datepickerVisible = (usermapVisible || timelineVisible);
 				$scope.controlControl.childScope.control.timelineDatapickerVisible = timelineVisible;
+				$scope.controlControl.childScope.control.csvTimelineButtonsVisible = timelineVisible;
 				$scope.controlControl.childScope.control.mapButtonsVisible = usermapVisible;
-				$scope.controlControl.childScope.control.csvButtonsVisible = usermapVisible;
+				$scope.controlControl.childScope.control.csvMapButtonsVisible = usermapVisible;
 				$scope.rerenderSlider();
 			}
 		});		

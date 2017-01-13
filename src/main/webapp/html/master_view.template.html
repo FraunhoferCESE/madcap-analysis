@@ -48,12 +48,12 @@
 					<control-unit-v2></control-unit-v2>
 				</div>
 			</div>
-			<div uib-collapse="!viewControl.usermap.visible" ng-if="viewControl.usermap.alreadyLoaded">
+			<div uib-collapse="!viewControl.usermap.visible" ng-if="viewControl.usermap.alreadyLoaded" id="map_content" style="position:relative">
 				<div style="height: 100%;" class="well well-sg">
 					<map-v2></map-v2>
 				</div>
 			</div>
-				<div uib-collapse="!viewControl.timeline.visible" ng-if="viewControl.timeline.alreadyLoaded">
+				<div uib-collapse="!viewControl.timeline.visible" ng-if="viewControl.timeline.alreadyLoaded" id="timeline_content" style="position:relative">
 				<div class="well well-sg">
 					<timeline-v2></timeline-v2>
 				</div>

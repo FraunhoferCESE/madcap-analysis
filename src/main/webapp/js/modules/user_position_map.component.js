@@ -189,11 +189,11 @@ module('userMap').
 		 */
 		$scope.showMarkers = function()	{
 			var strUser = document.getElementById("chosen_user").options[document.getElementById("chosen_user").selectedIndex].text;
-			var dialog = loading_overlay.createLoadOverlay("Loading entries ...", this);
+			var dialog = loading_overlay.createLoadOverlay("Loading entries ...", this, 'old_map_content');
 			//Those are 64-bit integers. They have to be passed to the endpoint as long!
 			//Querying for the data
 			gapi.client.analysisEndpoint.getInWindow({'user' : strUser, 'start' : $scope.unixRest , 'end' : ($scope.unixRest + 86400000)}).execute(function(resp) {
-        	   dialog.close();
+        	   dialog.remove();
         	   //Checks to see if the returned object is valid and usable
         	   if(resp !== false && typeof resp.items !== 'undefined' && resp.items.length !== 0)	{	   		
         	   		$scope.noData = false;
@@ -419,7 +419,7 @@ module('userMap').
 		 * EXTENSION: Will update a window with longitude, latitude and time of the marker.
 		 */
 		$scope.showCensus = function(time, lat, lng)	{	
-			var dialog = loading_overlay.createLoadOverlay("Loading census data ...", this);
+			var dialog = loading_overlay.createLoadOverlay("Loading census data ...", this, "old_census_content");
 			census_api.sendRequest(lat, lng,
 			function(resp, id)	{
 				
@@ -476,7 +476,7 @@ module('userMap').
 					$scope.censusData.averages.owner = averages[0]; 
 					$scope.censusData.averages.renter = averages[1]; 
 					$scope.censusData.averages.total = averages[2];
-					dialog.close();
+					dialog.remove();
 				});
 			}, true, -1);
 		};
