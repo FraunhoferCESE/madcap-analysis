@@ -2,7 +2,7 @@
  * This service provides a loading overlay when necessary. It uses the ngDialog module to do this.
  */
 angular.module('madcap-analysis')
-.factory('loading_overlay', ['ngDialog', '$uibModal', function(ngDialog, $uibModal){
+.factory('loading_overlay', function(){
 	  "use strict";
 	  	  
 	  return {
@@ -22,17 +22,8 @@ angular.module('madcap-analysis')
         	var spinner = document.getElementById('loadoverlayspinner');
         	spinner.style['margin-top'] = Math.floor((height-spinner.offsetHeight-70)/2) + "px";
         	messageGui.innerHTML = message;
-        	/*var dialog = ngDialog.open({
-        		  templateUrl: 'html/loading_overlay.html',
-        		  scope: passedCon,
-        		  overlay: false,
-        		  appendTo: angular.element(document.querySelector(anchor)),
-        		  controller: function loadOverlayController()	{
-        			  passedCon.load_overlay_message = message;
-        		  }
-        	});*/
         	return dialog;
         }
     };
-}]
+}
 );

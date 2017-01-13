@@ -8,6 +8,7 @@ module('timelineV2').
 
     	$scope.controlScope = $scope.$parent.controlControl.childScope;
     	
+    	$scope.processTickets = 0;
     	$scope.noData = false;
     	
     	// Various flags to synchronize the multiple callbacks during initialization
@@ -115,6 +116,8 @@ module('timelineV2').
 		 */
 		$scope.renderTimeline = function()	{
 			
+			$scope.processTickets++;
+			var startUnix = $scope.controlScope.dateData.unixRest;
 			var cacheUser = $scope.controlScope.userData.currentSubject;
 			var cacheDate = $scope.controlScope.dateData.lastUnixRest;
 			var cacheSource = $scope.controlScope.sourceData.timelineSource;
@@ -140,13 +143,18 @@ module('timelineV2').
 			var src = $scope.controlScope.sourceData.timelineSource;
 
 			$scope.noData = true;
+			
+			if(!($scope.stopper.firstRendering) && (typeof $scope.dialog === 'undefined' || $scope.dialog[0].parentElement === null))	{
+				$scope.dialog = loading_overlay.createLoadOverlay("Loading data ...", this, "timeline_content");
+			}
+			
 			if($scope.controlScope.userData.currentSubject !== '')	{
 				
 				var cachedAt = -1;
 				
 				// Checks if the key is in the cache
 				for(var j=0; cachedAt === -1 && j< $scope.cache.size; j++){
-					if($scope.controlScope.sourceData.timelineSource + $scope.controlScope.dateData.unixRest + $scope.controlScope.userData.currentSubject === $scope.cache.meta[j])	{
+					if($scope.controlScope.sourceData.timelineSource + startUnix + $scope.controlScope.userData.currentSubject === $scope.cache.meta[j])	{
 						cachedAt = j;
 					}
 				}
@@ -156,11 +164,8 @@ module('timelineV2').
 					afterDataLoad();
 				}
 				else	{
-					if(!($scope.stopper.firstRendering))	{
-						var dialog = loading_overlay.createLoadOverlay("Loading data ...", this, "timeline_content");
-					}
 					//Loads the data to display in the timeline
-					gapi.client.analysisEndpoint.getActivityData({"user" : $scope.controlScope.userData.currentSubject, "start" : $scope.controlScope.dateData.unixRest, "end" : ($scope.controlScope.dateData.unixRest + 86400000), "source" : src, "include_first" : true}).execute(function(resp)	{
+					gapi.client.analysisEndpoint.getActivityData({"user" : $scope.controlScope.userData.currentSubject, "start" : startUnix, "end" : (startUnix + 86400000), "source" : src, "include_first" : true}).execute(function(resp)	{
 						if(resp !== null && resp !== false && (typeof resp.returnedFBEE !== 'undefined' || typeof resp.returnedAE !== 'undefined'))	{
 	
 							// Fills the rawData array with data from the corresponding member of resp
@@ -204,7 +209,7 @@ module('timelineV2').
 							/*Gets the ON/OFF events in the intervall we got data for. Start is not the beginning of the day,
 							but the timestamp of the last event of the previous day to be able to deliver data for the interval before
 							the first activity event off the chosen day.*/
-							helper.provideOnOffTime($scope.controlScope.userData.currentSubject, parseInt(rawData[0].time), parseInt($scope.controlScope.dateData.unixRest + 86400000), true, function(providedTime)	{
+							helper.provideOnOffTime($scope.controlScope.userData.currentSubject, parseInt(rawData[0].time), parseInt(startUnix + 86400000), true, function(providedTime)	{
 								if(providedTime !== false)	{
 									
 									//Creates an array of timestamps defining the ON->OFF->ON->OFF->... rythm of the timeframe the data resides in
@@ -231,7 +236,7 @@ module('timelineV2').
 									// Adds ON/OFF tag at the end of the day to create an interval between last ON tag and end of the day.
 									onOffTimes.push({
 										state: toggleOnOff(onOffTimes[onOffTimes.length-1].state),
-										timestamp: $scope.controlScope.dateData.unixRest + 86400000
+										timestamp: startUnix + 86400000
 									});
 									
 									function toggleOnOff(i)	{
@@ -246,156 +251,161 @@ module('timelineV2').
 									//Refines the data
 									var refinedData = helper.refineData(rawData, onOffTimes, 'label');
 									var startLength = refinedData.length; 
-	
-									$scope.eventData.probability['No Data Collected'] = [];
-		
-									//Expands the last bar so that the expanded parts can get cutted top
-									var cuttedLastBarAt = -1;
-									refinedData[refinedData.length-1].end = Math.min($scope.controlScope.dateData.unixRest + 86400000-1, new Date());
-									for(var k=0; k<onOffTimes.length; k++)	{
-										if(onOffTimes[k].state === 'OFF' && refinedData[refinedData.length-1] < onOffTimes[k].timestamp && onOffTimes[k].timestamp < $scope.controlScope.dateData.unixRest + 86400000)	{
-											cuttedLastBarAr = k;
-											refinedData[refinedData.length-1].end = onOffTimes[k].timestamp; 
-											$scope.eventData.probability['No Data Collected'][onOffTimes[k].timestamp] = 100;
+
+									if(--($scope.processTickets) === 0)	{
+
+										$scope.eventData.probability['No Data Collected'] = [];
+			
+										//Expands the last bar so that the expanded parts can get cutted top
+										var cuttedLastBarAt = -1;
+										refinedData[refinedData.length-1].end = Math.min($scope.controlScope.dateData.unixRest + 86400000-1, new Date());
+										for(var k=0; k<onOffTimes.length; k++)	{
+											if(onOffTimes[k].state === 'OFF' && refinedData[refinedData.length-1] < onOffTimes[k].timestamp && onOffTimes[k].timestamp < $scope.controlScope.dateData.unixRest + 86400000)	{
+												cuttedLastBarAr = k;
+												refinedData[refinedData.length-1].end = onOffTimes[k].timestamp; 
+												$scope.eventData.probability['No Data Collected'][onOffTimes[k].timestamp] = 100;
+											}
 										}
-									}
-									
-									for(var i=0; i<startLength; i++){
 										
-										// Removes data if it lies completely outside of the days timeframe
-										if(refinedData[i].end < $scope.controlScope.dateData.unixRest)	{
-											refinedData.shift();
-											if(0<refinedData.length)	{
-												i--;
-												startLength--;
+										for(var i=0; i<startLength; i++){
+											
+											// Removes data if it lies completely outside of the days timeframe
+											if(refinedData[i].end < $scope.controlScope.dateData.unixRest)	{
+												refinedData.shift();
+												if(0<refinedData.length)	{
+													i--;
+													startLength--;
+												}
+												else	{
+													// Creates filler if all data has been removed
+													createFiller();
+												}
+											}
+											else if(refinedData[i].start < $scope.controlScope.dateData.unixRest)	{
+												if(src === 'Kind of Movement')	{
+													$scope.eventData.probability[refinedData[i].label][$scope.controlScope.dateData.unixRest+1] = $scope.eventData.probability[refinedData[i].label][parseInt(refinedData[i].start)];
+													refinedData[i].opaque = $scope.eventData.probability[refinedData[i].label][$scope.controlScope.dateData.unixRest+1];
+												}
+												refinedData[i].start = $scope.controlScope.dateData.unixRest+1;
 											}
 											else	{
-												// Creates filler if all data has been removed
-												createFiller();
-											}
-										}
-										else if(refinedData[i].start < $scope.controlScope.dateData.unixRest)	{
-											if(src === 'Kind of Movement')	{
-												$scope.eventData.probability[refinedData[i].label][$scope.controlScope.dateData.unixRest+1] = $scope.eventData.probability[refinedData[i].label][parseInt(refinedData[i].start)];
-												refinedData[i].opaque = $scope.eventData.probability[refinedData[i].label][$scope.controlScope.dateData.unixRest+1];
-											}
-											refinedData[i].start = $scope.controlScope.dateData.unixRest+1;
-										}
-										else	{
-											//Collects the timestamps where the probability changes in the bar. While doing that, also sets the opacity of each bar
-											var enteredFor = false;
-											var cuttedAt = [];
-											var hasProbability = false;
-											for(var k=0; typeof $scope.eventData.probability[refinedData[i].label] !== 'undefined' && k<Object.keys($scope.eventData.probability[refinedData[i].label]).length; k++){
-												hasProbability = true
-												var time = parseInt(Object.keys($scope.eventData.probability[refinedData[i].label])[k]);
-												if(time === refinedData[i].start)	{
-													refinedData[i].opaque = $scope.eventData.probability[refinedData[i].label][time];
-												}
-												if(refinedData[i].start < time && time < refinedData[i].end)	{
-													enteredFor = true;
-													cuttedAt.push(time);
-												}
-											}
-											
-											var indexWhereEndIs = i;
-											
-											// Cuts the bar and pushes the new "part-bars" seperately onto the refinedData array. Adds probablitity for new bars too
-											if(enteredFor){
-												cuttedAt.push(refinedData[i].end);
-												for(var k=0; k<cuttedAt.length;k++)	{
-													if(k<cuttedAt.length-1)	{
-														refinedData.push({
-															label: refinedData[i].label,
-															start: cuttedAt[k],
-															end: cuttedAt[k+1],
-															opaque: $scope.eventData.probability[refinedData[i].label][cuttedAt[k]]
-														});
-														$scope.eventData.probability[refinedData[i].label][cuttedAt[k]] = $scope.eventData.probability[refinedData[i].label][cuttedAt[k]];
+												//Collects the timestamps where the probability changes in the bar. While doing that, also sets the opacity of each bar
+												var enteredFor = false;
+												var cuttedAt = [];
+												var hasProbability = false;
+												for(var k=0; typeof $scope.eventData.probability[refinedData[i].label] !== 'undefined' && k<Object.keys($scope.eventData.probability[refinedData[i].label]).length; k++){
+													hasProbability = true
+													var time = parseInt(Object.keys($scope.eventData.probability[refinedData[i].label])[k]);
+													if(time === refinedData[i].start)	{
+														refinedData[i].opaque = $scope.eventData.probability[refinedData[i].label][time];
+													}
+													if(refinedData[i].start < time && time < refinedData[i].end)	{
+														enteredFor = true;
+														cuttedAt.push(time);
 													}
 												}
-												indexWhereEndIs = refinedData.length-1;
-												refinedData[i].end = cuttedAt[0];
 												
+												var indexWhereEndIs = i;
+												
+												// Cuts the bar and pushes the new "part-bars" seperately onto the refinedData array. Adds probablitity for new bars too
+												if(enteredFor){
+													cuttedAt.push(refinedData[i].end);
+													for(var k=0; k<cuttedAt.length;k++)	{
+														if(k<cuttedAt.length-1)	{
+															refinedData.push({
+																label: refinedData[i].label,
+																start: cuttedAt[k],
+																end: cuttedAt[k+1],
+																opaque: $scope.eventData.probability[refinedData[i].label][cuttedAt[k]]
+															});
+															$scope.eventData.probability[refinedData[i].label][cuttedAt[k]] = $scope.eventData.probability[refinedData[i].label][cuttedAt[k]];
+														}
+													}
+													indexWhereEndIs = refinedData.length-1;
+													refinedData[i].end = cuttedAt[0];
+													
+												}
+												// Sets the opacity when there is no probability fetched
+												if(!hasProbability)	{
+													refinedData[i].opaque = 100;
+												}
+												if(i < startLength-1 && refinedData[indexWhereEndIs].end !== refinedData[i+1].start){
+													refinedData.push({
+														label: 'No Data Collected',
+														start: refinedData[indexWhereEndIs].end,
+														end: refinedData[i+1].start,
+														opaque: 100
+													});
+													$scope.eventData.probability['No Data Collected'][refinedData[indexWhereEndIs].end] = 100;
+												}
 											}
-											// Sets the opacity when there is no probability fetched
-											if(!hasProbability)	{
-												refinedData[i].opaque = 100;
-											}
-											if(i < startLength-1 && refinedData[indexWhereEndIs].end !== refinedData[i+1].start){
+										}
+										
+										// Adds "no data" bar when first data event is after the beginning of the day
+										if(0<refinedData.length)	{								
+											if(refinedData[0].start > $scope.controlScope.dateData.unixRest+1){
 												refinedData.push({
 													label: 'No Data Collected',
-													start: refinedData[indexWhereEndIs].end,
-													end: refinedData[i+1].start,
+													start: $scope.controlScope.dateData.unixRest + 1,
+													end: refinedData[0].start,
 													opaque: 100
 												});
-												$scope.eventData.probability['No Data Collected'][refinedData[indexWhereEndIs].end] = 100;
+												$scope.eventData.probability['No Data Collected'][$scope.controlScope.dateData.unixRest+1] = 100;
+											}
+												
+											//Adds last 'No Data' bar after cutting so that it doesn't gets cutted
+											if(cuttedLastBarAt !== -1)	{
+												refinedData.push({
+													label: 'No Data Collected',
+													start: onOffTimes[cutedLastBarAt].timestamp,
+													end: $scope.controlScope.dateData.unixRest + 86400000-1,
+													opaque: 100
+												});
 											}
 										}
-									}
-									
-									// Adds "no data" bar when first data event is after the beginning of the day
-									if(0<refinedData.length)	{								
-										if(refinedData[0].start > $scope.controlScope.dateData.unixRest+1){
-											refinedData.push({
-												label: 'No Data Collected',
-												start: $scope.controlScope.dateData.unixRest + 1,
-												end: refinedData[0].start,
-												opaque: 100
-											});
-											$scope.eventData.probability['No Data Collected'][$scope.controlScope.dateData.unixRest+1] = 100;
-										}
-											
-										//Adds last 'No Data' bar after cutting so that it doesn't gets cutted
-										if(cuttedLastBarAt !== -1)	{
-											refinedData.push({
-												label: 'No Data Collected',
-												start: onOffTimes[cutedLastBarAt].timestamp,
-												end: $scope.controlScope.dateData.unixRest + 86400000-1,
-												opaque: 100
-											});
-										}
-									}
-									// Creates the data for the timeline
-									for(var j=0; j<refinedData.length; j++)	{
-										if(refinedData[j].start < refinedData[j].end){
-											var expanded = false;
-											var start = refinedData[j].start;
-											var colorCode = 1;
-											for(var k=0; k<$scope.eventData.eventStorage.length; k++)	{
-												colorCode = 1;
-												if(refinedData[j].label === $scope.eventData.eventStorage[k].label)	{
+										
+										// Creates the data for the timeline
+										for(var j=0; j<refinedData.length; j++)	{
+											if(refinedData[j].start < refinedData[j].end){
+												var expanded = false;
+												var start = refinedData[j].start;
+												var colorCode = 1;
+												for(var k=0; k<$scope.eventData.eventStorage.length; k++)	{
+													colorCode = 1;
+													if(refinedData[j].label === $scope.eventData.eventStorage[k].label)	{
+														if(refinedData[j].label === 'No Data Collected')	{
+															colorCode = 2;
+														}
+														$scope.eventData.eventStorage[k].times.push({"starting_time": start, "ending_time": refinedData[j].end, "color_code": colorCode, "opaque": refinedData[j].opaque});
+														expanded = true;
+													}
+												}
+												if(!expanded)	{
 													if(refinedData[j].label === 'No Data Collected')	{
 														colorCode = 2;
 													}
-													$scope.eventData.eventStorage[k].times.push({"starting_time": start, "ending_time": refinedData[j].end, "color_code": colorCode, "opaque": refinedData[j].opaque});
-													expanded = true;
+													$scope.eventData.eventStorage.push({label: refinedData[j].label, times: [{"starting_time": start, "ending_time": refinedData[j].end, "color_code": colorCode, "opaque": refinedData[j].opaque}]});	
 												}
-											}
-											if(!expanded)	{
-												if(refinedData[j].label === 'No Data Collected')	{
-													colorCode = 2;
-												}
-												$scope.eventData.eventStorage.push({label: refinedData[j].label, times: [{"starting_time": start, "ending_time": refinedData[j].end, "color_code": colorCode, "opaque": refinedData[j].opaque}]});	
 											}
 										}
+										$scope.noData = false;
+										afterDataLoad();	
 									}
-									$scope.noData = false;
 								}
-								else	{
+								else if(--($scope.processTickets) === 0)	{
 									createFiller();
+									afterDataLoad();	
 								}
-								afterDataLoad();	
 							});
 						}
-						else	{
+						else if(--($scope.processTickets) === 0)	{
 							createFiller();
 							afterDataLoad();	
 						}
 					});
 				}
 			}
-			else	{
+			else if(--($scope.processTickets) === 0)	{
 				createFiller();
 				afterDataLoad();
 			}
@@ -411,15 +421,15 @@ module('timelineV2').
 			}
 		
 			/**
-			 * Starts filtering and closes dialog if one had been opened before
+			 * Starts filtering and closes $scope.dialog if one had been opened before
 			 */
 			function afterDataLoad()	{
 				$scope.stopper.renderingFinished = true;
 				if($scope.stopper.directiveFinished)	{
 					$scope.filterAccordingToSlider(src);	
 				}
-				if(!($scope.stopper.firstRendering) && typeof dialog !== 'undefined')	{
-					dialog.remove();
+				if(!($scope.stopper.firstRendering) && typeof $scope.dialog !== 'undefined' && $scope.dialog[0].parentElement !== null)	{
+					$scope.dialog.remove();
 				}
 			}
 		};

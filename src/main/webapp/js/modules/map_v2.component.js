@@ -5,13 +5,14 @@ module('mapV2').
     controller: function MapController(NgMap, $scope, $timeout, loading_overlay, census_api, helper, allowed_directive_service) {
     	
     	"use strict";
-    	var startDialog = loading_overlay.createLoadOverlay('Loading the map ...', this, 'map_content');
+    	$scope.dialog = loading_overlay.createLoadOverlay('Loading the map ...', this, 'map_content');
     	
     	$scope.controlScope = $scope.$parent.controlControl.childScope;
 
     	$scope.noData = false;
     	$scope.bounds = new google.maps.LatLngBounds();
     	$scope.rekick = false;
+    	$scope.processTickets = 0;
     	
     	// All the data we need to show the Google Map, markers and the heatmap layer
     	$scope.mapData = {
@@ -91,7 +92,9 @@ module('mapV2').
 		 * This method is called whenever a new set of data needs to get shown on the map.
 		 * Currently, that's the case when a new user is chosen or when the date in the datepicker changes.
 		 * 
-		 * It consists of 3 parts:
+		 * It consists of 4 parts:
+		 * 
+		 * 0. Create load-hash
 		 * 
 		 * 1. It caches the currently shown data in the cache-Array. The key is the userId plus the unixRest,
 		 * which defines the day. This part of the method is only triggered when a user is logged in and data has been actually loaded
@@ -108,6 +111,13 @@ module('mapV2').
 		 */
 		$scope.initializeRefresh = function()	{
 			
+			//Step 0: Count processes
+			$scope.processTickets++;
+			
+			if($scope.dialog[0].parentElement === null)	{
+				$scope.dialog = loading_overlay.createLoadOverlay("Loading entries ...", this, 'map_content');
+			}
+
 			//Step 1: Caching data
 			if($scope.controlScope.userData.lastSubject !== '' && !($scope.noData))	{
 				$scope.cache = helper.cacheData($scope.cache, {
@@ -117,11 +127,12 @@ module('mapV2').
 			}
 			
 			if($scope.mapData.map === 'no map')	{
-				$scope.rekick = true
+				$scope.rekick = true;
+				$scope.processTickets--;
 				return;
 			}
 			//Step 2: Restoring "factory mode"
-			if($scope.controlScope.userData.currentSubject !== ''){
+			else if($scope.controlScope.userData.currentSubject !== ''){
 				for(var i=0; i<$scope.mapData.markers.length; i++){
 					$scope.mapData.markers[i].setMap(null);
 				}
@@ -152,15 +163,22 @@ module('mapV2').
 					}
 				}
 				
+				//Step 3: Load new data. The method to do so depends on the fact if the data is cached or not.
 				if(cachedAt === -1)	{
 					// Load data anew
 					$scope.showMarkers();
 				}
 				else	{
 					// Load data from cache at the give index
-					loadFromCache(cachedAt);
+					showFromCache(cachedAt);
 				}
 			}
+			else{
+				$scope.processTickets--;
+				if($scope.dialog[0].parentElement !== null)	{
+	     		   $scope.dialog.remove();
+				}
+	     	}
 		};
 		
 		
@@ -170,19 +188,53 @@ module('mapV2').
 		 */
 		$scope.showMarkers = function()	{
 			var strUser = document.getElementById("chosen_user").options[document.getElementById("chosen_user").selectedIndex].text;
-			var dialog = loading_overlay.createLoadOverlay("Loading entries ...", this, 'map_content');
 			//Those are 64-bit integers. They have to be passed to the endpoint as long!
 			//Querying for the data
 			gapi.client.analysisEndpoint.getInWindow({'user' : strUser, 'start' : $scope.controlScope.dateData.unixRest , 'end' : ($scope.controlScope.dateData.unixRest + 86400000)}).execute(function(resp) {
-        	   dialog.remove();
         	   //Checks to see if the returned object is valid and usable
+    	   		$scope.processTickets--;
         	   if(resp !== false && typeof resp.items !== 'undefined' && resp.items.length !== 0)	{	   		
         	   		$scope.noData = false;
-        	   		showOnMap(resp.items);
-        	   	}
-        	   else	{
+        	   		var entries = resp.items;
+        	   		if($scope.processTickets === 0)	{
+        	   			for(var i=0; typeof entries !== 'undefined' && i<entries.length; i++)	{
+        				
+	        				var location = [];
+	        				location[0] = entries[i].latitude;
+	        				location[1] = entries[i].longitude;
+	        				
+	        				var coordinates = new google.maps.LatLng(location[0], location[1]);
+		        			$scope.mapData.mvcArray.push(coordinates);
+		
+		        			$scope.mapData.markers[i] = new google.maps.Marker({
+		        				title: helper.getDateFromUnix(entries[i].timestamp)
+		        			});
+		        			$scope.mapData.markers[i].addListener('click', function() {
+		        				$scope.censusData.latitude = this.getPosition().lat();
+		        				$scope.censusData.longitude = this.getPosition().lng();
+		        				$scope.showCensus(this.getTitle(), this.getPosition().lat(), this.getPosition().lng());
+		        		    });
+	
+		        			$scope.mapData.markers[i].setPosition(coordinates);
+		        			$scope.mapData.markers[i].setMap($scope.mapData.map);
+		        			$scope.mapData.markers[i].setVisible(false);
+		        			$scope.bounds.extend($scope.mapData.markers[i].getPosition());
+	        			}
+	        			
+	        			if(typeof entries !== 'undefined' && $scope.processTickets === 0)	{
+	        				$scope.centerMap();
+	        			}
+	        			
+	        			$scope.filterAccordingToSlider();
+        	   		}
+        		}
+        	   	else	{
         		   $scope.noData = true;
-        	   }
+        		   $scope.processTickets--;
+        		   if($scope.dialog[0].parentElement !== null)	{
+    	     		   $scope.dialog.remove();
+        		   }
+        	   	}
         	});  
 		};
 		
@@ -190,7 +242,7 @@ module('mapV2').
 		 * Copies the data from the cache onto the map.
 		 * @param index: The index where the markers reside in the cache
 		 */
-		function loadFromCache(index)	{
+		function showFromCache(index)	{
 			$scope.mapData.markers = $scope.cache.content.marker[index];
 			$scope.mapData.mvcArray = $scope.cache.content.mvc[index];
 			for(var i=0; i<$scope.mapData.markers.length; i++){
@@ -224,47 +276,7 @@ module('mapV2').
 			$scope.mapData.map.setCenter($scope.bounds.getCenter());
 		};
 		
-		/**
-		 * Shows markers on the map with the data from the locations. Prepares the raw string and extractes
-		 * locations out of them.
-		 * @param entries: the LocationEntries
-		 */
-		function showOnMap(entries)	{
-			for(var i=0; typeof entries !== 'undefined' && i<entries.length; i++)	{
-				
-				var location = [];
-				location[0] = entries[i].latitude;
-				location[1] = entries[i].longitude;
-				
-				var coordinates = new google.maps.LatLng(location[0], location[1]);
-				$scope.mapData.mvcArray.push(coordinates);
-
-				$scope.mapData.markers[i] = new google.maps.Marker({
-					title: helper.getDateFromUnix(entries[i].timestamp)
-				});
-				$scope.mapData.markers[i].addListener('click', function() {
-					$scope.censusData.latitude = this.getPosition().lat();
-					$scope.censusData.longitude = this.getPosition().lng();
-					$scope.showCensus(this.getTitle(), this.getPosition().lat(), this.getPosition().lng());
-			    });
-
-				$scope.mapData.markers[i].setPosition(coordinates);
-				$scope.mapData.markers[i].setMap($scope.mapData.map);
-				if($scope.controlScope.mapControlData.isHeat)	{
-					$scope.mapData.markers[i].setVisible(false);
-				}	
-				$scope.bounds.extend($scope.mapData.markers[i].getPosition());
-			}
-			
-			if(typeof entries !== 'undefined')	{
-				$scope.centerMap();
-			}
-			
-			
-			$scope.filterAccordingToSlider();
-			
-		}
-	
+		
 		/**
 		 * Searches the entry String for the code word. returnes everything betwen thecode word and the next comma in line.
 		 * @param code: The codewort. everything after the codewort until the next comma will be returned as result
@@ -334,19 +346,14 @@ module('mapV2').
 		 * It updates automatically whenever the slider is moved, but is also called manually
 		 */
 		$scope.filterAccordingToSlider = function()	{
-			if($scope.controlScope.userData.currentSubject !== '')	{
+			
+			if($scope.processTickets === 0 && $scope.controlScope.userData.currentSubject !== '')	{
 			    /* Completly clears the heatmap. The heatmapdata is a stack, therefore injecting
 				and removing at specific indexes is not possible*/
         		$scope.mapData.heatmapDataArray.clear();
         		for(var i=0; i<$scope.mapData.markers.length; i++)	{
         			var value = Math.floor((helper.getUnixFromDate($scope.mapData.markers[i].getTitle(), $scope.controlScope.dateData.unixRest)-$scope.controlScope.dateData.unixRest)/60000);
-        			if(value < $scope.controlScope.slider.minValue || $scope.controlScope.slider.maxValue < value){
-        				// Only change if the marker is visible while it shall not be
-        				if($scope.mapData.markers[i].getVisible())	{
-        					$scope.mapData.markers[i].setVisible(false);
-        				}
-        			}
-        			else	{
+        			if(value <= $scope.controlScope.slider.maxValue || $scope.controlScope.slider.minValue <= value){
         				// Only change if the marker is not visible while it shall be
         				if(!($scope.mapData.markers[i].getVisible()) && !($scope.controlScope.mapControlData.isHeat))	{
         					$scope.mapData.markers[i].setVisible(true);
@@ -354,8 +361,17 @@ module('mapV2').
         				// Adds the location to the heatmap
     					$scope.mapData.heatmapDataArray.push($scope.mapData.mvcArray.getAt(i));
         			}
+        			else	{
+        				// Only change if the marker is visible while it shall not be
+        				if($scope.mapData.markers[i].getVisible())	{
+        					$scope.mapData.markers[i].setVisible(false);
+        				}
+        			}
         		}
         	}
+			if($scope.dialog[0].parentElement !== null)	{
+     		   $scope.dialog.remove();
+     	   }
 		};		
 		
 		$scope = helper.datePickerSetup($scope);
@@ -367,7 +383,7 @@ module('mapV2').
 		$scope.refresh = function()	{
 			$scope.refreshMap = true;
 			$timeout(function()	{
-				startDialog.remove();
+				$scope.dialog.remove();
 				$timeout(function () {
 				      $scope.$broadcast('rzSliderForceRender');
 				    });
@@ -392,7 +408,7 @@ module('mapV2').
 		 * EXTENSION: Will update a window with longitude, latitude and time of the marker.
 		 */
 		$scope.showCensus = function(time, lat, lng)	{	
-			var dialog = loading_overlay.createLoadOverlay("Loading census data ...", this, "map_content");
+			$scope.dialog = loading_overlay.createLoadOverlay("Loading census data ...", this, "map_content");
 			census_api.sendRequest(lat, lng,
 			function(resp, id)	{
 				
@@ -449,7 +465,7 @@ module('mapV2').
 					$scope.censusData.averages.owner = averages[0]; 
 					$scope.censusData.averages.renter = averages[1]; 
 					$scope.censusData.averages.total = averages[2];
-					dialog.remove();
+					$scope.dialog.remove();
 				});
 			}, true, -1);
 		};
