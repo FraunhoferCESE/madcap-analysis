@@ -96,7 +96,7 @@ angular.module('madcap-analysis')
 		 * 			4:50pm-8:50pm, Block 2020 
 		 */
 		refineData : function(thisData, onOffTimes, grouper)	{
-			
+
 			var refinedData = [];
 			var locationCounter = 0;
 			var onIntervalAt = -1;

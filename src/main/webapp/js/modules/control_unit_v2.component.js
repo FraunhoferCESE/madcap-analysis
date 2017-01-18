@@ -35,7 +35,7 @@ module('controlUnitV2').
     		sliderVisible: false,
     		timelineCsvTrigger: false,
     		locationCsvTrigger: false,
-    		blockCsvTrigger: false  		
+    		blockCsvTrigger: false,  		
     	};
     	
     	$scope.sourceData = {
@@ -84,8 +84,9 @@ module('controlUnitV2').
     	
     	$scope.csvParameter = {
     			createCsvMap: false,
+    			createCsvTimeline: false,
     			maxMap: 0,
-    			csvProgress: 0
+    			csvProgressMap: 0
     	};
     	
     	$scope.mapControlData =	{

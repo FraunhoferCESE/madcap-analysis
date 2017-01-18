@@ -11,25 +11,78 @@ module('mapV2').
 
     	$scope.noData = false;
     	$scope.bounds = new google.maps.LatLngBounds();
-    	$scope.rekick = false;
     	$scope.processTickets = 0;
     	
     	// All the data we need to show the Google Map, markers and the heatmap layer
     	$scope.mapData = {
-    			map: 'no map',
-    			mvcArray: new google.maps.MVCArray(),
-    			heatmapDataArray: new google.maps.MVCArray(),
-    			heatmap : {},
-    			isHeat: false,
-    			markers: [],
-    			center: new google.maps.LatLng(38.97, -76.92)
+   			map: 'no map',
+    		mvcArray: new google.maps.MVCArray(),
+    		heatmapDataArray: new google.maps.MVCArray(),
+    		heatmap : {},
+   			isHeat: false,
+   			markers: [],
+    		center: new google.maps.LatLng(38.97, -76.92),
+    		
     	};
+    	
+    	$scope.initializePack = {
+       		rekick: false,
+       		stopper: 2,
+       		xsSize: false,
+    		initializeMap: function()	{
+    			var mapPromise = NgMap.getMap({id:"map"});	
+    			$scope.dialog.remove();
+   				document.getElementById("mapWell").style.height = "";
+    			document.getElementById("mapRow").style.height = document.getElementById("mapInformationContainer").offsetHeight+120;
+				$(window).on('resize',$scope.moveElementsOnResize);
+    			mapPromise.then(function(returnMap){
+    				$scope.mapData.map = returnMap;
+   					if($scope.initializePack.rekick)	{
+    					$scope.initializePack.rekick = false;
+    				$scope.initializeRefresh();
+    				}
+    			});
+    				
+    			$timeout(function () {
+    				    $scope.$broadcast('rzSliderForceRender');
+    			});
+    		},
+    		initializeCallback: function()	{
+    			if(--($scope.initializePack.stopper) === 0)	{
+    				$scope.refreshMap = true;
+    			}
+    		}
+    	};
+    	
+    	$scope.moveElementsOnResize = function()	{
+    		if($scope.initializePack.xsSize && 768 <= $(window).width())	{
+    			$scope.initializePack.xsSize = false;
+    			document.getElementById("mapWell").style.height = "";
+    		}
+    		else if(!($scope.initializePack.xsSize) && 768 > $(window).width()){
+    			$scope.initializePack.xsSize = true;
+    			document.getElementById("mapWell").style.height = document.getElementById("mapWrap").offsetHeight + document.getElementById("mapInformationContainer").offsetHeight + 120;
+
+    		}
+    	}
     	
     	//A collection of data from census requests. Will be expanded in the future probably
     	$scope.censusData = {
-    		blockData: [],
-    		longitude: "",
-    		latitude: ""
+    		blockData: {
+    			state: "No data requested",
+    			county: "No data requested",
+    			tract: "No data requested",
+    			blockGroup: "No data requested",
+    			block: "No data requested",
+    			place_name: "No data requested"
+    		},
+    		longitude: "No data requested",
+    		latitude: "No data requested",
+    		averages: {
+    			owner: "No data requested",
+    			renter: "No data requested",
+    			total: "No data requested"
+    		}
     	};
     	
     	$scope.mapData.heatmap = new google.maps.visualization.HeatmapLayer({
@@ -65,6 +118,7 @@ module('mapV2').
 			if($scope.controlScope.control.locationCsvTrigger)	{
 				$scope.controlScope.control.locationCsvTrigger
 				$scope.downloadLocationCSV();
+				$scope.controlScope.control.locationCsvTrigger = false;
 			}
 	    });
     	
@@ -79,6 +133,7 @@ module('mapV2').
 			if($scope.controlScope.control.blockCsvTrigger)	{
 				$scope.controlScope.control.blockCsvTrigger
 				$scope.downloadBlockCSV();
+				$scope.controlScope.control.blockCsvTrigger = false;
 			}
 	    });
     	
@@ -127,7 +182,7 @@ module('mapV2').
 			}
 			
 			if($scope.mapData.map === 'no map')	{
-				$scope.rekick = true;
+				$scope.initializePack.rekick = true;
 				$scope.processTickets--;
 				return;
 			}
@@ -192,7 +247,7 @@ module('mapV2').
 			//Querying for the data
 			gapi.client.analysisEndpoint.getInWindow({'user' : strUser, 'start' : $scope.controlScope.dateData.unixRest , 'end' : ($scope.controlScope.dateData.unixRest + 86400000)}).execute(function(resp) {
         	   //Checks to see if the returned object is valid and usable
-    	   		$scope.processTickets--;
+				$scope.processTickets--;
         	   if(resp !== false && typeof resp.items !== 'undefined' && resp.items.length !== 0)	{	   		
         	   		$scope.noData = false;
         	   		var entries = resp.items;
@@ -230,7 +285,6 @@ module('mapV2').
         		}
         	   	else	{
         		   $scope.noData = true;
-        		   $scope.processTickets--;
         		   if($scope.dialog[0].parentElement !== null)	{
     	     		   $scope.dialog.remove();
         		   }
@@ -243,6 +297,7 @@ module('mapV2').
 		 * @param index: The index where the markers reside in the cache
 		 */
 		function showFromCache(index)	{
+			$scope.processTickets--;
 			$scope.mapData.markers = $scope.cache.content.marker[index];
 			$scope.mapData.mvcArray = $scope.cache.content.mvc[index];
 			for(var i=0; i<$scope.mapData.markers.length; i++){
@@ -341,10 +396,10 @@ module('mapV2').
 	    
 	    
 		/**
-		 * At rendering, all markers get shown and the heatmap is empty. This method
-		 * sorts out the markers which shall not be seen and fills the heatmap.
-		 * It updates automatically whenever the slider is moved, but is also called manually
-		 */
+		* At rendering, all markers get shown and the heatmap is empty. This method
+		* sorts out the markers which shall not be seen and fills the heatmap.
+		* It updates automatically whenever the slider is moved, but is also called manually
+		*/
 		$scope.filterAccordingToSlider = function()	{
 			
 			if($scope.processTickets === 0 && $scope.controlScope.userData.currentSubject !== '')	{
@@ -353,7 +408,7 @@ module('mapV2').
         		$scope.mapData.heatmapDataArray.clear();
         		for(var i=0; i<$scope.mapData.markers.length; i++)	{
         			var value = Math.floor((helper.getUnixFromDate($scope.mapData.markers[i].getTitle(), $scope.controlScope.dateData.unixRest)-$scope.controlScope.dateData.unixRest)/60000);
-        			if(value <= $scope.controlScope.slider.maxValue || $scope.controlScope.slider.minValue <= value){
+        			if(value <= $scope.controlScope.slider.maxValue && $scope.controlScope.slider.minValue <= value){
         				// Only change if the marker is not visible while it shall be
         				if(!($scope.mapData.markers[i].getVisible()) && !($scope.controlScope.mapControlData.isHeat))	{
         					$scope.mapData.markers[i].setVisible(true);
@@ -369,37 +424,16 @@ module('mapV2').
         			}
         		}
         	}
-			if($scope.dialog[0].parentElement !== null)	{
+			if($scope.dialog[0].parentElement !== null && $scope.refreshMap)	{
      		   $scope.dialog.remove();
      	   }
 		};		
 		
 		$scope = helper.datePickerSetup($scope);
 				
-		/**
-		 * Hides the for this view specific loading spinner and text. Provides the ng-if tag time to get shown on the DOM,
-		 * so that NgMap can get the map from the DOM through getMap();
-		 */
-		$scope.refresh = function()	{
-			$scope.refreshMap = true;
-			$timeout(function()	{
-				$scope.dialog.remove();
-				$timeout(function () {
-				      $scope.$broadcast('rzSliderForceRender');
-				    });
-				var thisMap = NgMap.getMap({id:"map"});
-				thisMap.then(function(returnMap){
-					$scope.mapData.map = returnMap;
-					if($scope.rekick)	{
-						$scope.rekick = false;
-						$scope.initializeRefresh();
-					}
-				});
-			}, 1000);
-		};
 		
 		setTimeout(function(){
-			allowed_directive_service.passDirectiveCallback($scope.refresh);
+			allowed_directive_service.passDirectiveCallback($scope.initializePack.initializeCallback);
 		},0);
 		
 		
@@ -476,7 +510,7 @@ module('mapV2').
 		 * regardless of the fact if they are shown on the map currently. 
 		 */
 		$scope.downloadBlockCSV = function()	{
-	    	var csvData = $scope.$parent.$parent.controlControl.controlScope.csvParameter;
+	    	var csvData = $scope.$parent.$parent.controlControl.childScope.csvParameter;
 			csvData.csvProgressMap = 10;
 			if(csvData.createCsvMap === false)	{
 				csvData.createCsvMap = true;
@@ -489,7 +523,7 @@ module('mapV2').
 				return;
 			}
     		// Prepares data to be passed to (out) census service
-			$scope.userData.chosen_user = $scope.userData.users[2];
+			$scope.controlScope.userData.chosen_user = $scope.controlScope.userData.users[2];
 			var coords = [];
 			for(var i=0; i<$scope.mapData.markers.length; i++)	{
 				coords[i] = {};
@@ -554,5 +588,7 @@ module('mapV2').
 				document.body.removeChild(link);
 			});
 		};
+    
+    $scope.initializePack.initializeCallback();
     }
   });

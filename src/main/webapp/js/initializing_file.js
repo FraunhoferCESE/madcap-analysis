@@ -15,9 +15,8 @@
 		 */
 		function con()	{
 			if(--apisToLoad === 0)	{
-				var y=0;
-				  document.getElementById('loadmessage').innerHTML = "Checking user ...";
-				  gapi.auth.authorize({client_id: '611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com',scope: 'https://www.googleapis.com/auth/userinfo.email', immediate: true}, auth);
+				document.getElementById('loadmessage').innerHTML = "Checking user ...";
+				gapi.auth.authorize({client_id: '611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com',scope: 'https://www.googleapis.com/auth/userinfo.email', immediate: true}, auth);
 			}
 		}
 		if(window.location.href.substring(0,8) !== "https://") {
@@ -38,7 +37,6 @@
    */
   function auth(oldResp) {
 	  "use strict";
-	  var v=0;
 	  if(!('access_token' in oldResp))	{
   		  gapi.client.securityEndpoint.login({"para" : encodeURI(window.location.href)}).execute(function(resp){
   			  window.location = resp.returned;

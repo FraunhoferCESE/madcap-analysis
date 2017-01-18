@@ -117,13 +117,15 @@ module('timelineV2').
 		$scope.renderTimeline = function()	{
 			
 			$scope.processTickets++;
+			
 			var startUnix = $scope.controlScope.dateData.unixRest;
+
 			var cacheUser = $scope.controlScope.userData.currentSubject;
-			var cacheDate = $scope.controlScope.dateData.lastUnixRest;
+			var cacheDate = $scope.controlScope.dateData.unixRest;
 			var cacheSource = $scope.controlScope.sourceData.timelineSource;
+			
 			if($scope.controlScope.eventTrigger === 'user')	{
 				cacheUser = $scope.controlScope.userData.lastSubject;
-				cacheDate = $scope.controlScope.dateData.unixRest;
 			}
 			else if($scope.controlScope.eventTrigger === 'date')	{
 				cacheDate = $scope.controlScope.dateData.lastUnixRest;
@@ -132,7 +134,7 @@ module('timelineV2').
 				cacheSource = $scope.controlScope.sourceData.lastTimelineSource;
 			}
 			
-			if($scope.controlScope.userData.LastSubject !== '' && !($scope.noData))	{
+			if(cacheUser !== '' && !($scope.noData))	{
 				$scope.cache = helper.cacheData($scope.cache, {
 					storage: $scope.eventData.eventStorage,
 					probabilities: $scope.eventData.probability
@@ -158,7 +160,7 @@ module('timelineV2').
 						cachedAt = j;
 					}
 				}
-				if(cachedAt !== -1)	{
+				if(cachedAt !== -1 && --($scope.processTickets) === 0)	{
 					$scope.eventData.eventStorage = $scope.cache.content.storage[cachedAt];
 					$scope.eventData.probability = $scope.cache.content.probabilities[cachedAt];
 					afterDataLoad();
@@ -206,6 +208,7 @@ module('timelineV2').
 	     		   					$scope.eventData.probability[max][rawData[i].time] = maxNum*100;     			   			
 								}
 							}
+							
 							/*Gets the ON/OFF events in the intervall we got data for. Start is not the beginning of the day,
 							but the timestamp of the last event of the previous day to be able to deliver data for the interval before
 							the first activity event off the chosen day.*/
@@ -258,10 +261,11 @@ module('timelineV2').
 			
 										//Expands the last bar so that the expanded parts can get cutted top
 										var cuttedLastBarAt = -1;
+										var oldEnd = refinedData[refinedData.length-1].end;
 										refinedData[refinedData.length-1].end = Math.min($scope.controlScope.dateData.unixRest + 86400000-1, new Date());
 										for(var k=0; k<onOffTimes.length; k++)	{
-											if(onOffTimes[k].state === 'OFF' && refinedData[refinedData.length-1] < onOffTimes[k].timestamp && onOffTimes[k].timestamp < $scope.controlScope.dateData.unixRest + 86400000)	{
-												cuttedLastBarAr = k;
+											if(onOffTimes[k].state === 'OFF' && oldEnd < onOffTimes[k].timestamp && onOffTimes[k].timestamp < refinedData[refinedData.length-1].end)	{
+												cuttedLastBarAt = k;
 												refinedData[refinedData.length-1].end = onOffTimes[k].timestamp; 
 												$scope.eventData.probability['No Data Collected'][onOffTimes[k].timestamp] = 100;
 											}
@@ -269,9 +273,12 @@ module('timelineV2').
 										
 										for(var i=0; i<startLength; i++){
 											
+											var outOfRange = false;
+											
 											// Removes data if it lies completely outside of the days timeframe
 											if(refinedData[i].end < $scope.controlScope.dateData.unixRest)	{
 												refinedData.shift();
+												outOfRange = true;
 												if(0<refinedData.length)	{
 													i--;
 													startLength--;
@@ -288,11 +295,12 @@ module('timelineV2').
 												}
 												refinedData[i].start = $scope.controlScope.dateData.unixRest+1;
 											}
-											else	{
+											if(!outOfRange)	{
 												//Collects the timestamps where the probability changes in the bar. While doing that, also sets the opacity of each bar
 												var enteredFor = false;
 												var cuttedAt = [];
 												var hasProbability = false;
+												
 												for(var k=0; typeof $scope.eventData.probability[refinedData[i].label] !== 'undefined' && k<Object.keys($scope.eventData.probability[refinedData[i].label]).length; k++){
 													hasProbability = true
 													var time = parseInt(Object.keys($scope.eventData.probability[refinedData[i].label])[k]);
@@ -357,7 +365,7 @@ module('timelineV2').
 											if(cuttedLastBarAt !== -1)	{
 												refinedData.push({
 													label: 'No Data Collected',
-													start: onOffTimes[cutedLastBarAt].timestamp,
+													start: onOffTimes[cuttedLastBarAt].timestamp,
 													end: $scope.controlScope.dateData.unixRest + 86400000-1,
 													opaque: 100
 												});

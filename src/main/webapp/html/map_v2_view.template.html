@@ -1,53 +1,77 @@
 <div allowed="SEE_GUI">
-	<div ng-if="refreshMap">
-		<div class="row">	
-			<div class="col-md-8">
-				<div style="margin-bottom: 20px; margin-top: 20px; margin-left: 20px; margin-right: 20px;">
-					<div class="jumbotron">
-						<div style="margin-left: 10px;">
-							<ng-map id="map" center="[38.97, -76.92]" zoom="15" default-style="false" style="height:85%;"></ng-map>
-						</div>
-					</div>
+	<div id="refreshWindow" ng-if="refreshMap" ng-init="initializePack.initializeMap()">
+		<div class="row" id="mapRow">	
+			<div id="mapWrap" class="col-xs-12 col-sm-8">
+				<ng-map id="map" center="[38.97, -76.92]" zoom="15" default-style="false" style="height:100%; display:inline-block;"></ng-map>
+			</div>
+			<div id="mapInformationContainer" class="col-xs-12 col-sm-4">
+				<div class="col-xs-12">
+					<h4><b>Geographical Data:</b></h4>
 				</div>
-			</div>
-			<div class="col-md-4">
-				<h3>Geographical Data:</h3>
-				Longitude: {{censusData.longitude}}
 				</br>
-				Latitude: {{censusData.latitude}}
-				</br>
-				State: {{censusData.blockData.state}}
-				</br>
-				County: {{censusData.blockData.county}}
-				</br>
-				Tract: {{censusData.blockData.tract}}
-				</br>
-				Block group: {{censusData.blockData.blockGroup}}
-				</br>
-				Block: {{censusData.blockData.block}}
-				</br>
-				Place name: {{censusData.blockData.place_name}}
-				</br>
-				<h3>Census Data:</h3>
-				Average household size (owner): {{censusData.averages.owner}}
-				</br>
-				Average household size (renter): {{censusData.averages.renter}}
-				</br>
-				Average household size (total): {{censusData.averages.total}}
-				</br>
-			</div>
-		</div>
-		<div class="row">	
-			<div class="col-md-1">
-				<div style="margin-left: 20px;">
+				<div class="col-xs-3 col-sm-6">
+					<b>Longitude</b>
+					</br>
+					{{censusData.longitude}}
 				</div>
-			</div>
-			<div class="col-md-6">
-				
-			</div>
-			<div class="col-md-5" >
-				<div style="text-align:right; margin-right: 20px;">
-					This product uses the Census Bureau Data API but is not endorsed or certified by the Census Bureau.
+				<div class="col-xs-3 col-sm-6">
+					<b>Latitude</b>
+					</br>
+					{{censusData.latitude}}
+				</div>
+				<div class="col-xs-3 col-sm-6">
+					<b>State</b>
+					</br>
+					{{censusData.blockData.state}}
+				</div>
+				<div class="col-xs-3 col-sm-6">
+					<b>County</b>
+					</br>
+					{{censusData.blockData.county}}
+				</div>
+				<div class="col-xs-3 col-sm-6">
+					<b>Tract</b>
+					</br>
+					{{censusData.blockData.tract}}
+				</div>
+				<div class="col-xs-3 col-sm-6">
+					<b>Block group</b> 
+					</br>
+					{{censusData.blockData.blockGroup}}
+				</div>
+				<div class="col-xs-3 col-sm-6">
+					<b>Block</b>
+					</br>
+					{{censusData.blockData.block}}
+				</div>
+				<div class="col-xs-3 col-sm-6">
+					<b>Place name</b>
+					</br>
+					{{censusData.blockData.place_name}}
+				</div>
+				<div class="col-xs-12">
+					</br>
+					<h4><b>Census Data:</b></h4>
+				</div>
+				</br>
+				<div class="col-xs-4 col-sm-12">
+					<b>Average household size (owner)</b>
+					</br>
+					{{censusData.averages.owner}}
+				</div>
+				<div class="col-xs-4 col-sm-12">
+					<b>Average household size (renter)</b>
+					</br>
+					{{censusData.averages.renter}}
+				</div>
+				<div class="col-xs-4 col-sm-12">
+					<b>Average household size (total)</b>
+					</br>
+					{{censusData.averages.total}}
+				</div>
+				<div class="col-xs-12">
+					</br></br>
+					<b>Disclaimer:</b> This product uses the Census Bureau Data API but is not endorsed or certified by the Census Bureau.
 				</div>
 			</div>
 		</div>
