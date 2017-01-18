@@ -172,13 +172,29 @@ module('mapV2').
 			if($scope.dialog[0].parentElement === null)	{
 				$scope.dialog = loading_overlay.createLoadOverlay("Loading entries ...", this, 'map_content');
 			}
+			
+			//Step 1: Caching Data
+			var startUnix = $scope.controlScope.dateData.unixRest;
 
-			//Step 1: Caching data
-			if($scope.controlScope.userData.lastSubject !== '' && !($scope.noData))	{
+			var cacheUser = $scope.controlScope.userData.currentSubject;
+			var cacheDate = $scope.controlScope.dateData.unixRest;
+			var cacheSource = $scope.controlScope.sourceData.timelineSource;
+			
+			if($scope.controlScope.eventTrigger === 'user')	{
+				cacheUser = $scope.controlScope.userData.lastSubject;
+			}
+			else if($scope.controlScope.eventTrigger === 'date')	{
+				cacheDate = $scope.controlScope.dateData.lastUnixRest;
+			}
+			else if($scope.controlScope.eventTrigger === 'timelineSource')	{
+				cacheSource = $scope.controlScope.sourceData.lastTimelineSource;
+			}
+			
+			if(cacheUser !== '' && !($scope.noData))	{
 				$scope.cache = helper.cacheData($scope.cache, {
 					marker: $scope.mapData.markers,
 					mvc: $scope.mapData.mvcArray
-				}, $scope.controlScope.userData.lastSubject + $scope.controlScope.dateData.unixRest);
+				}, cacheUser + cacheDate);
 			}
 			
 			if($scope.mapData.map === 'no map')	{
