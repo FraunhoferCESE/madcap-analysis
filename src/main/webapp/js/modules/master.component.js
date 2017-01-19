@@ -1,6 +1,7 @@
 /**
- * The master component. It will dynamically compute the shown views and controlling units 
- * according to the users choices. More master components can be created through nesting.
+ * The master component. It is the parent of all other modules of v2. It computes which views get shown or not and contains all the
+ * view information. It serves as connection between the visualization views and the control panel. New modules can also use this module as connection.
+ * 
  */
 angular.
 module('master').
@@ -9,7 +10,8 @@ module('master').
     controller: function masterController($scope) {
     	"use strict"; 	
 		document.getElementById('siteloadspinner').style.display="block";	
-				
+		
+		//Information about the control elements. Currently only the control unit.
 		$scope.controlControl = {
 			unitVisible: false,
 			unitAlreadyLoaded: false,
@@ -17,6 +19,7 @@ module('master').
 			generalRenderTrigger: false
 		};
 		
+		//Information about all the views as well as their entries in the top navigation bar
 		$scope.viewControl = {				
 			usermap:	{
 				name: 'Map view',
@@ -35,6 +38,10 @@ module('master').
 				textColor: 'rgb(150, 150, 150)'
 			}
 		};
+		
+		/**
+		 * Calculates the visibility of all child modules (include children's child modules too)
+		 */
 		$scope.$watchGroup(['viewControl.timeline.visible','viewControl.usermap.visible'], function()	{
 			var usermapVisible = $scope.viewControl.usermap.visible;
 			var timelineVisible = $scope.viewControl.timeline.visible;
@@ -52,7 +59,10 @@ module('master').
 				$scope.rerenderSlider();
 			}
 		});		
-
+		
+		/**
+		 * Controls the color setting in the navigation bar
+		 */
 		$scope.barControl = {
 			toggleColor: function(name, event)	{
 				for(var key in $scope.viewControl){

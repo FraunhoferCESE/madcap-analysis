@@ -1,3 +1,12 @@
+/**
+ * This module provides the timeline view for the master view of v2. It shows a timeline from either the ActivityEntry or ForegroundBAckgroundEventEntry probes.
+ * Data will be queried by user and day and can be filtered through a slider. Main functionality is the calculation if the of the bars
+ * from pure information timestamps. ON/OFF events from the DataCollectionEntry probe are included into the calculation. 
+ * 
+ * IMPORTANT!: This module is intended to be used only together with the master
+ * module and the control_unit_v2 module. It will NOT work on it's own! For an
+ * independently running but smaller version of the map view use the user-map
+ * module in the user_position_map component file. */
 angular.
 module('timelineV2').
   component('timelineV2', {
@@ -5,7 +14,8 @@ module('timelineV2').
     controller: function TimelineController($scope, $timeout, helper, allowed_directive_service, loading_overlay) {
     	
     	"use strict"; 	
-
+    	
+		// Access to the controlling variables of the control unit component
     	$scope.controlScope = $scope.$parent.controlControl.childScope;
     	
     	$scope.processTickets = 0;
@@ -28,6 +38,7 @@ module('timelineV2').
     		probability: []
     	};
     	
+		// The data cache. content contains the saved content, meta holds the identifier. Size can be set to any number
     	$scope.cache = {
     		content: {
     			storage: [],
@@ -77,7 +88,7 @@ module('timelineV2').
 			}
 	    });
 
-    	
+		//Listener for the variable that determines if the view gets shown or not
     	$scope.$watch('controlScope.sourceData.timelineSource', function(value)	{
     		if($scope.$parent.viewControl.timeline.visible && value === 'Activity in Foreground')	{
 				$scope.stopper.isApplicationShow = true;
@@ -90,6 +101,7 @@ module('timelineV2').
 			$scope.renderTimeline();
 		});
     	
+		//Listener for the slider
 		$scope.$watchGroup(['controlScope.slider.minValue','controlScope.slider.maxValue'], function(value)	{
 	    	if(!($scope.stopper.firstRendering))	{
 	    		$scope.filterAccordingToSlider($scope.controlScope.sourceData.timelineSource);        	
@@ -120,6 +132,7 @@ module('timelineV2').
 			
 			var startUnix = $scope.controlScope.dateData.unixRest;
 
+			//In correlation to the source of the event change, the identifier for the cache entry gets built			
 			var cacheUser = $scope.controlScope.userData.currentSubject;
 			var cacheDate = $scope.controlScope.dateData.unixRest;
 			var cacheSource = $scope.controlScope.sourceData.timelineSource;
@@ -134,12 +147,15 @@ module('timelineV2').
 				cacheSource = $scope.controlScope.sourceData.lastTimelineSource;
 			}
 			
+			//Chaches the data if there is data to cache
 			if(cacheUser !== '' && !($scope.noData))	{
 				$scope.cache = helper.cacheData($scope.cache, {
 					storage: $scope.eventData.eventStorage,
 					probabilities: $scope.eventData.probability
 				}, cacheSource + cacheDate + cacheUser);
 			}
+			
+			//Resets information
 			$scope.eventData.eventStorage = [];
 			$scope.eventData.eventCache = [];
 			var src = $scope.controlScope.sourceData.timelineSource;

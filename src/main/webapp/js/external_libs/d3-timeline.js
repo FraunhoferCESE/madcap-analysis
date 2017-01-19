@@ -253,10 +253,10 @@
 
           if (backgroundColor) { appendBackgroundBar(yAxisMapping, index, g, data, datum); }
 
-          var labelwidth = 0;
+          var labelWidth = 0;
           // add the label
           if (hasLabel) { 
-        	  var labelWidth = (appendLabel(gParent, yAxisMapping, index, hasLabel, datum))[0][0].getComputedTextLength();
+        	  labelWidth = (appendLabel(gParent, yAxisMapping, index, hasLabel, datum))[0][0].getComputedTextLength();
           }
           
           if(containerMargin < labelWidth)	{

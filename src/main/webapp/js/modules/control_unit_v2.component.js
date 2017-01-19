@@ -1,3 +1,7 @@
+/**
+ * This module contains the conrtrol elements for all visualization views (map, timeline, ...). Listening to the elements is normally handled
+ * directly by the visualization views.
+ */
 angular.
 module('controlUnitV2').
   component('controlUnitV2', {
@@ -7,6 +11,7 @@ module('controlUnitV2').
     	
     	$scope.eventTrigger = '';
     	
+    	//Data regarding the chosen user
     	$scope.userData = {
        		users: [],
        		chosen_user_for_gui: '',
@@ -24,7 +29,8 @@ module('controlUnitV2').
  				$scope.userData.currentSubject = document.getElementById("chosen_user").options[document.getElementById("chosen_user").selectedIndex].text;
        	 	}
         };
-    	   	
+    	   
+    	// The booleans control which part of the control pannels are shown and which not
     	$scope.control = {
     		mapButtonsVisible: false,
     		csvMapButtonsVisible: false,
@@ -38,6 +44,7 @@ module('controlUnitV2').
     		blockCsvTrigger: false,  		
     	};
     	
+    	// Data regarding the source if a visualization displays multiple like the timeline for example
     	$scope.sourceData = {
         	timeline_source_for_gui: 'Activity in Foreground',
     		lastTimelineSource: '',
@@ -49,9 +56,11 @@ module('controlUnitV2').
             	$scope.sourceData.timelineSource = document.getElementById("chosen_source").options[document.getElementById("chosen_source").selectedIndex].text;
            	}	
         }
-        
+    	
+        // Makes itself known to the master module
     	$scope.$parent.controlControl.childScope = $scope;
     	
+    	//Data regarding the slider
     	$scope.slider = {
         	minValue: 0,
         	maxValue: 1439,
@@ -65,11 +74,13 @@ module('controlUnitV2').
     		},
     	};
     	
+    	//Data regarding the currently chosen date
     	$scope.dateData = {
     		unixRest: 0,
     		lastUnixRest: 0
     	};
     	
+    	//Trigger variables for the csv downloads of all visualizations
     	$scope.csvTrigger = {
     		startTimelineCsv: function()	{
     			$scope.control.timelineCsvTrigger = true;
@@ -82,6 +93,7 @@ module('controlUnitV2').
     		}
         };
     	
+    	// Diverse flags for the csv exports
     	$scope.csvParameter = {
     			createCsvMap: false,
     			createCsvTimeline: false,
@@ -89,6 +101,7 @@ module('controlUnitV2').
     			csvProgressMap: 0
     	};
     	
+    	//Data regarding the map, which has to be part of the control panel
     	$scope.mapControlData =	{
     		isHeat: false,
     		centerMapOrder: false,
@@ -108,6 +121,7 @@ module('controlUnitV2').
     	var time = new Date();
 		$scope.dateData.unixRest = time - ((time-(time.getTimezoneOffset()*60000))%86400000);
        
+		// Listener to the datepicker. Sets the unixRest, to which the visualizations listen
     	$scope.$watch('dt.value', function(newValue) { 
 			$scope.eventTrigger = 'date';
     		if(typeof newValue !== 'undefined' && newValue !== 'Please select a date ...')	{
