@@ -30,21 +30,21 @@ module('mapV2').
        		stopper: 2,
        		xsSize: false,
     		initializeMap: function()	{
-    			var mapPromise = NgMap.getMap({id:"map"});	
-    			$scope.dialog.remove();
-   				document.getElementById("mapWell").style.height = "";
+    			document.getElementById("mapWell").style.height = "";
     			document.getElementById("mapRow").style.height = document.getElementById("mapInformationContainer").offsetHeight+120;
-				$(window).on('resize',$scope.moveElementsOnResize);
+   				var mapPromise = NgMap.getMap({id:"map"});	
+    			$scope.dialog.remove();
+    			$(window).on('resize',$scope.moveElementsOnResize);
     			mapPromise.then(function(returnMap){
     				$scope.mapData.map = returnMap;
-   					if($scope.initializePack.rekick)	{
+    				if($scope.initializePack.rekick)	{
     					$scope.initializePack.rekick = false;
-    				$scope.initializeRefresh();
+    					$scope.initializeRefresh();
     				}
     			});
     				
     			$timeout(function () {
-    				    $scope.$broadcast('rzSliderForceRender');
+    			    $scope.$broadcast('rzSliderForceRender');
     			});
     		},
     		initializeCallback: function()	{
@@ -53,7 +53,7 @@ module('mapV2').
     			}
     		}
     	};
-    	
+    
     	$scope.moveElementsOnResize = function()	{
     		if($scope.initializePack.xsSize && 768 <= $(window).width())	{
     			$scope.initializePack.xsSize = false;
