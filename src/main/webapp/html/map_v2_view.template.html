@@ -1,5 +1,5 @@
 <div allowed="SEE_GUI">
-	<div id="refreshWindow" ng-if="refreshMap">
+	<div id="refreshWindow" ng-if="mapData.refreshMap">
 		<div class="row" id="mapRow" ng-init="initializePack.initializeMap()">	
 			<div id="mapWrap" class="col-xs-12 col-sm-8">
 				<ng-map id="map" center="[38.97, -76.92]" zoom="15" default-style="false" style="height:100%; display:inline-block;"></ng-map>

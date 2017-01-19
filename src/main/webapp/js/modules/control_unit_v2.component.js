@@ -106,13 +106,13 @@ module('controlUnitV2').
     	};
     	
     	var time = new Date();
-		$scope.dateData.unixRest = time - (time%86400000) + (time.getTimezoneOffset()*60000);
+		$scope.dateData.unixRest = time - ((time-(time.getTimezoneOffset()*60000))%86400000);
        
     	$scope.$watch('dt.value', function(newValue) { 
 			$scope.eventTrigger = 'date';
     		if(typeof newValue !== 'undefined' && newValue !== 'Please select a date ...')	{
 				$scope.dateData.lastUnixRest = $scope.dateData.unixRest; 
-				$scope.dateData.unixRest = newValue - (newValue%86400000) + (newValue.getTimezoneOffset()*60000);
+				$scope.dateData.unixRest = newValue - ((newValue-(newValue.getTimezoneOffset()*60000))%86400000);
 			}
 	    });
     	

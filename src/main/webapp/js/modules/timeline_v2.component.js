@@ -551,13 +551,13 @@ module('timelineV2').
 				document.getElementById('timelineloadspinner').style.display="none";
 				document.getElementById('timelineloadmessage').style.display="none";					
 				$scope.stopper.firstRendering = false;
-				$scope.passResize = function()	{
+				$scope.onTimelineResize = function()	{
 					var container = document.getElementById("timeline_container");
-					if(container.offsetWidth - parseInt(container.style.paddingLeft) - parseInt(container.style.paddingRight) !== $scope.r[0][0].offsetWidth){
+					if($scope.$parent.viewControl.timeline.visible && container.offsetWidth - parseInt(container.style.paddingLeft) - parseInt(container.style.paddingRight) !== $scope.r[0][0].offsetWidth){
 						$scope.renderOnScreen();	
 					}
 				};
-				$(window).on('resize', $scope.passResize);
+				$(window).on('resize', $scope.onTimelineResize);
 				$scope.$apply(function()	{
 					$scope.stopper.showPage = true;
 				});

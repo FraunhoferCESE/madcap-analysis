@@ -20,6 +20,7 @@ module('mapV2').
     		heatmapDataArray: new google.maps.MVCArray(),
     		heatmap : {},
    			isHeat: false,
+   			refreshMap: false,
    			markers: [],
     		center: new google.maps.LatLng(38.97, -76.92),
     		
@@ -49,22 +50,21 @@ module('mapV2').
     		},
     		initializeCallback: function()	{
     			if(--($scope.initializePack.stopper) === 0)	{
-    				$scope.refreshMap = true;
+    				$scope.mapData.refreshMap = true;
     			}
     		}
     	};
     
     	$scope.moveElementsOnResize = function()	{
-    		if($scope.initializePack.xsSize && 768 <= $(window).width())	{
+    		if($scope.$parent.viewControl.usermap.visible && $scope.initializePack.xsSize && 768 <= $(window).width())	{
     			$scope.initializePack.xsSize = false;
     			document.getElementById("mapWell").style.height = "";
     		}
-    		else if(!($scope.initializePack.xsSize) && 768 > $(window).width()){
+    		else if($scope.$parent.viewControl.usermap.visible && !($scope.initializePack.xsSize) && 768 > $(window).width()){
     			$scope.initializePack.xsSize = true;
     			document.getElementById("mapWell").style.height = document.getElementById("mapWrap").offsetHeight + document.getElementById("mapInformationContainer").offsetHeight + 120;
-
     		}
-    	}
+    	};
     	
     	//A collection of data from census requests. Will be expanded in the future probably
     	$scope.censusData = {
@@ -169,6 +169,9 @@ module('mapV2').
 			//Step 0: Count processes
 			$scope.processTickets++;
 			
+			if($scope.mapData.refreshMap)	{
+				$scope.moveElementsOnResize();
+			}
 			if($scope.dialog[0].parentElement === null)	{
 				$scope.dialog = loading_overlay.createLoadOverlay("Loading entries ...", this, 'map_content');
 			}
@@ -440,7 +443,7 @@ module('mapV2').
         			}
         		}
         	}
-			if($scope.dialog[0].parentElement !== null && $scope.refreshMap)	{
+			if($scope.dialog[0].parentElement !== null && $scope.mapData.refreshMap)	{
      		   $scope.dialog.remove();
      	   }
 		};		
