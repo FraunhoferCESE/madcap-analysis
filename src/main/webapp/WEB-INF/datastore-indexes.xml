@@ -36,6 +36,11 @@
         <property name="userID" direction="asc" />
         <property name="timestamp" direction="desc" />
     </datastore-index>
+    <datastore-index kind="ReverseHeartBeatEntry" ancestor="false">
+        <property name="userID" direction="asc" />
+        <property name="deathStart" direction="asc" />
+        <property name="deathEnd" direction="asc" />
+    </datastore-index>
     <datastore-index kind="PowerEntry" ancestor="false">
         <property name="userID" direction="asc" />
         <property name="timestamp" direction="asc" />

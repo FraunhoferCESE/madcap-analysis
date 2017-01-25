@@ -4,103 +4,58 @@ import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.Index;
 
+import org.json.JSONObject;
+
 import java.util.HashMap;
 
-
 /**
- * Created by MMueller on 11/7/2016.
+ * Created by MMueller on 12/23/2016.
+ *
+ * Model class for CellProbe.
  */
-
 @Entity
-public class LocationEntry implements Comparable<LocationEntry> {
-
+public class ReverseHeartBeatEntry implements Comparable<ReverseHeartBeatEntry> {
     @Id
     private String id;
     @Index
     private Long timestamp;
-    @Index
-    private Double latitude;
-    @Index
-    private Double longitude;
-    private String origin;
-    private Double accuracy;
-    private String extras;
-    private Double bearing;
+    private long deathStart;
+    private long deathEnd;
     @Index
     private String userID;
 
+    public ReverseHeartBeatEntry(){}
 
-    public String getId() {
-        return id;
+    /**
+     * Gets the deathStart.
+     * @return the deathStart.
+     */
+    public long getDeathStart() {
+        return deathStart;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    /**
+     * Sets the deathStart.
+     * @param deathStart to be set.
+     */
+    public void setDeathStart(long deathStart) {
+        this.deathStart = deathStart;
     }
 
-    public Long getTimestamp() {
-        return timestamp;
+    /**
+     * Gets the deathEnd.
+     * @return the deathEnd.
+     */
+    public long getdDeathEnd() {
+        return deathEnd;
     }
 
-    public void setTimestamp(Long timestamp) {
-        this.timestamp = timestamp;
-    }
-
-    public Double getBearing() {
-        return bearing;
-    }
-
-    public void setBearing(Double bearing) {
-        this.bearing = bearing;
-    }
-
-    public Double getLatitude() {
-        return latitude;
-    }
-
-    public void setLatitude(Double latitude) {
-        this.latitude = latitude;
-    }
-
-    public Double getLongitude() {
-        return longitude;
-    }
-
-    public void setLongitude(Double longitude) {
-        this.longitude = longitude;
-    }
-
-
-    public Double getAccuracy() {
-        return accuracy;
-    }
-
-    public void setAccuracy(Double accuracy) {
-        this.accuracy = accuracy;
-    }
-
-    public String getExtras() {
-        return extras;
-    }
-
-    public void setExtras(String extras) {
-        this.extras = extras;
-    }
-
-    public String getUserID() {
-        return userID;
-    }
-
-    public void setOrigin(String origin) {
-        this.origin = origin;
-    }
-    
-    public String getorigin() {
-        return origin;
-    }
-
-    public void setUserID(String userID) {
-        this.userID = userID;
+    /**
+     * Sets the deathEnd.
+     * @param deathEnd to be set.
+     */
+    public void setDeathEnd(long deathEnd) {
+        this.deathEnd = deathEnd;
     }
 
     /**
@@ -142,10 +97,9 @@ public class LocationEntry implements Comparable<LocationEntry> {
      *                              from being compared to this object.
      */
     @Override
-    public int compareTo(LocationEntry o) {
+    public int compareTo(ReverseHeartBeatEntry o) {
         return 0;
     }
-
 
     /**
      * Returns a hash code value for the object. This method is
@@ -238,36 +192,16 @@ public class LocationEntry implements Comparable<LocationEntry> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        LocationEntry that = (LocationEntry) o;
-
-        if (id != null ? !id.equals(that.id) : that.id != null) return false;
-        if (timestamp != null ? !timestamp.equals(that.timestamp) : that.timestamp != null)
-            return false;
-        if (latitude != null ? !latitude.equals(that.latitude) : that.latitude !=null)
-            return false;
-        if (longitude != null ? !longitude.equals(that.longitude) : that.longitude !=null)
-            return false;
-        if (origin != null ? !origin.equals(that.origin) : that.origin !=null)
-            return false;
-        if (accuracy != null ? !accuracy.equals(that.accuracy) : that.accuracy !=null)
-            return false;
-        if (extras != null ? !extras.equals(that.extras) : that.extras !=null)
-            return false;
-        return (userID != null ? !userID.equals(that.userID) : that.userID !=null);
-
+        ReverseHeartBeatEntry that = (ReverseHeartBeatEntry) o;
+        return deathStart == (that.getDeathStart()) && deathEnd == that.getdDeathEnd();
     }
 
     @Override
     public String toString() {
-        return "ProbeEntry{" +
+        return "ReverseHeartBeatEntry{"+
                 "id=" + id +
-                ", timestamp=" + timestamp +
-                ", latitude='" + latitude + '\'' +
-                ", longitude='" + longitude + '\'' +
-                ", origin='" + origin + '\'' +
-                ", accuracy='" + accuracy + '\'' +
-                ", extras='" + extras.toString() + '\'' +
+                "\"deathStart\": " + deathStart +
+                "\"deathEnd\": " + deathEnd +
                 '}';
     }
-
 }

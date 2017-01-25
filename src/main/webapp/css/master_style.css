@@ -11,3 +11,7 @@
 	padding-left: 8px;
 	padding-right: 8px;
 }
+.marker{
+	max-height: 100%;
+    max-width: auto;
+}

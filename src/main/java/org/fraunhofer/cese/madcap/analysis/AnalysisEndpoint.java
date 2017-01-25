@@ -9,6 +9,7 @@ import org.fraunhofer.cese.madcap.analysis.models.DataCollectionEntry;
 import org.fraunhofer.cese.madcap.analysis.models.EndpointArrayReturnObject;
 import org.fraunhofer.cese.madcap.analysis.models.ForegroundBackgroundEventEntry;
 import org.fraunhofer.cese.madcap.analysis.models.LocationEntry;
+import org.fraunhofer.cese.madcap.analysis.models.ReverseHeartBeatEntry;
 import org.fraunhofer.cese.madcap.analysis.models.TimelineReturnContainer;
 
 import com.google.api.server.spi.config.Api;
@@ -165,25 +166,19 @@ public class AnalysisEndpoint {
 	 * @throws OAuthRequestException
 	 */
 	@ApiMethod(name = "callForLocationCSV", httpMethod = ApiMethod.HttpMethod.GET)
-	public LocationEntry[] locationCSV(@Named("user") String id, User user) throws OAuthRequestException{
+	public LocationEntry[] locationCSV(@Named("user") String id, @Named("start") long startTime, @Named("end") long endTime, User user) throws OAuthRequestException{
 		SecurityEndpoint.isUserValid(user);
 		ObjectifyService.begin();
-		List<LocationEntry> activities = ofy().load().type(LocationEntry.class).filter("userID =",id).order("-timestamp").limit(1000).list();
+		List<LocationEntry> activities = ofy().load().type(LocationEntry.class).filter("userID =",id).filter("timestamp >=",startTime).filter("timestamp <=",endTime).order("-timestamp").list();
 		return activities.toArray(new LocationEntry[activities.size()]);
 	}
 	
 	
 	@ApiMethod(name = "getOnOffTime", httpMethod = ApiMethod.HttpMethod.GET)
-	public DataCollectionEntry[] getOnOffTime(@Named("user") String id, @Named("start") long startTime, @Named("end") long endTime, @Named("first") boolean shallFirst, User user) throws OAuthRequestException{
+	public DataCollectionEntry[] getOnOffTime(@Named("user") String id, @Named("start") long startTime, @Named("end") long endTime, User user) throws OAuthRequestException{
 		SecurityEndpoint.isUserValid(user);
 		ObjectifyService.begin();
 		List<DataCollectionEntry> result = ofy().load().type(DataCollectionEntry.class).filter("userID =",id).filter("timestamp >=",startTime).filter("timestamp <=",endTime).order("timestamp").list();
-		if(shallFirst)	{
-			DataCollectionEntry firstTime = ofy().load().type(DataCollectionEntry.class).filter("userID =",id).filter("timestamp <",startTime).order("-timestamp").first().now();				
-			if(firstTime != null){
-				result.add(0, firstTime);
-			}
-		}
 		return result.toArray(new DataCollectionEntry[result.size()]);
 	}
 }

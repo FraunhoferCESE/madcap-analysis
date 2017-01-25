@@ -19,6 +19,7 @@ angular
 		"use strict";
 		// Creates loading overlay for initial loading
 		$scope.dialog = loading_overlay.createLoadOverlay('Loading the map ...', this, 'map_content');
+		$scope.fromStart = true;
 		
 		// Access to the controlling variables of the control unit component
 		$scope.controlScope = $scope.$parent.controlControl.childScope;
@@ -39,7 +40,9 @@ angular
 			isHeat : false,
 			refreshMap : false,
 			markers : [],
-			center : new google.maps.LatLng(38.97, -76.92),				
+			center : new google.maps.LatLng(38.97, -76.92),	
+			markerCircle : null,
+			lastClickedMarker: null
 		};
 		
 		// Necessary methods and variables to control the initial loading and general setup of the module
@@ -64,17 +67,15 @@ angular
 						$scope.initializeRefresh();
 					}
 				});
-							
-				$timeout(function() {
-					$scope.$broadcast('rzSliderForceRender');
-				});
 			},
 			/**
 			 * Only lets the map load when previous setup as well as allowed_directive have finished their work
 			 */
 			initializeCallback : function() {
 				if (--($scope.initializePack.stopper) === 0) {
-					$scope.mapData.refreshMap = true;
+					$scope.$apply(function()	{
+						$scope.mapData.refreshMap = true;
+					});
 				}
 			}
 		};
@@ -104,6 +105,8 @@ angular
 			},
 			longitude : "No data requested",
 			latitude : "No data requested",
+			origin : "No data requested",
+			accuracy : "No data requested",
 			averages : {
 				owner : "No data requested",
 				renter : "No data requested",
@@ -162,7 +165,20 @@ angular
 		//Listener for the variable that determines if the view gets shown or not
 		$scope.$parent.$watch('viewControl.usermap.visible',function(newValue) {
 			if ($scope.$parent.viewControl.usermap.visible) {
+				$scope.fromStart = true;
 				$scope.initializeRefresh();
+			}
+		});
+		
+		//Listener for the variable that determines if the view gets shown or not
+		$scope.$watch('controlScope.mapControlData.censusRequest',function(newValue) {
+			if ($scope.mapData.lastClickedMarker !== null && $scope.controlScope.mapControlData.censusRequest) {
+				var marker = $scope.mapData.lastClickedMarker;
+				$scope.showCensus(marker.getTitle(),marker.getPosition().lat(),marker.getPosition().lng());
+				$scope.controlScope.mapControlData.censusRequest = false;
+			}
+			else if($scope.mapData.lastClickedMarker === null)	{
+				$scope.controlScope.mapControlData.censusRequest = false;
 			}
 		});
 
@@ -205,7 +221,8 @@ angular
 		$scope.initializeRefresh = function() {
 
 			$scope.processTickets++;
-
+			$scope.mapData.lastClickedMarker = null;
+			
 			if ($scope.mapData.refreshMap) {
 				$scope.moveElementsOnResize();
 			}
@@ -246,6 +263,7 @@ angular
 			else if ($scope.controlScope.userData.currentSubject !== '') {
 				for (var i = 0; i < $scope.mapData.markers.length; i++) {
 					$scope.mapData.markers[i].setMap(null);
+					$scope.mapData.markers[i].circle.setMap(null);
 				}
 				$scope.mapData.markers = null;
 				$scope.mapData.heatmap.setMap(null);
@@ -316,14 +334,56 @@ angular
 								title : helper.getDateFromUnix(entries[i].timestamp)
 							});
 							$scope.mapData.markers[i].addListener('click',function() {
-								$scope.censusData.latitude = this.getPosition().lat();
-								$scope.censusData.longitude = this.getPosition().lng();
-								$scope.showCensus(this.getTitle(),this.getPosition().lat(),this.getPosition().lng());
+								var self = this;
+								$scope.$apply(function()	{
+									$scope.censusData.origin = self.origin;
+									$scope.censusData.accuracy = self.accuracy;
+									$scope.censusData.latitude = self.getPosition().lat();
+									$scope.censusData.longitude = self.getPosition().lng();
+									$scope.mapData.lastClickedMarker = self;
+								});
+								
+								if(this.circle.getMap() === null)	{
+									this.circle.setMap($scope.mapData.map);
+								}
+								else	{
+									this.circle.setMap(null);	
+								}
 							});
 							
 							$scope.mapData.markers[i].setPosition(coordinates);
 							$scope.mapData.markers[i].setMap($scope.mapData.map);
 							$scope.mapData.markers[i].setVisible(false);
+
+							$scope.mapData.markers[i].accuracy = entries[i].accuracy;
+							$scope.mapData.markers[i].origin = entries[i].origin;
+							if($scope.mapData.markers[i].origin === 'network')	{
+								$scope.mapData.markers[i].origin = entries[i].extras;
+							}
+							if($scope.mapData.markers[i].origin === 'cell')	{
+								$scope.mapData.markers[i].origin = $scope.mapData.markers[i].origin + ' tower';
+							}
+							if($scope.mapData.markers[i].origin === 'wifi')	{
+								$scope.mapData.markers[i].setIcon('https://maps.google.com/mapfiles/ms/icons/blue-dot.png');
+							}
+							else if($scope.mapData.markers[i].origin === 'cell tower')	{
+								$scope.mapData.markers[i].setIcon('https://maps.google.com/mapfiles/ms/icons/green-dot.png');									
+							}
+							else if($scope.mapData.markers[i].origin === 'gps')	{
+								$scope.mapData.markers[i].setIcon('https://maps.google.com/mapfiles/ms/icons/red-dot.png');
+							}
+							
+							$scope.mapData.markers[i].circle = new google.maps.Circle({
+					            strokeColor: '#FF0000',
+					            strokeOpacity: 0.8,
+					            strokeWeight: 2,
+					            map: null,
+					            fillColor: '#FF0000',
+					            fillOpacity: 0.35,
+					            center: $scope.mapData.markers[i].getPosition(),
+					            radius: $scope.mapData.markers[i].accuracy
+					          });
+							
 							$scope.bounds.extend($scope.mapData.markers[i].getPosition());
 						}
 						
@@ -377,6 +437,11 @@ angular
 		
 		//Listener for the slider
 		$scope.$watchGroup(['controlScope.slider.minValue','controlScope.slider.maxValue'], function(value) {
+			$scope.filterAccordingToSlider();
+		});
+		
+		//Listener for checkboxes
+		$scope.$watchGroup(['controlScope.mapControlData.wifiAsOriginChecked','controlScope.mapControlData.cellAsOriginChecked','controlScope.mapControlData.gpsAsOriginChecked'], function(value) {
 			$scope.filterAccordingToSlider();
 		});
 		
@@ -436,14 +501,13 @@ angular
 			var newMap;
 			if (!$scope.controlScope.mapControlData.isHeat) {
 				newMap = $scope.mapData.map;
-				document.getElementById("heatmap_toggle").innerHTML = "show Heatmap";
+				document.getElementById("heatmap_button").innerHTML = "show Heatmap";
 			} else {
 				newMap = null;
-				document.getElementById("heatmap_toggle").innerHTML = "show Markermap";
+				document.getElementById("heatmap_button").innerHTML = "show Markermap";
 			}
 			if (newMap === null) {
-				$scope.mapData.heatmap
-				.setMap($scope.mapData.map);
+				$scope.mapData.heatmap.setMap($scope.mapData.map);
 			} else {
 				$scope.mapData.heatmap.setMap(null);
 			}
@@ -456,7 +520,7 @@ angular
 			}
 			$scope.filterAccordingToSlider();
 		});
-
+		
 		/**
 		 * At rendering, all markers get shown and the heatmap
 		 * is empty. This method sorts out the markers which
@@ -475,7 +539,19 @@ angular
 				$scope.mapData.heatmapDataArray.clear();
 				for (var i = 0; i < $scope.mapData.markers.length; i++) {
 					var value = Math.floor((helper.getUnixFromDate($scope.mapData.markers[i].getTitle(),$scope.controlScope.dateData.unixRest) - $scope.controlScope.dateData.unixRest) / 60000);
-					if (value <= $scope.controlScope.slider.maxValue && $scope.controlScope.slider.minValue <= value) {
+					
+					var originCheck = false;
+					if($scope.mapData.markers[i].origin === 'gps')	{
+						originCheck = $scope.controlScope.mapControlData.gpsAsOriginChecked;
+					}
+					else if($scope.mapData.markers[i].origin === 'wifi')	{
+						originCheck = $scope.controlScope.mapControlData.wifiAsOriginChecked;
+					}
+					else if($scope.mapData.markers[i].origin === 'cell tower')	{
+						originCheck = $scope.controlScope.mapControlData.cellAsOriginChecked;
+					}
+					
+					if (value <= $scope.controlScope.slider.maxValue && $scope.controlScope.slider.minValue <= value && originCheck) {
 						// Only change if the marker is not
 						// visible while it shall be
 						if (!($scope.mapData.markers[i].getVisible()) && !($scope.controlScope.mapControlData.isHeat)) {
@@ -488,6 +564,7 @@ angular
 						// while it shall not be
 						if ($scope.mapData.markers[i].getVisible()) {
 							$scope.mapData.markers[i].setVisible(false);
+							$scope.mapData.markers[i].circle.setMap(null);
 						}
 					}
 				}
@@ -505,7 +582,7 @@ angular
 		}, 0);
 		
 		/**
-		 * :oads census data for a given coordinate pair. Saves
+		 * Loads census data for a given coordinate pair. Saves
 		 * the returned data in the census data cache.
 		 */
 		$scope.showCensus = function(time, lat, lng) {
@@ -638,7 +715,8 @@ angular
 			if (month < 10) {
 				month = '0' + month;
 			}
-			gapi.client.analysisEndpoint.callForLocationCSV({"user" : subject}).execute(function(resp) {
+			
+			gapi.client.analysisEndpoint.callForLocationCSV({'user' : subject,'start' : $scope.controlScope.dateData.unixRest,'end' : ($scope.controlScope.dateData.unixRest + 86400000)}).execute(function(resp) {
 				var row = 'data:text/csv;charset=utf-8,' + '"User","Time","latitude","longitude","bearing","accuracy"\r\n';
 				for (var i = resp.items.length - 1; 0 <= i; i--) {
 					row = row + '"' + subject + '",' + helper.getDateFromUnix(resp.items[i].timestamp) + ',' + resp.items[i].latitude + ',' + resp.items[i].longitude + ',' + resp.items[i].bearing + ',' + resp.items[i].accuracy + '\r\n';

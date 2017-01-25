@@ -43,12 +43,13 @@
 		    </nav>
 		</div>
 		<div id="views" style="margin:70px 20px 0px 20px;">
-			<div uib-collapse="!controlControl.unitVisible" expanded="rerenderSlider()">
+			<div uib-collapse="!controlControl.unitVisible" 
+			expanded="rerenderSlider()">
 				<div class="well well-sg">
 					<control-unit-v2></control-unit-v2>
 				</div>
 			</div>
-			<div uib-collapse="!viewControl.usermap.visible" ng-if="viewControl.usermap.alreadyLoaded" id="map_content" style="position:relative;">
+			<div uib-collapse="!viewControl.usermap.visible" expanded=""ng-if="viewControl.usermap.alreadyLoaded" id="map_content" style="position:relative;">
 				<div id="mapWell" class="well well-sg" style="height:200px;">
 					<map-v2></map-v2>
 				</div>

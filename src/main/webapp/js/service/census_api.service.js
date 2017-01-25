@@ -94,7 +94,6 @@ angular.module('madcap-analysis')
 						data[id].avOwner = averages[0]; 
 						data[id].avRenter = averages[1];
 						data[id].avTotal = averages[2]; 
-						//gapi.client.analysisEndpoint.writeInCache({"lat" : array[id].lat, "lng" : array[id].lng, "block" : data[id].block}).execute();
 					
 						if(--calls === 0){
 							createCsv(helper.refineDataOld(data));

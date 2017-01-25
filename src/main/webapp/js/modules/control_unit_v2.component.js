@@ -26,10 +26,11 @@ module('controlUnitV2').
  					delete $scope.userData.users.splice($scope.userData.users.length-1,1);
 					}
        			$scope.userData.lastSubject = $scope.userData.currentSubject;
- 				$scope.userData.currentSubject = document.getElementById("chosen_user").options[document.getElementById("chosen_user").selectedIndex].text;
-       	 	}
+ 				$scope.userData.currentSubject = document.getElementById("chosen_user")
+ 				.options[document.getElementById("chosen_user").selectedIndex].text;
+       		}
         };
-    	   
+
     	// The booleans control which part of the control pannels are shown and which not
     	$scope.control = {
     		mapButtonsVisible: false,
@@ -39,9 +40,10 @@ module('controlUnitV2').
     		userpickerVisible: false,
     		datepickerVisible: false,
     		sliderVisible: false,
+    		mapOriginCheckboxesVisible: false,
     		timelineCsvTrigger: false,
     		locationCsvTrigger: false,
-    		blockCsvTrigger: false,  		
+    		blockCsvTrigger: false,
     	};
     	
     	// Data regarding the source if a visualization displays multiple like the timeline for example
@@ -115,7 +117,14 @@ module('controlUnitV2').
     		},
     		centerMap: function()	{
     			$scope.mapControlData.centerMapOrder = true;
-    		}
+    		},
+    		requestCensusData: function()	{
+    			$scope.mapControlData.censusRequest = true;
+    		},
+    		censusRequest: false,
+    		wifiAsOriginChecked: true,
+    		gpsAsOriginChecked: true,
+    		cellAsOriginChecked: true
     	};
     	
     	var time = new Date();

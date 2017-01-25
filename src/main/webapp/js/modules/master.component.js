@@ -3,7 +3,7 @@
  * view information. It serves as connection between the visualization views and the control panel. New modules can also use this module as connection.
  * 
  */
-angular.
+var mx = angular.
 module('master').
   component('master', {
     templateUrl: 'html/master_view.template.html',
@@ -56,6 +56,7 @@ module('master').
 				$scope.controlControl.childScope.control.csvTimelineButtonsVisible = timelineVisible;
 				$scope.controlControl.childScope.control.mapButtonsVisible = usermapVisible;
 				$scope.controlControl.childScope.control.csvMapButtonsVisible = usermapVisible;
+				$scope.controlControl.childScope.control.mapOriginCheckboxesVisible = usermapVisible;
 				$scope.rerenderSlider();
 			}
 		});		

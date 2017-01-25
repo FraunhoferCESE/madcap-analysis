@@ -228,29 +228,24 @@ module('timelineV2').
 							/*Gets the ON/OFF events in the intervall we got data for. Start is not the beginning of the day,
 							but the timestamp of the last event of the previous day to be able to deliver data for the interval before
 							the first activity event off the chosen day.*/
-							helper.provideOnOffTime($scope.controlScope.userData.currentSubject, parseInt(rawData[0].time), parseInt(startUnix + 86400000), true, function(providedTime)	{
+							helper.provideOnOffTime($scope.controlScope.userData.currentSubject, parseInt(rawData[0].time), parseInt(startUnix + 86400000), function(providedTime)	{
 								if(providedTime !== false)	{
 									
 									//Creates an array of timestamps defining the ON->OFF->ON->OFF->... rythm of the timeframe the data resides in
 									var state = 'START';
-									var onOffTimes = [{}];	
+									var onOffTimes = [];	
 									for(var i=0; i<providedTime.length; i++){
 										if(state !== providedTime[i].state){
 											state = providedTime[i].state;
 											onOffTimes.push(providedTime[i]);
 										}
 									}
-									//Add ON tag at first index when necessary
-									if(onOffTimes[1].state === 'ON'){
-										onOffTimes.shift();
-										onOffTimes[0].timestamp = parseInt(rawData[0].time)-1;
-									}
-									else	{
-										onOffTimes[0] = {
-											state: 'ON',
-											timestamp: parseInt(rawData[0].time)-1
-										} 
-									}
+
+									var firstIndex = [{
+										state: 'ON',
+										timestamp: parseInt(rawData[0].time)-1
+									}]; 
+									onOffTimes = firstIndex.concat(onOffTimes);
 									
 									// Adds ON/OFF tag at the end of the day to create an interval between last ON tag and end of the day.
 									onOffTimes.push({

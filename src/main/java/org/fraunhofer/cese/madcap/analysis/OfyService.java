@@ -5,6 +5,7 @@ import org.fraunhofer.cese.madcap.analysis.models.BlockCache;
 import org.fraunhofer.cese.madcap.analysis.models.DataCollectionEntry;
 import org.fraunhofer.cese.madcap.analysis.models.ForegroundBackgroundEventEntry;
 import org.fraunhofer.cese.madcap.analysis.models.LocationEntry;
+import org.fraunhofer.cese.madcap.analysis.models.ReverseHeartBeatEntry;
 import org.fraunhofer.cese.madcap.analysis.models.UserInformation;
 
 import com.googlecode.objectify.*;
@@ -21,6 +22,7 @@ public class OfyService {
 		 ObjectifyService.register(ActivityEntry.class);
 		 ObjectifyService.register(ForegroundBackgroundEventEntry.class);
 		 ObjectifyService.register(DataCollectionEntry.class);
+		 ObjectifyService.register(ReverseHeartBeatEntry.class);
 	}
 
 	/**

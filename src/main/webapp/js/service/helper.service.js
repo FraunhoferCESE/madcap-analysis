@@ -198,12 +198,17 @@ angular.module('madcap-analysis')
 		/**
 		 * Provides the DataCollectionEntries for a timeframe and initializes a callback after that.
 		 */
-		provideOnOffTime : function(user, start, end, shallFirst, callback)	{
+		provideOnOffTime : function(user, start, end, callback)	{
 			if(user !== '')	{
-				gapi.client.analysisEndpoint.getOnOffTime({"user" : user, "start" : start, "end" : end, "first" : true}).execute(function(resp)	{
+				gapi.client.analysisEndpoint.getOnOffTime({"user" : user, "start" : start, "end" : end}).execute(function(resp)	{
 					var providedTime = {};
-					if(resp !== null && resp !== false && typeof resp.items !== 'undefined')	{
-						providedTime = resp.items;
+					if(resp !== null && resp !== false)	{
+						if(typeof resp.items !== 'undefined'){
+							providedTime = resp.items;
+						}
+						else	{
+							providedTime = [];
+						}
 					}
 					else	{
 						providedTime = false;
