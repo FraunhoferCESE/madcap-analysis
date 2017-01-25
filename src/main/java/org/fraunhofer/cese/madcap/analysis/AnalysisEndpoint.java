@@ -3,7 +3,6 @@ package org.fraunhofer.cese.madcap.analysis;
 import java.util.List;
 
 import org.fraunhofer.cese.madcap.analysis.models.ActivityEntry;
-import org.fraunhofer.cese.madcap.analysis.models.BlockCache;
 import org.fraunhofer.cese.madcap.analysis.models.Constants;
 import org.fraunhofer.cese.madcap.analysis.models.DataCollectionEntry;
 import org.fraunhofer.cese.madcap.analysis.models.EndpointArrayReturnObject;
@@ -50,59 +49,6 @@ public class AnalysisEndpoint {
 		List<LocationEntry> result = ofy().load().type(LocationEntry.class).filter("userID =",id).filter("timestamp >=",startTime).filter("timestamp <=",endTime).order("timestamp").list();
 		return result.toArray(new LocationEntry[result.size()]);
 	}
-
-	
-	/**
-	 * Checks in a transaction if the object is already in the cache to prevent race condition 
-	 * and writes it into the cache if it is not already in there.
-	 * @param lat: latitude
-	 * @param lng: longitude
-	 * @param block: The block
-	 * @param user: OAuth user
-	 * @throws OAuthRequestException
-	 */
-	@ApiMethod(name = "writeInCache", httpMethod = ApiMethod.HttpMethod.POST)
-	public void writeInCache(@Named("lat") final String lat, @Named("lng") final String lng, @Named("block") final String block, User user) throws OAuthRequestException{
-		SecurityEndpoint.isUserValid(user);
-		ObjectifyService.begin();
-		ofy().transact(new VoidWork() {
-		    public void vrun() {
-		    	float floatLat = Float.parseFloat(lat);
-		    	float floatLng = Float.parseFloat(lng);
-		    	BlockCache saver = new BlockCache();
-				saver.latitude = floatLat;
-				saver.longitude = floatLng;
-				saver.block = block;
-				saver.createCompositeId(); 
-				ofy().transactionless().load().entity(saver).now();
-		    }
-		});		
-	}
-	
-	
-	/**
-	 * Gets all the locations in the cache at specific longitudes and latitudes.
-	 * @param lat: latitude
-	 * @param lng: longitude
-	 * @param ticket: A id to identify the caller of this method in the callback
-	 * @param user; OAuth user
-	 * @return the ticket and the result of the query
-	 * @throws OAuthRequestException
-	 */
-	@ApiMethod(name = "getAtLocation", httpMethod = ApiMethod.HttpMethod.POST)
-	public EndpointArrayReturnObject getAtLocation(@Named("lat") String lat, @Named("lng") String lng, @Named("ticket") int ticket, User user) throws OAuthRequestException{
-		SecurityEndpoint.isUserValid(user);
-		ObjectifyService.begin();
-		
-		BlockCache result = ofy().load().type(BlockCache.class).id(""+Float.parseFloat(lat)+Float.parseFloat(lng)).now();
-		
-		String[] returned = {"no entry", ticket+""};
-		if(result != null)	{
-			returned[0] = result.block;
-		}
-		return new EndpointArrayReturnObject(returned);
-	}
-	
 	
 	/**
 	 * Gets all users which have uploaded LocationEntries.

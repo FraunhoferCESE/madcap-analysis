@@ -1,7 +1,6 @@
 package org.fraunhofer.cese.madcap.analysis;
 
 import org.fraunhofer.cese.madcap.analysis.models.ActivityEntry;
-import org.fraunhofer.cese.madcap.analysis.models.BlockCache;
 import org.fraunhofer.cese.madcap.analysis.models.DataCollectionEntry;
 import org.fraunhofer.cese.madcap.analysis.models.ForegroundBackgroundEventEntry;
 import org.fraunhofer.cese.madcap.analysis.models.LocationEntry;
@@ -18,7 +17,6 @@ public class OfyService {
 	static {
 		 ObjectifyService.register(LocationEntry.class);
 		 ObjectifyService.register(UserInformation.class);
-		 ObjectifyService.register(BlockCache.class);
 		 ObjectifyService.register(ActivityEntry.class);
 		 ObjectifyService.register(ForegroundBackgroundEventEntry.class);
 		 ObjectifyService.register(DataCollectionEntry.class);
