@@ -4,8 +4,6 @@ import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.Index;
 
-import org.json.JSONObject;
-
 import java.util.HashMap;
 
 /**
@@ -19,44 +17,34 @@ public class ReverseHeartBeatEntry implements Comparable<ReverseHeartBeatEntry> 
     private String id;
     @Index
     private Long timestamp;
-    private long deathStart;
-    private long deathEnd;
+    private String kind;
     @Index
     private String userID;
 
-    public ReverseHeartBeatEntry(){}
-
-    /**
-     * Gets the deathStart.
-     * @return the deathStart.
-     */
-    public long getDeathStart() {
-        return deathStart;
+    public ReverseHeartBeatEntry(){
+    }
+    
+    public ReverseHeartBeatEntry(String kind, long timestamp){
+    	this.kind = kind;
+    	this.timestamp = timestamp;
     }
 
     /**
-     * Sets the deathStart.
-     * @param deathStart to be set.
+     * Gets the kind.
+     * @return the kind.
      */
-    public void setDeathStart(long deathStart) {
-        this.deathStart = deathStart;
+    public String getKind() {
+        return kind;
     }
 
     /**
-     * Gets the deathEnd.
-     * @return the deathEnd.
+     * Sets the kind.
+     * @param kind to be set.
      */
-    public long getdDeathEnd() {
-        return deathEnd;
+    public void setKind(String kind) {
+        this.kind = kind;
     }
 
-    /**
-     * Sets the deathEnd.
-     * @param deathEnd to be set.
-     */
-    public void setDeathEnd(long deathEnd) {
-        this.deathEnd = deathEnd;
-    }
 
     /**
      * Compares this object with the specified object for order.  Returns a
@@ -99,6 +87,30 @@ public class ReverseHeartBeatEntry implements Comparable<ReverseHeartBeatEntry> 
     @Override
     public int compareTo(ReverseHeartBeatEntry o) {
         return 0;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String s) {
+        id = s;
+    }
+
+    public Long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(Long l) {
+        timestamp = l;
+    }
+
+    public String getUserID() {
+        return userID;
+    }
+
+    public void setUserID(String s) {
+        userID = s;
     }
 
     /**
@@ -193,15 +205,14 @@ public class ReverseHeartBeatEntry implements Comparable<ReverseHeartBeatEntry> 
         if (o == null || getClass() != o.getClass()) return false;
 
         ReverseHeartBeatEntry that = (ReverseHeartBeatEntry) o;
-        return deathStart == (that.getDeathStart()) && deathEnd == that.getdDeathEnd();
+        return kind.equals(that.getKind());
     }
 
     @Override
     public String toString() {
         return "ReverseHeartBeatEntry{"+
                 "id=" + id +
-                "\"deathStart\": " + deathStart +
-                "\"deathEnd\": " + deathEnd +
+                "\"kind\": " + kind +
                 '}';
     }
 }

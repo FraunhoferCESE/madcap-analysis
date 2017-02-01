@@ -49,6 +49,12 @@
 					<control-unit-v2></control-unit-v2>
 				</div>
 			</div>
+			</div>
+				<div uib-collapse="!viewControl.userInfornmation.visible" ng-if="viewControl.userInformation.alreadyLoaded" id="user_content" style="position:relative;">
+				<div class="well well-sg">
+					<user-v2></user-v2>
+				</div>
+			</div>
 			<div uib-collapse="!viewControl.usermap.visible" expanded=""ng-if="viewControl.usermap.alreadyLoaded" id="map_content" style="position:relative;">
 				<div id="mapWell" class="well well-sg" style="height:200px;">
 					<map-v2></map-v2>

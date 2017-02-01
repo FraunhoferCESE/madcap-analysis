@@ -4,8 +4,6 @@ import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.Index;
 
-import org.json.JSONObject;
-
 import java.util.HashMap;
 
 /**
@@ -24,6 +22,11 @@ public class DataCollectionEntry implements Comparable<DataCollectionEntry> {
     private String userID;
 
     public DataCollectionEntry(){
+    }
+    
+    public DataCollectionEntry(String state, long timestamp){
+    	this.state = state;
+    	this.timestamp = timestamp;
     }
 
     @Override

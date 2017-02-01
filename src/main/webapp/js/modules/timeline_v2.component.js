@@ -20,7 +20,7 @@ module('timelineV2').
     	
     	$scope.processTickets = 0;
     	$scope.noData = false;
-    	
+    	    	
     	// Various flags to synchronize the multiple callbacks during initialization
     	$scope.stopper = {
     	    showPage: false,
@@ -225,42 +225,11 @@ module('timelineV2').
 								}
 							}
 							
-							/*Gets the ON/OFF events in the intervall we got data for. Start is not the beginning of the day,
+							/*Gets the ON/OFF events in the interval we got data for. Start is not the beginning of the day,
 							but the timestamp of the last event of the previous day to be able to deliver data for the interval before
 							the first activity event off the chosen day.*/
-							helper.provideOnOffTime($scope.controlScope.userData.currentSubject, parseInt(rawData[0].time), parseInt(startUnix + 86400000), function(providedTime)	{
-								if(providedTime !== false)	{
-									
-									//Creates an array of timestamps defining the ON->OFF->ON->OFF->... rythm of the timeframe the data resides in
-									var state = 'START';
-									var onOffTimes = [];	
-									for(var i=0; i<providedTime.length; i++){
-										if(state !== providedTime[i].state){
-											state = providedTime[i].state;
-											onOffTimes.push(providedTime[i]);
-										}
-									}
-
-									var firstIndex = [{
-										state: 'ON',
-										timestamp: parseInt(rawData[0].time)-1
-									}]; 
-									onOffTimes = firstIndex.concat(onOffTimes);
-									
-									// Adds ON/OFF tag at the end of the day to create an interval between last ON tag and end of the day.
-									onOffTimes.push({
-										state: toggleOnOff(onOffTimes[onOffTimes.length-1].state),
-										timestamp: startUnix + 86400000
-									});
-									
-									function toggleOnOff(i)	{
-										if(i === 'ON'){
-											return 'OFF';
-										}
-										else if(i=== 'OFF')	{
-											return 'ON';
-										}
-									}
+							helper.provideOnOffTime($scope.controlScope.userData.currentSubject, parseInt(rawData[0].time), parseInt(startUnix + 86400000), function(onOffTimes)	{
+								if(onOffTimes !== false)	{
 									
 									//Refines the data
 									var refinedData = helper.refineData(rawData, onOffTimes, 'label');
@@ -268,27 +237,34 @@ module('timelineV2').
 
 									if(--($scope.processTickets) === 0)	{
 
-										$scope.eventData.probability['No Data Collected'] = [];
+										$scope.eventData.probability['Data collection turned off'] = [];
+										$scope.eventData.probability['Unexpected collection interuption'] = [];
 			
 										//Expands the last bar so that the expanded parts can get cutted top
 										var cuttedLastBarAt = -1;
 										var oldEnd = refinedData[refinedData.length-1].end;
-										refinedData[refinedData.length-1].end = Math.min($scope.controlScope.dateData.unixRest + 86400000-1, new Date());
+										var endOrigin = refinedData[refinedData.length-1].origin;
+										refinedData[refinedData.length-1].end = Math.min($scope.controlScope.dateData.unixRest + 86400000-2, new Date());
 										for(var k=0; k<onOffTimes.length; k++)	{
-											if(onOffTimes[k].state === 'OFF' && oldEnd < onOffTimes[k].timestamp && onOffTimes[k].timestamp < refinedData[refinedData.length-1].end)	{
+											if(onOffTimes[k].state.substring(0,3) === 'OFF' && oldEnd < onOffTimes[k].timestamp && onOffTimes[k].timestamp < refinedData[refinedData.length-1].end)	{
 												cuttedLastBarAt = k;
 												refinedData[refinedData.length-1].end = onOffTimes[k].timestamp; 
-												$scope.eventData.probability['No Data Collected'][onOffTimes[k].timestamp] = 100;
+												if(onOffTimes[k].state === 'OFF INTENT')	{
+													$scope.eventData.probability['Data collection turned off'][onOffTimes[k].timestamp] = 100;
+												}
+												else if(onOffTimes[k].state === 'OFF CRASH')
+												$scope.eventData.probability['Unexpected collection interuption'][onOffTimes[k].timestamp] = 100;
 											}
 										}
 										
 										for(var i=0; i<startLength; i++){
 											
 											var outOfRange = false;
+											var shiftOrigin = '';
 											
 											// Removes data if it lies completely outside of the days timeframe
 											if(refinedData[i].end < $scope.controlScope.dateData.unixRest)	{
-												refinedData.shift();
+												shiftOrigin = refinedData.shift().origin;
 												outOfRange = true;
 												if(0<refinedData.length)	{
 													i--;
@@ -326,7 +302,7 @@ module('timelineV2').
 												
 												var indexWhereEndIs = i;
 												
-												// Cuts the bar and pushes the new "part-bars" seperately onto the refinedData array. Adds probablitity for new bars too
+												// Cuts the bar and pushes the new "part-bars" separately onto the refinedData array. Adds probablitity for new bars too
 												if(enteredFor){
 													cuttedAt.push(refinedData[i].end);
 													for(var k=0; k<cuttedAt.length;k++)	{
@@ -335,6 +311,7 @@ module('timelineV2').
 																label: refinedData[i].label,
 																start: cuttedAt[k],
 																end: cuttedAt[k+1],
+																origin: refinedData[i].origin, 
 																opaque: $scope.eventData.probability[refinedData[i].label][cuttedAt[k]]
 															});
 															$scope.eventData.probability[refinedData[i].label][cuttedAt[k]] = $scope.eventData.probability[refinedData[i].label][cuttedAt[k]];
@@ -342,20 +319,24 @@ module('timelineV2').
 													}
 													indexWhereEndIs = refinedData.length-1;
 													refinedData[i].end = cuttedAt[0];
-													
 												}
 												// Sets the opacity when there is no probability fetched
 												if(!hasProbability)	{
 													refinedData[i].opaque = 100;
 												}
+												
 												if(i < startLength-1 && refinedData[indexWhereEndIs].end !== refinedData[i+1].start){
-													refinedData.push({
-														label: 'No Data Collected',
+														var label = 'Data collection turned off';
+														if(refinedData[indexWhereEndIs].origin === 'CRASH')	{
+															label = 'Unexpected collection interuption'
+														}
+														refinedData.push({
+														label: label,
 														start: refinedData[indexWhereEndIs].end,
 														end: refinedData[i+1].start,
 														opaque: 100
 													});
-													$scope.eventData.probability['No Data Collected'][refinedData[indexWhereEndIs].end] = 100;
+													$scope.eventData.probability[label][refinedData[indexWhereEndIs].end] = 100;
 												}
 											}
 										}
@@ -363,19 +344,27 @@ module('timelineV2').
 										// Adds "no data" bar when first data event is after the beginning of the day
 										if(0<refinedData.length)	{								
 											if(refinedData[0].start > $scope.controlScope.dateData.unixRest+1){
+												var label = 'Data collection turned off';
+												if(shiftOrigin === 'CRASH')	{
+													label = 'Unexpected collection interuption'
+												}
 												refinedData.push({
-													label: 'No Data Collected',
+													label: label,
 													start: $scope.controlScope.dateData.unixRest + 1,
 													end: refinedData[0].start,
 													opaque: 100
 												});
-												$scope.eventData.probability['No Data Collected'][$scope.controlScope.dateData.unixRest+1] = 100;
+												$scope.eventData.probability[label][$scope.controlScope.dateData.unixRest+1] = 100;
 											}
 												
 											//Adds last 'No Data' bar after cutting so that it doesn't gets cutted
 											if(cuttedLastBarAt !== -1)	{
+												var label = 'Data collection turned off';
+												if(endOrigin === 'CRASH')	{
+													label = 'Unexpected collection interuption'
+												}
 												refinedData.push({
-													label: 'No Data Collected',
+													label: label,
 													start: onOffTimes[cuttedLastBarAt].timestamp,
 													end: $scope.controlScope.dateData.unixRest + 86400000-1,
 													opaque: 100
@@ -392,16 +381,22 @@ module('timelineV2').
 												for(var k=0; k<$scope.eventData.eventStorage.length; k++)	{
 													colorCode = 1;
 													if(refinedData[j].label === $scope.eventData.eventStorage[k].label)	{
-														if(refinedData[j].label === 'No Data Collected')	{
+														if(refinedData[j].label === 'Data collection turned off')	{
 															colorCode = 2;
+														}
+														else if(refinedData[j].label === 'Unexpected collection interuption')	{
+															colorCode = 3;
 														}
 														$scope.eventData.eventStorage[k].times.push({"starting_time": start, "ending_time": refinedData[j].end, "color_code": colorCode, "opaque": refinedData[j].opaque});
 														expanded = true;
 													}
 												}
 												if(!expanded)	{
-													if(refinedData[j].label === 'No Data Collected')	{
+													if(refinedData[j].label === 'Data collection turned off')	{
 														colorCode = 2;
+													}
+													else if(refinedData[j].label === 'Unexpected collection interuption')	{
+														colorCode = 3;
 													}
 													$scope.eventData.eventStorage.push({label: refinedData[j].label, times: [{"starting_time": start, "ending_time": refinedData[j].end, "color_code": colorCode, "opaque": refinedData[j].opaque}]});	
 												}
@@ -433,10 +428,11 @@ module('timelineV2').
 			 * Creates a filler bar to be shown when data is not available or insufficient
 			 */
 			function createFiller()	{
-				$scope.eventData.eventStorage.push({label: 'No Data Collected', times: []});	
-				$scope.eventData.probability['No Data Collected'] = [];
+				$scope.eventData.eventStorage.push({label: 'Data collection turned off', times: []});	
+				$scope.eventData.probability['Data collection turned off'] = [];
+				$scope.eventData.probability['Unexpected collection disruption'] = [];
 				$scope.eventData.eventStorage[0].times.push({"starting_time": $scope.controlScope.dateData.unixRest+1, "ending_time": $scope.controlScope.dateData.unixRest + 86400000-1, "color_code": 2, "opaque": 100});	
-				$scope.eventData.probability['No Data Collected'][$scope.controlScope.dateData.unixRest] = 100;
+				$scope.eventData.probability['Data collection turned off'][$scope.controlScope.dateData.unixRest] = 100;
 			}
 		
 			/**
@@ -596,6 +592,7 @@ module('timelineV2').
 					arrayColors[1] = rgbToHex(0,0,255);
 					arrayNum[2] = 2;
 					arrayColors[2] = rgbToHex(150,150,150);
+					arrayColors[3] = rgbToHex(0,0,0);
 					var colorScale = d3.scale.ordinal().range(arrayColors).domain(arrayNum);
 					
 					$scope.renderOnScreen = function()	{

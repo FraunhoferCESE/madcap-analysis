@@ -355,8 +355,10 @@ angular
 							$scope.mapData.markers[i].setMap($scope.mapData.map);
 							$scope.mapData.markers[i].setVisible(false);
 
+							$scope.mapData.markers[i].bearing = entries[i].bearing;
 							$scope.mapData.markers[i].accuracy = entries[i].accuracy;
 							$scope.mapData.markers[i].origin = entries[i].origin;
+							$scope.mapData.markers[i].extras = entries[i].extras;
 							if($scope.mapData.markers[i].origin === 'network')	{
 								$scope.mapData.markers[i].origin = entries[i].extras;
 							}
@@ -715,20 +717,17 @@ angular
 			if (month < 10) {
 				month = '0' + month;
 			}
-			
-			gapi.client.analysisEndpoint.callForLocationCSV({'user' : subject,'start' : $scope.controlScope.dateData.unixRest,'end' : ($scope.controlScope.dateData.unixRest + 86400000)}).execute(function(resp) {
-				var row = 'data:text/csv;charset=utf-8,' + '"User","Time","latitude","longitude","bearing","accuracy"\r\n';
-				for (var i = resp.items.length - 1; 0 <= i; i--) {
-					row = row + '"' + subject + '",' + helper.getDateFromUnix(resp.items[i].timestamp) + ',' + resp.items[i].latitude + ',' + resp.items[i].longitude + ',' + resp.items[i].bearing + ',' + resp.items[i].accuracy + '\r\n';
-				}
-				var encodedUri = encodeURI(row);
-				var link = document.createElement("a");
-				link.setAttribute("href",encodedUri);
-				link.setAttribute("download","location_export_" + subject + "_" + month + "_" + day + "_" + date.getFullYear() + ".csv");
-				document.body.appendChild(link);
-				link.click();
-				document.body.removeChild(link);
-			});
+			var row = 'data:text/csv;charset=utf-8,' + '"User","Time","latitude","longitude","bearing","origin","accuracy","extras"\r\n';
+			for (var i = $scope.mapData.markers.length - 1; 0 <= i; i--) {
+				row = row + '"' + subject + '",' + $scope.mapData.markers[i].getTitle() + ',' + $scope.mapData.markers[i].getPosition().lat() + ',' + $scope.mapData.markers[i].getPosition().lng() + ',' + $scope.mapData.markers[i].bearing + ',' + $scope.mapData.markers[i].origin + ',' + $scope.mapData.markers[i].accuracy +  ',' + $scope.mapData.markers[i].extras + '\r\n';
+			}
+			var encodedUri = encodeURI(row);
+			var link = document.createElement("a");
+			link.setAttribute("href",encodedUri);
+			link.setAttribute("download","location_export_" + subject + "_" + month + "_" + day + "_" + date.getFullYear() + ".csv");
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
 		};
 		
 		$scope.initializePack.initializeCallback();

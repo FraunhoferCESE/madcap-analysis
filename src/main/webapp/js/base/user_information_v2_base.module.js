@@ -1,0 +1,1 @@
+angular.module('userV2', ['ui.bootstrap']);

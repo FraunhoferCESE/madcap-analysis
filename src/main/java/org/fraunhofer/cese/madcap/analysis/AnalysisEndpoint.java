@@ -1,11 +1,13 @@
 package org.fraunhofer.cese.madcap.analysis;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.fraunhofer.cese.madcap.analysis.models.ActivityEntry;
 import org.fraunhofer.cese.madcap.analysis.models.Constants;
 import org.fraunhofer.cese.madcap.analysis.models.DataCollectionEntry;
 import org.fraunhofer.cese.madcap.analysis.models.EndpointArrayReturnObject;
+import org.fraunhofer.cese.madcap.analysis.models.EndpointReturnObject;
 import org.fraunhofer.cese.madcap.analysis.models.ForegroundBackgroundEventEntry;
 import org.fraunhofer.cese.madcap.analysis.models.LocationEntry;
 import org.fraunhofer.cese.madcap.analysis.models.ReverseHeartBeatEntry;
@@ -17,8 +19,8 @@ import com.google.api.server.spi.config.ApiNamespace;
 import com.google.api.server.spi.config.Named;
 import com.google.appengine.api.oauth.OAuthRequestException;
 import com.google.appengine.api.users.User;
+import com.googlecode.objectify.Key;
 import com.googlecode.objectify.ObjectifyService;
-import com.googlecode.objectify.VoidWork;
 
 import static org.fraunhofer.cese.madcap.analysis.OfyService.ofy;
  
@@ -123,8 +125,79 @@ public class AnalysisEndpoint {
 	@ApiMethod(name = "getOnOffTime", httpMethod = ApiMethod.HttpMethod.GET)
 	public DataCollectionEntry[] getOnOffTime(@Named("user") String id, @Named("start") long startTime, @Named("end") long endTime, User user) throws OAuthRequestException{
 		SecurityEndpoint.isUserValid(user);
-		ObjectifyService.begin();
-		List<DataCollectionEntry> result = ofy().load().type(DataCollectionEntry.class).filter("userID =",id).filter("timestamp >=",startTime).filter("timestamp <=",endTime).order("timestamp").list();
-		return result.toArray(new DataCollectionEntry[result.size()]);
+		//ObjectifyService.begin();
+		List<DataCollectionEntry> resultDCE = ofy().load().type(DataCollectionEntry.class).filter("userID =",id).filter("timestamp >=",startTime).filter("timestamp <=",endTime).order("timestamp").list();
+		List<ReverseHeartBeatEntry> resultRHBE = ofy().load().type(ReverseHeartBeatEntry.class).filter("userID =",id).filter("timestamp >",startTime).filter("timestamp <",endTime).order("timestamp").list();
+		
+		List<DataCollectionEntry> returner = new ArrayList<DataCollectionEntry>();
+		resultDCE.add(0,new DataCollectionEntry("ON", startTime-1));
+		resultRHBE.add(0,new ReverseHeartBeatEntry("DEATHEND", startTime-2));
+		resultDCE.add(resultDCE.size(),new DataCollectionEntry("OFF", endTime-1));
+		resultRHBE.add(resultRHBE.size(),new ReverseHeartBeatEntry("DEATHSTART", endTime-2));
+		
+		boolean onFlagRHBE = false;
+		boolean onFlagDCE = false;
+		int countResultRHBE = 0;
+		int countResultDCE = 0;
+	
+		for(int i=0; i<(resultDCE.size() + resultRHBE.size()); i++){
+			long rhbeTimestamp = 0;
+			String rhbeState = "";
+			long dceTimestamp = 0;
+			String dceState = "";
+		
+			if(countResultRHBE < resultRHBE.size())	{
+				rhbeTimestamp = resultRHBE.get(countResultRHBE).getTimestamp();
+				rhbeState = resultRHBE.get(countResultRHBE).getKind();
+			}
+			if(countResultDCE < resultDCE.size())	{
+				dceTimestamp = resultDCE.get(countResultDCE).getTimestamp();
+				dceState = resultDCE.get(countResultDCE).getState();
+			}	
+			if(countResultDCE < resultDCE.size() && (dceTimestamp < rhbeTimestamp || countResultRHBE >= resultRHBE.size()))	{
+				if(dceState.equals("ON")){
+					onFlagDCE = true;
+					if(onFlagDCE && onFlagRHBE)	{
+						returner.add(new DataCollectionEntry("ON INTENT", dceTimestamp));
+					}
+				}
+				else if(dceState.equals("OFF"))	{
+					if(returner.get(returner.size()-1).getState().equals("OFF CRASH"))	{
+						DataCollectionEntry cache = returner.remove(returner.size()-1);
+						cache.setState("OFF INTENT");
+						returner.add(cache);
+					}
+					else	{
+						returner.add(new DataCollectionEntry("OFF INTENT", dceTimestamp));
+					}
+					onFlagDCE = false;
+				}
+				countResultDCE++;
+			}
+			else	{
+				if(rhbeState.equals("DEATHEND")){
+					onFlagRHBE = true;
+					if(onFlagDCE && onFlagRHBE){
+						if(returner.get(returner.size()-1).getState().equals("OFF INTENT"))	{
+							returner.add(new DataCollectionEntry("ON INTENT", rhbeTimestamp));
+						}
+						else	{
+							returner.add(new DataCollectionEntry("ON CRASH", rhbeTimestamp));
+						}
+					}
+				}
+				else if(rhbeState.equals("DEATHSTART"))	{
+					returner.add(new DataCollectionEntry("OFF CRASH", rhbeTimestamp));
+					onFlagRHBE = false;
+				}
+				countResultRHBE++;
+			}
+			
+			if(returner.size() >= 2 && returner.get(returner.size()-1).getState().substring(0,3).equals(returner.get(returner.size()-2).getState().substring(0,3)))	{
+				returner.remove(returner.size()-1);
+			}
+
+		}
+		return returner.toArray(new DataCollectionEntry[returner.size()]);
 	}
 }

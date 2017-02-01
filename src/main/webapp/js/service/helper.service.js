@@ -102,18 +102,29 @@ angular.module('madcap-analysis')
 			var onIntervalAt = -1;
 			for(var i=0; i<thisData.length; i++){				
 				var lastOnInterval = onIntervalAt;
+				var foundInterval = false;
 				thisData[i].time = parseInt(thisData[i].time);
+				var outBefore = false;
 				// Determines in which ON interval the current timestamp resides in
-				for(var j=0; onOffTimes !== null && j<onOffTimes.length-1 && onIntervalAt === lastOnInterval; j++)	{
+				for(var j=0; onOffTimes !== null && j<onOffTimes.length-1 && !foundInterval; j++)	{
 					onOffTimes[j].timestamp = parseInt(onOffTimes[j].timestamp);
 					onOffTimes[j+1].timestamp = parseInt(onOffTimes[j+1].timestamp);
-					if(onOffTimes[j].state === 'ON' && onOffTimes[j].timestamp < thisData[i].time && thisData[i].time < onOffTimes[j+1].timestamp)	{
+					if(onOffTimes[j].state.substring(0,2) === 'ON' && onOffTimes[j].timestamp <= thisData[i].time && thisData[i].time <= onOffTimes[j+1].timestamp)	{
 						onIntervalAt = j;
+						foundInterval = true;
+					}
+					else if(outBefore && onOffTimes[j].timestamp > thisData[i].time)	{
+						/*onIntervalAt = j;
+						foundInterval = true;
+						onOffTimes[j].timestamp = thisData[i].time;*/
+					}
+					else if(onOffTimes[j].timestamp < thisData[i].time)	{
+						outBefore = true;
 					}
 				}
 				
 				//Extends a bar if the grouper attribute match and the timestamp is in the same ON intervall
-				if((onIntervalAt === lastOnInterval || lastOnInterval === -1) && refinedData.length !== 0 && refinedData[locationCounter][grouper] === thisData[i][grouper])	{	
+				if(onIntervalAt === lastOnInterval && refinedData.length !== 0 && refinedData[locationCounter][grouper] === thisData[i][grouper])	{	
 					if(refinedData[locationCounter].start > thisData[i].time)	{
 						refinedData[locationCounter].start = thisData[i].time;
 					}
@@ -121,7 +132,7 @@ angular.module('madcap-analysis')
 						refinedData[locationCounter].end = thisData[i].time;							
 					}
 				}
-				else if(onIntervalAt !== -1)	{
+				else if(foundInterval)	{
 					
 					// Extends the end of a bar to the start of its successor
 					if(typeof refinedData[locationCounter] !== 'undefined')	{
@@ -134,6 +145,10 @@ angular.module('madcap-analysis')
 					refinedData[locationCounter] = {};
 					for(var property in thisData[i])	{
 						refinedData[locationCounter][property] = thisData[i][property];
+					}
+					refinedData[locationCounter].origin = onOffTimes[onIntervalAt+1].state.substring(3,onOffTimes[onIntervalAt+1].state.length);
+					if(refinedData[locationCounter].origin.charAt(0) === ' ')	{
+						refinedData[locationCounter].origin = refinedData[locationCounter].origin.substring(1,refinedData[locationCounter].origin.length);
 					}
 					refinedData[locationCounter].start = thisData[i].time;
 					refinedData[locationCounter].end = thisData[i].time;					
@@ -223,7 +238,7 @@ angular.module('madcap-analysis')
 				    },
 					{
 				    	timestamp: end,
-				    	state: 'ON'
+				    	state: 'OFF'
 					}];
 				callback(providedTime);
 			}

@@ -43,64 +43,6 @@
         "body" : "autoTemplate(backendResponse)"
       }
     },
-    "analysisEndpoint.callForLocationCSV" : {
-      "path" : "locationCSV/{user}/{start}/{end}",
-      "httpMethod" : "GET",
-      "authLevel" : "NONE",
-      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
-      "audiences" : [ ],
-      "clientIds" : [ "611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com" ],
-      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.locationCSV",
-      "request" : {
-        "parameters" : {
-          "user" : {
-            "type" : "string",
-            "required" : true
-          },
-          "start" : {
-            "type" : "int64",
-            "required" : true
-          },
-          "end" : {
-            "type" : "int64",
-            "required" : true
-          }
-        },
-        "body" : "empty"
-      },
-      "response" : {
-        "body" : "autoTemplate(backendResponse)"
-      }
-    },
-    "analysisEndpoint.getOnOffTime" : {
-      "path" : "datacollectionentrycollection/{user}/{start}/{end}",
-      "httpMethod" : "GET",
-      "authLevel" : "NONE",
-      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
-      "audiences" : [ ],
-      "clientIds" : [ "611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com" ],
-      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getOnOffTime",
-      "request" : {
-        "parameters" : {
-          "user" : {
-            "type" : "string",
-            "required" : true
-          },
-          "start" : {
-            "type" : "int64",
-            "required" : true
-          },
-          "end" : {
-            "type" : "int64",
-            "required" : true
-          }
-        },
-        "body" : "empty"
-      },
-      "response" : {
-        "body" : "autoTemplate(backendResponse)"
-      }
-    },
     "analysisEndpoint.getInWindow" : {
       "path" : "locationentrycollection/{user}/{start}/{end}",
       "httpMethod" : "GET",
@@ -158,6 +100,64 @@
           },
           "include_first" : {
             "type" : "boolean",
+            "required" : true
+          }
+        },
+        "body" : "empty"
+      },
+      "response" : {
+        "body" : "autoTemplate(backendResponse)"
+      }
+    },
+    "analysisEndpoint.callForLocationCSV" : {
+      "path" : "locationCSV/{user}/{start}/{end}",
+      "httpMethod" : "GET",
+      "authLevel" : "NONE",
+      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
+      "audiences" : [ ],
+      "clientIds" : [ "611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com" ],
+      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.locationCSV",
+      "request" : {
+        "parameters" : {
+          "user" : {
+            "type" : "string",
+            "required" : true
+          },
+          "start" : {
+            "type" : "int64",
+            "required" : true
+          },
+          "end" : {
+            "type" : "int64",
+            "required" : true
+          }
+        },
+        "body" : "empty"
+      },
+      "response" : {
+        "body" : "autoTemplate(backendResponse)"
+      }
+    },
+    "analysisEndpoint.getOnOffTime" : {
+      "path" : "datacollectionentrycollection/{user}/{start}/{end}",
+      "httpMethod" : "GET",
+      "authLevel" : "NONE",
+      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
+      "audiences" : [ ],
+      "clientIds" : [ "611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com" ],
+      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getOnOffTime",
+      "request" : {
+        "parameters" : {
+          "user" : {
+            "type" : "string",
+            "required" : true
+          },
+          "start" : {
+            "type" : "int64",
+            "required" : true
+          },
+          "end" : {
+            "type" : "int64",
             "required" : true
           }
         },
@@ -224,37 +224,6 @@
             "type" : "array",
             "items" : {
               "$ref" : "LocationEntry"
-            }
-          }
-        }
-      },
-      "DataCollectionEntry" : {
-        "id" : "DataCollectionEntry",
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string"
-          },
-          "timestamp" : {
-            "type" : "string",
-            "format" : "int64"
-          },
-          "state" : {
-            "type" : "string"
-          },
-          "userID" : {
-            "type" : "string"
-          }
-        }
-      },
-      "DataCollectionEntryCollection" : {
-        "id" : "DataCollectionEntryCollection",
-        "type" : "object",
-        "properties" : {
-          "items" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "DataCollectionEntry"
             }
           }
         }
@@ -347,22 +316,43 @@
             "type" : "string"
           }
         }
+      },
+      "DataCollectionEntry" : {
+        "id" : "DataCollectionEntry",
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "string",
+            "format" : "int64"
+          },
+          "state" : {
+            "type" : "string"
+          },
+          "userID" : {
+            "type" : "string"
+          }
+        }
+      },
+      "DataCollectionEntryCollection" : {
+        "id" : "DataCollectionEntryCollection",
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "DataCollectionEntry"
+            }
+          }
+        }
       }
     },
     "methods" : {
       "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getUsers" : {
         "response" : {
           "$ref" : "EndpointArrayReturnObject"
-        }
-      },
-      "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.locationCSV" : {
-        "response" : {
-          "$ref" : "LocationEntryCollection"
-        }
-      },
-      "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getOnOffTime" : {
-        "response" : {
-          "$ref" : "DataCollectionEntryCollection"
         }
       },
       "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getInWindow" : {
@@ -373,6 +363,16 @@
       "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getActivityData" : {
         "response" : {
           "$ref" : "TimelineReturnContainer"
+        }
+      },
+      "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.locationCSV" : {
+        "response" : {
+          "$ref" : "LocationEntryCollection"
+        }
+      },
+      "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getOnOffTime" : {
+        "response" : {
+          "$ref" : "DataCollectionEntryCollection"
         }
       }
     }
