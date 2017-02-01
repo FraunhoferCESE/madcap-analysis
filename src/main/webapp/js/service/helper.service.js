@@ -114,9 +114,9 @@ angular.module('madcap-analysis')
 						foundInterval = true;
 					}
 					else if(outBefore && onOffTimes[j].timestamp > thisData[i].time)	{
-						/*onIntervalAt = j;
+						onIntervalAt = j;
 						foundInterval = true;
-						onOffTimes[j].timestamp = thisData[i].time;*/
+						onOffTimes[j].timestamp = thisData[i].time - 1;
 					}
 					else if(onOffTimes[j].timestamp < thisData[i].time)	{
 						outBefore = true;
@@ -137,6 +137,14 @@ angular.module('madcap-analysis')
 					// Extends the end of a bar to the start of its successor
 					if(typeof refinedData[locationCounter] !== 'undefined')	{
 						refinedData[locationCounter].end = Math.min(thisData[i].time, onOffTimes[lastOnInterval+1].timestamp);
+						refinedData[locationCounter].holes = [];
+						//Attaches the holes (for example because of crashes) between this and the next eentry to this entry.
+						for(var k=lastOnInterval; k<onIntervalAt; k=k+2){
+							refinedData[locationCounter].holes.push({
+								start: onOffTimes[k+1].timestamp,
+								end: onOffTimes[k+2].timestamp,
+							});
+						}
 					}
 					if(refinedData.length !== 0)	{
 						locationCounter++;

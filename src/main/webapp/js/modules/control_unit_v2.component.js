@@ -26,8 +26,7 @@ module('controlUnitV2').
  					delete $scope.userData.users.splice($scope.userData.users.length-1,1);
 					}
        			$scope.userData.lastSubject = $scope.userData.currentSubject;
- 				$scope.userData.currentSubject = document.getElementById("chosen_user")
- 				.options[document.getElementById("chosen_user").selectedIndex].text;
+ 				$scope.userData.currentSubject = document.getElementById("chosen_user").options[document.getElementById("chosen_user").selectedIndex].text;
        		}
         };
 

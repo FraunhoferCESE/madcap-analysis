@@ -1,13 +1,16 @@
 package org.fraunhofer.cese.madcap.analysis;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import org.fraunhofer.cese.madcap.analysis.models.ActivityEntry;
 import org.fraunhofer.cese.madcap.analysis.models.Constants;
 import org.fraunhofer.cese.madcap.analysis.models.DataCollectionEntry;
 import org.fraunhofer.cese.madcap.analysis.models.EndpointArrayReturnObject;
-import org.fraunhofer.cese.madcap.analysis.models.EndpointReturnObject;
 import org.fraunhofer.cese.madcap.analysis.models.ForegroundBackgroundEventEntry;
 import org.fraunhofer.cese.madcap.analysis.models.LocationEntry;
 import org.fraunhofer.cese.madcap.analysis.models.ReverseHeartBeatEntry;
@@ -19,7 +22,6 @@ import com.google.api.server.spi.config.ApiNamespace;
 import com.google.api.server.spi.config.Named;
 import com.google.appengine.api.oauth.OAuthRequestException;
 import com.google.appengine.api.users.User;
-import com.googlecode.objectify.Key;
 import com.googlecode.objectify.ObjectifyService;
 
 import static org.fraunhofer.cese.madcap.analysis.OfyService.ofy;
@@ -199,5 +201,77 @@ public class AnalysisEndpoint {
 
 		}
 		return returner.toArray(new DataCollectionEntry[returner.size()]);
+	}
+	
+	@ApiMethod(name = "getAccountableTime", httpMethod = ApiMethod.HttpMethod.GET)
+	public EndpointArrayReturnObject getAccountableTime(@Named("user") String id,@Named("time") long time,@Named("withMonth") boolean wantsMonth, User user) throws OAuthRequestException, ParseException	{
+		
+		String[] returner = {"Not requested","Not requested"};
+				
+		long lb = (new SimpleDateFormat("HH:mm:ss").parse("08:00:00")).getTime();
+		long ub = (new SimpleDateFormat("HH:mm:ss").parse("23:59:59")).getTime();
+		lb = lb % 86400000;
+		ub = ub % 86400000;
+		
+		Date date = new Date(time);
+		Calendar calendar = Calendar.getInstance();		
+		calendar.setTime(date);
+		calendar.set(Calendar.HOUR, 0);
+		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.SECOND,0);
+		calendar.set(Calendar.MILLISECOND,0);
+		int cache = calendar.get(Calendar.DAY_OF_MONTH);
+		long start = calendar.getTimeInMillis();
+		calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+		long startMonth = calendar.getTimeInMillis();
+		
+		calendar.set(Calendar.HOUR, 23);
+		calendar.set(Calendar.MINUTE, 59);
+		calendar.set(Calendar.SECOND,59);
+		calendar.set(Calendar.MILLISECOND,999);
+		calendar.set(Calendar.DAY_OF_MONTH, cache);
+		long end = calendar.getTimeInMillis();
+		calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMinimum(Calendar.DAY_OF_MONTH));
+		long endMonth = calendar.getTimeInMillis();
+		
+		List<DataCollectionEntry> result = ofy().load().type(DataCollectionEntry.class).filter("userID =",id).filter("timestamp >=",start).filter("timestamp <=",end).order("timestamp").list();	
+		if(wantsMonth)	{
+			List<DataCollectionEntry> resultForMonth = ofy().load().type(DataCollectionEntry.class).filter("userID =",id).filter("timestamp >=",startMonth).filter("timestamp <=",endMonth).order("timestamp").list();	
+			String currentState = "";
+			long startTime = 0L;
+			long endTime = 0L;
+			for(int i=0; i<result.size(); i++)	{
+				String state = result.get(i).getState();
+				
+				if(!(state.equals(currentState)))	{
+					Date currentTime = new Date(result.get(i).getTimestamp());
+					Calendar currentCalendar = Calendar.getInstance();
+					currentCalendar.setTime(currentTime);
+					
+					if(state.equals("ON"))	{
+						if(currentCalendar.getTimeInMillis() % 86400000 < lb || currentCalendar.getTimeInMillis() % 86400000 > ub)	{
+							currentCalendar.set(Calendar.HOUR, 8);
+							currentCalendar.set(Calendar.MINUTE, 0);
+							currentCalendar.set(Calendar.SECOND, 0);
+							currentCalendar.set(Calendar.MILLISECOND, 0);
+							if(currentCalendar.getTimeInMillis() % 86400000 > ub){
+								currentCalendar.set(Calendar.DAY_OF_MONTH, 0);									
+							}
+							startTime = currentCalendar.getTimeInMillis();
+						}
+					}
+					else if(state.equals("OFF"))	{
+						if(currentCalendar.getTimeInMillis() % 86400000 < lb)	{
+							currentCalendar.set(Calendar.HOUR, 23);
+							currentCalendar.set(Calendar.MINUTE, 59);
+							currentCalendar.set(Calendar.SECOND, 59);
+							currentCalendar.set(Calendar.MILLISECOND, 999);
+						}
+						long startDistance = (startTime - (startTime % 86400000) + ub) - startTime;
+					}
+				}
+			}
+		}	
+		return new EndpointArrayReturnObject(returner);
 	}
 }

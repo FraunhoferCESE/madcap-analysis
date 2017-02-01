@@ -311,7 +311,8 @@ module('timelineV2').
 																label: refinedData[i].label,
 																start: cuttedAt[k],
 																end: cuttedAt[k+1],
-																origin: refinedData[i].origin, 
+																origin: refinedData[i].origin,
+																holes: refinedData[i].holes,
 																opaque: $scope.eventData.probability[refinedData[i].label][cuttedAt[k]]
 															});
 															$scope.eventData.probability[refinedData[i].label][cuttedAt[k]] = $scope.eventData.probability[refinedData[i].label][cuttedAt[k]];
@@ -326,17 +327,20 @@ module('timelineV2').
 												}
 												
 												if(i < startLength-1 && refinedData[indexWhereEndIs].end !== refinedData[i+1].start){
-														var label = 'Data collection turned off';
-														if(refinedData[indexWhereEndIs].origin === 'CRASH')	{
-															label = 'Unexpected collection interuption'
-														}
+													//Creates bars for the holes provided in the by the refine-method.
+													var label = 'Data collection turned off';
+													if(refinedData[indexWhereEndIs].origin === 'CRASH')	{
+														label = 'Unexpected collection interuption'
+													}
+													for(var j=0; j<refinedData[indexWhereEndIs].holes.length; j++)	{	
 														refinedData.push({
-														label: label,
-														start: refinedData[indexWhereEndIs].end,
-														end: refinedData[i+1].start,
-														opaque: 100
-													});
-													$scope.eventData.probability[label][refinedData[indexWhereEndIs].end] = 100;
+															label: label,
+															start: refinedData[indexWhereEndIs].holes[j].start,
+															end: refinedData[indexWhereEndIs].holes[j].end,
+															opaque: 100
+														});
+														$scope.eventData.probability[label][refinedData[indexWhereEndIs].end] = 100;
+													}
 												}
 											}
 										}
@@ -366,7 +370,7 @@ module('timelineV2').
 												refinedData.push({
 													label: label,
 													start: onOffTimes[cuttedLastBarAt].timestamp,
-													end: $scope.controlScope.dateData.unixRest + 86400000-1,
+													end: Math.min(new Date(), $scope.controlScope.dateData.unixRest + 86400000-1),
 													opaque: 100
 												});
 											}

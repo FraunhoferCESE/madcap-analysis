@@ -37,7 +37,7 @@ module('master').
 				style: 'rgb(230, 230, 230)',
 				textColor: 'rgb(150, 150, 150)'
 			},
-			userInfo:	{
+			userinfo:	{
 				name: 'User information view',
 				visible: false,
 				alreadyLoaded: false,
@@ -50,17 +50,17 @@ module('master').
 		/**
 		 * Calculates the visibility of all child modules (include children's child modules too)
 		 */
-		$scope.$watchGroup(['viewControl.timeline.visible','viewControl.usermap.visible'], function()	{
+		$scope.$watchGroup(['viewControl.timeline.visible','viewControl.usermap.visible','viewControl.userinfo.visible'], function()	{
 			var usermapVisible = $scope.viewControl.usermap.visible;
 			var timelineVisible = $scope.viewControl.timeline.visible;
-			var userInfoVisible = $scope.viewControl.userInfo.visible;
+			var userinfoVisible = $scope.viewControl.userinfo.visible;
 			
-			$scope.controlControl.unitVisible = ($scope.viewControl.usermap.visible || $scope.viewControl.timeline.visible || $scope.viewControl.userInfo.visible);
+			$scope.controlControl.unitVisible = ($scope.viewControl.usermap.visible || $scope.viewControl.timeline.visible || $scope.viewControl.userinfo.visible);
 			
 			if($scope.controlControl.unitVisible)	{
 				$scope.controlControl.childScope.control.sliderVisible = (usermapVisible || timelineVisible);
-				$scope.controlControl.childScope.control.userpickerVisible = (usermapVisible || timelineVisible || $scope.viewControl.userInfo.visible);
-				$scope.controlControl.childScope.control.datepickerVisible = (usermapVisible || timelineVisible || $scope.viewControl.userInfo.visible);
+				$scope.controlControl.childScope.control.userpickerVisible = (usermapVisible || timelineVisible || $scope.viewControl.userinfo.visible);
+				$scope.controlControl.childScope.control.datepickerVisible = (usermapVisible || timelineVisible || $scope.viewControl.userinfo.visible);
 				$scope.controlControl.childScope.control.timelineDatapickerVisible = timelineVisible;
 				$scope.controlControl.childScope.control.csvTimelineButtonsVisible = timelineVisible;
 				$scope.controlControl.childScope.control.mapButtonsVisible = usermapVisible;

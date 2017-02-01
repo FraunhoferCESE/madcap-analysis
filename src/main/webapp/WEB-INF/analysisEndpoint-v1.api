@@ -43,26 +43,26 @@
         "body" : "autoTemplate(backendResponse)"
       }
     },
-    "analysisEndpoint.getInWindow" : {
-      "path" : "locationentrycollection/{user}/{start}/{end}",
+    "analysisEndpoint.getAccountableTime" : {
+      "path" : "endpointarrayreturnobject/{user}/{time}/{withMonth}",
       "httpMethod" : "GET",
       "authLevel" : "NONE",
       "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
       "audiences" : [ ],
       "clientIds" : [ "611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com" ],
-      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getInWindow",
+      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getAccountableTime",
       "request" : {
         "parameters" : {
           "user" : {
             "type" : "string",
             "required" : true
           },
-          "start" : {
+          "time" : {
             "type" : "int64",
             "required" : true
           },
-          "end" : {
-            "type" : "int64",
+          "withMonth" : {
+            "type" : "boolean",
             "required" : true
           }
         },
@@ -166,6 +166,35 @@
       "response" : {
         "body" : "autoTemplate(backendResponse)"
       }
+    },
+    "analysisEndpoint.getInWindow" : {
+      "path" : "locationentrycollection/{user}/{start}/{end}",
+      "httpMethod" : "GET",
+      "authLevel" : "NONE",
+      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
+      "audiences" : [ ],
+      "clientIds" : [ "611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com" ],
+      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getInWindow",
+      "request" : {
+        "parameters" : {
+          "user" : {
+            "type" : "string",
+            "required" : true
+          },
+          "start" : {
+            "type" : "int64",
+            "required" : true
+          },
+          "end" : {
+            "type" : "int64",
+            "required" : true
+          }
+        },
+        "body" : "empty"
+      },
+      "response" : {
+        "body" : "autoTemplate(backendResponse)"
+      }
     }
   },
   "descriptor" : {
@@ -178,52 +207,6 @@
             "type" : "array",
             "items" : {
               "type" : "string"
-            }
-          }
-        }
-      },
-      "LocationEntry" : {
-        "id" : "LocationEntry",
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string"
-          },
-          "timestamp" : {
-            "type" : "string",
-            "format" : "int64"
-          },
-          "latitude" : {
-            "type" : "number"
-          },
-          "longitude" : {
-            "type" : "number"
-          },
-          "origin" : {
-            "type" : "string"
-          },
-          "accuracy" : {
-            "type" : "number"
-          },
-          "extras" : {
-            "type" : "string"
-          },
-          "bearing" : {
-            "type" : "number"
-          },
-          "userID" : {
-            "type" : "string"
-          }
-        }
-      },
-      "LocationEntryCollection" : {
-        "id" : "LocationEntryCollection",
-        "type" : "object",
-        "properties" : {
-          "items" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "LocationEntry"
             }
           }
         }
@@ -317,6 +300,52 @@
           }
         }
       },
+      "LocationEntry" : {
+        "id" : "LocationEntry",
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "string",
+            "format" : "int64"
+          },
+          "latitude" : {
+            "type" : "number"
+          },
+          "longitude" : {
+            "type" : "number"
+          },
+          "origin" : {
+            "type" : "string"
+          },
+          "accuracy" : {
+            "type" : "number"
+          },
+          "extras" : {
+            "type" : "string"
+          },
+          "bearing" : {
+            "type" : "number"
+          },
+          "userID" : {
+            "type" : "string"
+          }
+        }
+      },
+      "LocationEntryCollection" : {
+        "id" : "LocationEntryCollection",
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "LocationEntry"
+            }
+          }
+        }
+      },
       "DataCollectionEntry" : {
         "id" : "DataCollectionEntry",
         "type" : "object",
@@ -355,9 +384,9 @@
           "$ref" : "EndpointArrayReturnObject"
         }
       },
-      "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getInWindow" : {
+      "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getAccountableTime" : {
         "response" : {
-          "$ref" : "LocationEntryCollection"
+          "$ref" : "EndpointArrayReturnObject"
         }
       },
       "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getActivityData" : {
@@ -373,6 +402,11 @@
       "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getOnOffTime" : {
         "response" : {
           "$ref" : "DataCollectionEntryCollection"
+        }
+      },
+      "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getInWindow" : {
+        "response" : {
+          "$ref" : "LocationEntryCollection"
         }
       }
     }
