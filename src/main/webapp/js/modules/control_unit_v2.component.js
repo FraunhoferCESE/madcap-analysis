@@ -43,6 +43,9 @@ module('controlUnitV2').
     		timelineCsvTrigger: false,
     		locationCsvTrigger: false,
     		blockCsvTrigger: false,
+    		rerenderSlider: function()	{
+    	    	$scope.$broadcast('rzSliderForceRender');
+    		}
     	};
     	
     	// Data regarding the source if a visualization displays multiple like the timeline for example

@@ -82,8 +82,8 @@ module('timelineV2').
 	    });
     	
     	// Listener for the timeline csv download button
-    	$scope.$parent.$watch('viewControl.timeline.visible', function(newValue) { 
-			if($scope.$parent.viewControl.timeline.visible)	{
+    	$scope.$parent.$watch('viewControl.timeline.expanded', function(newValue) { 
+			if($scope.$parent.viewControl.timeline.expanded)	{
 				$scope.renderTimeline();
 			}
 	    });

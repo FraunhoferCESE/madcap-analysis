@@ -8,12 +8,12 @@ angular.module('madcap-analysis')
 	  	  
 	  var key = 'no key';
 	  var censusModule = 0;
-	  var canceled = false;
+	  var exportId = 0;
 	  
 	  return	{
 	  	
 		cancelDownload : function()	{
-			canceled = true;
+			exportId++;
 		},
 		
 		  /**
@@ -25,7 +25,7 @@ angular.module('madcap-analysis')
 		   * 				Can be used to update a progress bar for example
 		   */
 		csvDownload : function(array, day, user, updater)	{
-			canceled = false;
+			var myId = exportId;
 			var calls = array.length;
 			var progressUpdate = updater;
 			var data = [];
@@ -37,6 +37,7 @@ angular.module('madcap-analysis')
 			var threshold = 0;
 			var progress = 0;
 			var stepSize = 100;
+			
 			progressUpdate(0);
 			sendBatchRequest(progress, stepSize);
 			
@@ -59,6 +60,9 @@ angular.module('madcap-analysis')
 
 			function requestLookup(passedI)	{
 				self.sendRequest(array[passedI].lat, array[passedI].lng, function(resp, id)	{
+					if(myId !== exportId){
+						return;
+					}
 					if(typeof resp.data === 'undefined')	{
 						requestLookup(id);
 					}
@@ -102,8 +106,11 @@ angular.module('madcap-analysis')
 					}
 					
 					if(progress===threshold){
-						if(!canceled)	{
+						if(myId === exportId)	{
 							sendBatchRequest(progress, stepSize);
+						}
+						else	{
+							progressUpdate(-1);
 						}
 					}
 				}, true, passedI);					

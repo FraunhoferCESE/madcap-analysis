@@ -25,11 +25,10 @@ angular
 		$scope.controlScope = $scope.$parent.controlControl.childScope;
 		
 		$scope.noData = false;
-		$scope.bounds = new google.maps.LatLngBounds();
 		
 		/*Count the running processes. The last running process is the one which gets shown on the view> Since all
 		 * requests take the same time, this implements a last-in-last-out startegy for the sowing of the data*/
-		$scope.processTickets = 0;
+		$scope.processTickets = {};
 		
 		// All the data we need to show the Google Map, markers and the heatmap layer. Also contains map-related setup data
 		$scope.mapData = {
@@ -42,7 +41,8 @@ angular
 			markers : [],
 			center : new google.maps.LatLng(38.97, -76.92),	
 			markerCircle : null,
-			lastClickedMarker: null
+			lastClickedMarker: null,
+			bounds: new google.maps.LatLngBounds()
 		};
 		
 		// Necessary methods and variables to control the initial loading and general setup of the module
@@ -163,8 +163,8 @@ angular
 		});
 						
 		//Listener for the variable that determines if the view gets shown or not
-		$scope.$parent.$watch('viewControl.usermap.visible',function(newValue) {
-			if ($scope.$parent.viewControl.usermap.visible) {
+		$scope.$parent.$watch('viewControl.usermap.extended',function(newValue) {
+			if ($scope.$parent.viewControl.usermap.extended) {
 				$scope.fromStart = true;
 				$scope.initializeRefresh();
 			}
@@ -219,8 +219,12 @@ angular
 		 *            to the function
 		 */
 		$scope.initializeRefresh = function() {
-
-			$scope.processTickets++;
+			
+			var time = new Date().getTime();
+			var user = $scope.controlScope.userData.currentSubject;
+			var date = $scope.controlScope.dateData.unixRest;
+			$scope.processTickets[user+date+""] = time+'';
+			
 			$scope.mapData.lastClickedMarker = null;
 			
 			if ($scope.mapData.refreshMap) {
@@ -245,7 +249,7 @@ angular
 				cacheSource = $scope.controlScope.sourceData.lastTimelineSource;
 			}
 			
-			//Caches the data if there is data to chache
+			//Caches the data if there is data to cache
 			if (cacheUser !== '' && !($scope.noData)) {
 				$scope.cache = helper.cacheData($scope.cache, {
 					marker : $scope.mapData.markers,
@@ -256,7 +260,6 @@ angular
 			// If there is no map, a flag is set to restart the loading when the map is ready
 			if ($scope.mapData.map === 'no map') {
 				$scope.initializePack.rekick = true;
-				$scope.processTickets--;
 				return;
 			}
 			// Step 2: Restoring "factory mode"
@@ -270,7 +273,7 @@ angular
 				$scope.mapData.mvcArray = new google.maps.MVCArray();
 				$scope.mapData.heatmapDataArray = new google.maps.MVCArray();
 				$scope.mapData.markers = [];
-				$scope.bounds = new google.maps.LatLngBounds();
+				$scope.mapData.bounds = new google.maps.LatLngBounds();
 				$scope.mapData.heatmap = new google.maps.visualization.HeatmapLayer({
 					data : $scope.mapData.heatmapDataArray,
 					radius : 100
@@ -286,7 +289,7 @@ angular
 				var cachedAt = -1;
 				// Checks if the key is in the cache
 				for (var j = 0; cachedAt === -1 && j < $scope.cache.size; j++) {
-					if ($scope.controlScope.userData.currentSubject + $scope.controlScope.dateData.unixRest === $scope.cache.meta[j]) {
+					if (user + date === $scope.cache.meta[j]) {
 						cachedAt = j;
 					}
 				}
@@ -294,14 +297,14 @@ angular
 				// Step 3: Load new data. The method to do so depends on the fact if the data is cached or not.
 				if (cachedAt === -1) {
 					// Load data anew
-					$scope.showMarkers();
+					$scope.showMarkers(user, date);
 				} else {
 					// Load data from cache at the give index
-					showFromCache(cachedAt);
+					showFromCache(cachedAt, user, date);
 				}
 			} else {
 				// Decrease the process ticket and remove load overlay if no user is chosen yet
-				$scope.processTickets--;
+				$scope.processTickets = [];
 				if ($scope.dialog[0].parentElement !== null) {
 					$scope.dialog.remove();
 				}
@@ -313,89 +316,105 @@ angular
 		 * chosen day. The locations will be returned in one
 		 * raw String, which will have to get refined.
 		 */
-		$scope.showMarkers = function() {
-			var strUser = document.getElementById("chosen_user").options[document.getElementById("chosen_user").selectedIndex].text;
-			gapi.client.analysisEndpoint.getInWindow({'user' : strUser,'start' : $scope.controlScope.dateData.unixRest,'end' : ($scope.controlScope.dateData.unixRest + 86400000)}).execute(function(resp) {
-				$scope.processTickets--;
+		$scope.showMarkers = function(user, date) {
+			gapi.client.analysisEndpoint.getInWindow({'user' : user, 'start' : date,'end' : (date + 86400000)}).execute(function(resp) {
 				// Checks to see if the returned object is valid and usable
 				if (resp !== false && typeof resp.items !== 'undefined' && resp.items.length !== 0) {
 					$scope.noData = false;
 					var entries = resp.items;
-					if ($scope.processTickets === 0) {
-						for (var i = 0; typeof entries !== 'undefined' && i < entries.length; i++) {
-							var location = [];
-							location[0] = entries[i].latitude;
-							location[1] = entries[i].longitude;
-							
-							var coordinates = new google.maps.LatLng(location[0],location[1]);
-							$scope.mapData.mvcArray.push(coordinates);
-							
-							$scope.mapData.markers[i] = new google.maps.Marker({
-								title : helper.getDateFromUnix(entries[i].timestamp)
-							});
-							$scope.mapData.markers[i].addListener('click',function() {
-								var self = this;
-								$scope.$apply(function()	{
-									$scope.censusData.origin = self.origin;
-									$scope.censusData.accuracy = self.accuracy;
-									$scope.censusData.latitude = self.getPosition().lat();
-									$scope.censusData.longitude = self.getPosition().lng();
-									$scope.mapData.lastClickedMarker = self;
-								});
-								
-								if(this.circle.getMap() === null)	{
-									this.circle.setMap($scope.mapData.map);
-								}
-								else	{
-									this.circle.setMap(null);	
-								}
-							});
-							
-							$scope.mapData.markers[i].setPosition(coordinates);
-							$scope.mapData.markers[i].setMap($scope.mapData.map);
-							$scope.mapData.markers[i].setVisible(false);
-
-							$scope.mapData.markers[i].bearing = entries[i].bearing;
-							$scope.mapData.markers[i].accuracy = entries[i].accuracy;
-							$scope.mapData.markers[i].origin = entries[i].origin;
-							$scope.mapData.markers[i].extras = entries[i].extras;
-							if($scope.mapData.markers[i].origin === 'network')	{
-								$scope.mapData.markers[i].origin = entries[i].extras;
-							}
-							if($scope.mapData.markers[i].origin === 'cell')	{
-								$scope.mapData.markers[i].origin = $scope.mapData.markers[i].origin + ' tower';
-							}
-							if($scope.mapData.markers[i].origin === 'wifi')	{
-								$scope.mapData.markers[i].setIcon('https://maps.google.com/mapfiles/ms/icons/blue-dot.png');
-							}
-							else if($scope.mapData.markers[i].origin === 'cell tower')	{
-								$scope.mapData.markers[i].setIcon('https://maps.google.com/mapfiles/ms/icons/green-dot.png');									
-							}
-							else if($scope.mapData.markers[i].origin === 'gps')	{
-								$scope.mapData.markers[i].setIcon('https://maps.google.com/mapfiles/ms/icons/red-dot.png');
-							}
-							
-							$scope.mapData.markers[i].circle = new google.maps.Circle({
-					            strokeColor: '#FF0000',
-					            strokeOpacity: 0.8,
-					            strokeWeight: 2,
-					            map: null,
-					            fillColor: '#FF0000',
-					            fillOpacity: 0.35,
-					            center: $scope.mapData.markers[i].getPosition(),
-					            radius: $scope.mapData.markers[i].accuracy
-					          });
-							
-							$scope.bounds.extend($scope.mapData.markers[i].getPosition());
-						}
+					
+					var mock = {
+						mvcArray: new google.maps.MVCArray(),
+						markers: [],
+						bounds: new google.maps.LatLngBounds()
+					};
+					
+					for (var i = 0; typeof entries !== 'undefined' && i < entries.length; i++) {
+						var location = [];
+						location[0] = entries[i].latitude;
+						location[1] = entries[i].longitude;
 						
-						if (typeof entries !== 'undefined' && $scope.processTickets === 0) {
+						var coordinates = new google.maps.LatLng(location[0],location[1]);
+						mock.mvcArray.push(coordinates);
+						
+						mock.markers[i] = new google.maps.Marker({
+							title : helper.getDateFromUnix(entries[i].timestamp)
+						});
+						mock.markers[i].addListener('click',function() {
+							var self = this;
+							$scope.$apply(function()	{
+								$scope.censusData.origin = self.origin;
+								$scope.censusData.accuracy = self.accuracy;
+								$scope.censusData.latitude = self.getPosition().lat();
+								$scope.censusData.longitude = self.getPosition().lng();
+								$scope.mapData.lastClickedMarker = self;
+							});
+							
+							if(this.circle.getMap() === null)	{
+								this.circle.setMap($scope.mapData.map);
+							}
+							else	{
+								this.circle.setMap(null);	
+							}
+						});
+							
+						mock.markers[i].setPosition(coordinates);
+						mock.markers[i].setMap($scope.mapData.map);
+						mock.markers[i].setVisible(false);
+							
+						mock.markers[i].bearing = entries[i].bearing;
+						mock.markers[i].accuracy = entries[i].accuracy;
+						mock.markers[i].origin = entries[i].origin;
+						mock.markers[i].extras = entries[i].extras;
+						if(mock.markers[i].origin === 'network')	{
+							mock.markers[i].origin = entries[i].extras;
+						}
+						if(mock.markers[i].origin === 'cell')	{
+							mock.markers[i].origin = mock.markers[i].origin + ' tower';
+						}
+						if(mock.markers[i].origin === 'wifi')	{
+							mock.markers[i].setIcon('https://maps.google.com/mapfiles/ms/icons/blue-dot.png');
+						}
+						else if(mock.markers[i].origin === 'cell tower')	{
+							mock.markers[i].setIcon('https://maps.google.com/mapfiles/ms/icons/green-dot.png');									
+						}
+						else if(mock.markers[i].origin === 'gps')	{
+							mock.markers[i].setIcon('https://maps.google.com/mapfiles/ms/icons/red-dot.png');
+						}
+							
+						mock.markers[i].circle = new google.maps.Circle({
+				            strokeColor: '#FF0000',
+				            strokeOpacity: 0.8,
+				            strokeWeight: 2,
+				            map: null,
+				            fillColor: '#FF0000',
+				            fillOpacity: 0.35,
+				            center: mock.markers[i].getPosition(),
+				            radius: mock.markers[i].accuracy
+				          });
+							
+						mock.bounds.extend(mock.markers[i].getPosition());
+					}
+						
+					var maxTicket = 0;
+					var keys = Object.keys($scope.processTickets);
+					for(var k=0; k<keys.length; k++)	{
+						if(maxTicket < parseInt($scope.processTickets[keys[k]]))	{
+							maxTicket = parseInt($scope.processTickets[keys[k]]);
+						}
+					}
+					if(maxTicket === parseInt($scope.processTickets[user + date]))	{	
+						$scope.mapData.markers = mock.markers;
+						$scope.mapData.bounds = mock.bounds;
+						$scope.mapData.mvcArray = mock.mvcArray;
+						if (typeof entries !== 'undefined') {
 							$scope.centerMap();
 						}
-						
+						$scope.processTickets = {};
 						$scope.filterAccordingToSlider();
 					}
-				} else {
+				}
+				else {
 					// Closes load overlay and sets no data flag if response is empty
 					$scope.noData = true;
 					if ($scope.dialog[0].parentElement !== null) {
@@ -412,21 +431,45 @@ angular
 		 *            The index where the markers reside in the
 		 *            cache
 		 */
-		function showFromCache(index) {
-			$scope.processTickets--;
-			$scope.mapData.markers = $scope.cache.content.marker[index];
-			$scope.mapData.mvcArray = $scope.cache.content.mvc[index];
+		function showFromCache(index, user, date) {
+			
+			var mock = {
+					mvcArray: new google.maps.MVCArray(),
+					markers: [],
+					bounds: new google.maps.LatLngBounds()
+				};
+			
+			mock.markers = $scope.cache.content.marker[index];
+			mock.mvcArray = $scope.cache.content.mvc[index];
+			
 			// Connects markers with map and hides them if heatmap shall be shown
-			for (var i = 0; i < $scope.mapData.markers.length; i++) {
-				$scope.mapData.markers[i].setMap($scope.mapData.map);
+			for (var i = 0; i <mock.markers.length; i++) {
+				mock.markers[i].setMap($scope.mapData.map);
 				if ($scope.controlScope.mapControlData.isHeat) {
-					$scope.mapData.markers[i].setVisible(false);
+					mock.markers[i].setVisible(false);
 				}
 				// Extends the bounds, so that in the end all markers will be visible on the map at once
-				$scope.bounds.extend($scope.mapData.markers[i].getPosition());
+				mock.bounds.extend(mock.markers[i].getPosition());
 			}
-			$scope.centerMap();
-			$scope.filterAccordingToSlider();
+			
+			var maxTicket = 0;
+			var keys = Object.keys($scope.processTickets);
+			for(var k=0; k<keys.length; k++)	{
+				if(maxTicket < parseInt($scope.processTickets[keys[k]]))	{
+					maxTicket = parseInt($scope.processTickets[keys[k]]);
+				}
+			}
+			
+			if(maxTicket === parseInt($scope.processTickets[user + date]))	{
+				$scope.mapData.markers = mock.markers;
+				$scope.mapData.bounds = mock.bounds;
+				$scope.mapData.mvcArray = mock.mvcArray;
+				if (typeof entries !== 'undefined') {
+					$scope.centerMap();
+				}
+				$scope.processTickets = {};
+				$scope.filterAccordingToSlider();
+			} 
 		}
 		
 		// Listener for the center Map button
@@ -452,8 +495,8 @@ angular
 		 * them, not only the shown ones)
 		 */
 		$scope.centerMap = function() {
-			$scope.mapData.map.fitBounds($scope.bounds);
-			$scope.mapData.map.setCenter($scope.bounds.getCenter());
+			$scope.mapData.map.fitBounds($scope.mapData.bounds);
+			$scope.mapData.map.setCenter($scope.mapData.bounds.getCenter());
 		};
 
 		/**
@@ -532,7 +575,7 @@ angular
 		 */
 		$scope.filterAccordingToSlider = function() {
 
-			if ($scope.processTickets === 0 && $scope.controlScope.userData.currentSubject !== '') {
+			if (Object.keys($scope.processTickets).length === 0 && $scope.controlScope.userData.currentSubject !== '') {
 				/*
 				 * Completly clears the heatmap. The heatmapdata
 				 * is a stack, therefore injecting and removing
@@ -687,15 +730,22 @@ angular
 				//Hides progress bar if export is done
 				var phase = $scope.$root.$$phase;
 				if (phase === '$apply' || phase === '$digest') {
-					csvData.csvProgressMap = percent;
-					if (percent >= 100) {
+					if (percent >= 100 || percent === -1) {
 						csvData.createCsvMap = false;
+						csvData.csvProgressMap = 0;
+					}
+					else	{
+						csvData.csvProgressMap = percent;
 					}
 				} else {
 					$scope.$apply(function() {
 						csvData.csvProgressMap = percent;
-						if (percent >= 100) {
+						if (percent >= 100 || percent === -1) {
 							csvData.createCsvMap = false;
+							csvData.csvProgressMap = 0;
+						}
+						else	{
+							csvData.csvProgressMap = percent;
 						}
 					});
 				}

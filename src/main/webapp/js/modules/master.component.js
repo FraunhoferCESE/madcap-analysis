@@ -27,7 +27,14 @@ module('master').
 				alreadyloaded: false,
 				scope: {},
 				style: 'rgb(230, 230, 230)',
-				textColor: 'rgb(150, 150, 150)'
+				textColor: 'rgb(150, 150, 150)',
+				finishedExpand: function()	{
+					$scope.viewControl.usermap.expanded = true;
+				},
+				finishedCollapse: function()	{
+					$scope.viewControl.usermap.expanded = false;					
+				},
+				expanded: false
 			},
 			timeline:	{
 				name: 'Timeline view',
@@ -35,7 +42,14 @@ module('master').
 				alreadyLoaded: false,
 				scope: {},
 				style: 'rgb(230, 230, 230)',
-				textColor: 'rgb(150, 150, 150)'
+				textColor: 'rgb(150, 150, 150)',
+				finishedExpand: function()	{
+					$scope.viewControl.timeline.expanded = true;
+				},
+				finishedCollapse: function()	{
+					$scope.viewControl.timeline.expanded = false;
+				},
+				expanded: false
 			},
 			userinfo:	{
 				name: 'User information view',
@@ -43,7 +57,14 @@ module('master').
 				alreadyLoaded: false,
 				scope: {},
 				style: 'rgb(230, 230, 230)',
-				textColor: 'rgb(150, 150, 150)'
+				textColor: 'rgb(150, 150, 150)',
+				finishedExpand: function()	{
+					$scope.viewControl.userinfo.expanded = true;
+				},
+				finishedCollapse: function()	{
+					$scope.viewControl.userinfo.expanded = false;
+				},
+				expanded: false
 			}
 		};
 		
@@ -66,7 +87,6 @@ module('master').
 				$scope.controlControl.childScope.control.mapButtonsVisible = usermapVisible;
 				$scope.controlControl.childScope.control.csvMapButtonsVisible = usermapVisible;
 				$scope.controlControl.childScope.control.mapOriginCheckboxesVisible = usermapVisible;
-				$scope.rerenderSlider();
 			}
 		});		
 		
@@ -101,9 +121,5 @@ module('master').
 				}
 			}
 		};
-		
-		$scope.rerenderSlider = function()	{
-    		$scope.$broadcast('rzSliderForceRender');
-    	};	
     } 
 });
