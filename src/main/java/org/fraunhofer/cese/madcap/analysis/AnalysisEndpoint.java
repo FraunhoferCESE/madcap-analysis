@@ -5,7 +5,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.fraunhofer.cese.madcap.analysis.models.ActivityEntry;
 import org.fraunhofer.cese.madcap.analysis.models.Constants;
@@ -14,6 +16,7 @@ import org.fraunhofer.cese.madcap.analysis.models.EndpointArrayReturnObject;
 import org.fraunhofer.cese.madcap.analysis.models.ForegroundBackgroundEventEntry;
 import org.fraunhofer.cese.madcap.analysis.models.LocationEntry;
 import org.fraunhofer.cese.madcap.analysis.models.ReverseHeartBeatEntry;
+import org.fraunhofer.cese.madcap.analysis.models.SystemInfoEntry;
 import org.fraunhofer.cese.madcap.analysis.models.TimelineReturnContainer;
 
 import com.google.api.server.spi.config.Api;
@@ -84,9 +87,9 @@ public class AnalysisEndpoint {
 		SecurityEndpoint.isUserValid(user);
 		ObjectifyService.begin();
 		if(source.equals("Activity in Foreground")){
-			List<ForegroundBackgroundEventEntry> activities = ofy().load().type(ForegroundBackgroundEventEntry.class).filter("userID =",id).filter("timestamp >=",startTime).filter("timestamp <=",endTime).order("timestamp").list();
+			List<ForegroundBackgroundEventEntry> activities = ofy().load().type(ForegroundBackgroundEventEntry.class).filter("userID =",id).filter("eventType =",1).filter("timestamp >=",startTime).filter("timestamp <=",endTime).order("timestamp").list();
 			if(shallFirst)	{
-				ForegroundBackgroundEventEntry firstActivity = ofy().load().type(ForegroundBackgroundEventEntry.class).filter("userID =",id).filter("timestamp <",startTime).order("-timestamp").first().now();				
+				ForegroundBackgroundEventEntry firstActivity = ofy().load().type(ForegroundBackgroundEventEntry.class).filter("userID =",id).filter("eventType =",1).filter("timestamp <",startTime).order("-timestamp").first().now();				
 				if(firstActivity != null){
 					activities.add(0, firstActivity);
 				}
@@ -127,7 +130,7 @@ public class AnalysisEndpoint {
 	@ApiMethod(name = "getOnOffTime", httpMethod = ApiMethod.HttpMethod.GET)
 	public DataCollectionEntry[] getOnOffTime(@Named("user") String id, @Named("start") long startTime, @Named("end") long endTime, User user) throws OAuthRequestException{
 		SecurityEndpoint.isUserValid(user);
-		//ObjectifyService.begin();
+		ObjectifyService.begin();
 		List<DataCollectionEntry> resultDCE = ofy().load().type(DataCollectionEntry.class).filter("userID =",id).filter("timestamp >=",startTime).filter("timestamp <=",endTime).order("timestamp").list();
 		List<ReverseHeartBeatEntry> resultRHBE = ofy().load().type(ReverseHeartBeatEntry.class).filter("userID =",id).filter("timestamp >",startTime).filter("timestamp <",endTime).order("timestamp").list();
 		
@@ -203,75 +206,227 @@ public class AnalysisEndpoint {
 		return returner.toArray(new DataCollectionEntry[returner.size()]);
 	}
 	
-	@ApiMethod(name = "getAccountableTime", httpMethod = ApiMethod.HttpMethod.GET)
-	public EndpointArrayReturnObject getAccountableTime(@Named("user") String id,@Named("time") long time,@Named("withMonth") boolean wantsMonth, User user) throws OAuthRequestException, ParseException	{
+	@ApiMethod(name = "getUserInformation", httpMethod = ApiMethod.HttpMethod.GET)
+	public EndpointArrayReturnObject getUserInfo(@Named("user") String id,@Named("time") long time,@Named("with_month") boolean wantsMonth, User user) throws OAuthRequestException	{
+		SecurityEndpoint.isUserValid(user);
 		
-		String[] returner = {"Not requested","Not requested"};
-				
-		long lb = (new SimpleDateFormat("HH:mm:ss").parse("08:00:00")).getTime();
-		long ub = (new SimpleDateFormat("HH:mm:ss").parse("23:59:59")).getTime();
-		lb = lb % 86400000;
-		ub = ub % 86400000;
+		String[] accResult = (getAccountableTime(id, time, wantsMonth)).returned;
+		String[] returner = new String[10];
+		returner[0] = accResult[0];
+		returner[1] = accResult[1];
+
+		long times[] = getStartAndEnd(time);
+		
+		List<ReverseHeartBeatEntry> rhbe = ofy().load().type(ReverseHeartBeatEntry.class).filter("userID =",id).filter("timestamp >",times[0]).filter("timestamp <",times[1]).order("timestamp").list();
+		List<ReverseHeartBeatEntry> rhbeMonth = ofy().load().type(ReverseHeartBeatEntry.class).filter("userID =",id).filter("timestamp >",times[2]).filter("timestamp <",times[3]).order("timestamp").list();
+
+		if(rhbe.get(0).getKind().equals("DEATHEND"))	{
+			rhbe.add(0, new ReverseHeartBeatEntry("DEATHSTART", times[0]));
+		}
+		
+		long deathTime = 0L;
+		long deathStart = 0L;
+		long deathCount = 0;
+		for(int i=0; i<rhbe.size(); i++){
+			if(rhbe.get(i).getKind().equals("DEATHSTART"))	{
+				deathStart = rhbe.get(i).getTimestamp();
+			}
+			else if(deathStart != 0L && rhbe.get(i).getKind().equals("DEATHEND"))	{
+				deathTime = deathTime + rhbe.get(i).getTimestamp() - deathStart;
+				deathStart = 0L;
+				deathCount++;
+			}
+		}
+		long deathTimeMonth = 0L;
+		long deathStartMonth = 0L;
+		int deathCountMonth = 0;
+		for(int i=0; i<rhbeMonth.size(); i++){
+			if(rhbeMonth.get(i).getKind().equals("DEATHSTART"))	{
+				deathStartMonth = rhbeMonth.get(i).getTimestamp();
+			}
+			else if(deathStartMonth != 0L && rhbeMonth.get(i).getKind().equals("DEATHEND"))	{
+				deathTimeMonth = deathTimeMonth + rhbeMonth.get(i).getTimestamp() - deathStartMonth;
+				deathStartMonth = 0L;
+				deathCountMonth++;
+			}
+		}
+		returner[2] = deathTime+"";
+		returner[3] = deathCount+"";
+		returner[4] = deathTimeMonth+"";
+		returner[5] = deathCountMonth+"";
+		
+		SystemInfoEntry userInfo = ofy().load().type(SystemInfoEntry.class).filter("userID =",id).first().now();
+
+		returner[6] = userInfo.getManufacturer();
+		returner[7] = userInfo.getModel();
+		returner[8] = userInfo.getApiLevel()+"";
+		returner[9] = userInfo.getMadcapVersion();
+		
+		return new EndpointArrayReturnObject(returner);
+	}
+	
+	private long[] getStartAndEnd(long time)	{
+		long[] returner = new long[4];
 		
 		Date date = new Date(time);
 		Calendar calendar = Calendar.getInstance();		
+		
 		calendar.setTime(date);
-		calendar.set(Calendar.HOUR, 0);
+		calendar.setTimeZone(TimeZone.getTimeZone("EST"));
+		calendar.set(Calendar.HOUR_OF_DAY, 0);
 		calendar.set(Calendar.MINUTE, 0);
 		calendar.set(Calendar.SECOND,0);
 		calendar.set(Calendar.MILLISECOND,0);
 		int cache = calendar.get(Calendar.DAY_OF_MONTH);
-		long start = calendar.getTimeInMillis();
-		calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
-		long startMonth = calendar.getTimeInMillis();
+		returner[0] = calendar.getTimeInMillis();
+		calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMinimum(Calendar.DAY_OF_MONTH));
+		returner[2] = calendar.getTimeInMillis();
 		
-		calendar.set(Calendar.HOUR, 23);
+		calendar.set(Calendar.HOUR_OF_DAY, 23);
 		calendar.set(Calendar.MINUTE, 59);
 		calendar.set(Calendar.SECOND,59);
 		calendar.set(Calendar.MILLISECOND,999);
 		calendar.set(Calendar.DAY_OF_MONTH, cache);
-		long end = calendar.getTimeInMillis();
-		calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMinimum(Calendar.DAY_OF_MONTH));
-		long endMonth = calendar.getTimeInMillis();
+		returner[1] = calendar.getTimeInMillis();
+		calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+		returner[3] = calendar.getTimeInMillis();
 		
-		List<DataCollectionEntry> result = ofy().load().type(DataCollectionEntry.class).filter("userID =",id).filter("timestamp >=",start).filter("timestamp <=",end).order("timestamp").list();	
-		if(wantsMonth)	{
-			List<DataCollectionEntry> resultForMonth = ofy().load().type(DataCollectionEntry.class).filter("userID =",id).filter("timestamp >=",startMonth).filter("timestamp <=",endMonth).order("timestamp").list();	
-			String currentState = "";
-			long startTime = 0L;
-			long endTime = 0L;
-			for(int i=0; i<result.size(); i++)	{
-				String state = result.get(i).getState();
+		return returner;
+	}
+	
+	
+	private EndpointArrayReturnObject getAccountableTime( String id, long time, boolean wantsMonth)	{
+		ObjectifyService.begin();
+		
+		String[] returner = {"Not requested","Not requested"};
 				
-				if(!(state.equals(currentState)))	{
-					Date currentTime = new Date(result.get(i).getTimestamp());
-					Calendar currentCalendar = Calendar.getInstance();
-					currentCalendar.setTime(currentTime);
-					
-					if(state.equals("ON"))	{
-						if(currentCalendar.getTimeInMillis() % 86400000 < lb || currentCalendar.getTimeInMillis() % 86400000 > ub)	{
-							currentCalendar.set(Calendar.HOUR, 8);
-							currentCalendar.set(Calendar.MINUTE, 0);
-							currentCalendar.set(Calendar.SECOND, 0);
-							currentCalendar.set(Calendar.MILLISECOND, 0);
-							if(currentCalendar.getTimeInMillis() % 86400000 > ub){
-								currentCalendar.set(Calendar.DAY_OF_MONTH, 0);									
-							}
-							startTime = currentCalendar.getTimeInMillis();
-						}
-					}
-					else if(state.equals("OFF"))	{
-						if(currentCalendar.getTimeInMillis() % 86400000 < lb)	{
-							currentCalendar.set(Calendar.HOUR, 23);
-							currentCalendar.set(Calendar.MINUTE, 59);
-							currentCalendar.set(Calendar.SECOND, 59);
-							currentCalendar.set(Calendar.MILLISECOND, 999);
-						}
-						long startDistance = (startTime - (startTime % 86400000) + ub) - startTime;
-					}
+		long[] times = getStartAndEnd(time);
+		
+		long start = times[0];
+		long end = times[1];
+		long startMonth = times[2];
+		long endMonth = times[3];
+		
+		try{
+			String lowerDeathBound = "00:00:00:000";
+			String upperDeathBound = "08:00:00:000";
+			List<DataCollectionEntry> result = ofy().load().type(DataCollectionEntry.class).filter("userID =",id).filter("timestamp >=",start).filter("timestamp <=",end).order("timestamp").list();	
+			DataCollectionEntry first = ofy().load().type(DataCollectionEntry.class).filter("userID =",id).filter("timestamp <",start).order("-timestamp").first().now();
+			if(first != null && result != null && !result.isEmpty())	{
+				result.add(0,new DataCollectionEntry(first.getState(),first.getTimestamp()));	
+				result.get(0).setTimestamp(start);
+			}
+			if(first != null || (result != null && !result.isEmpty()))	{
+				result.add(new DataCollectionEntry("ON", end));
+				returner[0] = "" + calculateAccountableTime( new EndpointArrayReturnObject(result), start, end, lowerDeathBound, upperDeathBound);
+			}
+			else	{
+				returner[0] = "0";
+			}
+			
+			if(wantsMonth)	{
+				List<DataCollectionEntry> resultMonth = ofy().load().type(DataCollectionEntry.class).filter("userID =",id).filter("timestamp >=",startMonth).filter("timestamp <=",endMonth).order("timestamp").list();	
+				DataCollectionEntry firstOfMonth = ofy().load().type(DataCollectionEntry.class).filter("userID =",id).filter("timestamp <",startMonth).order("-timestamp").first().now();
+				if(firstOfMonth != null && resultMonth != null && !resultMonth.isEmpty()){
+					resultMonth.add(0,new DataCollectionEntry(firstOfMonth.getState(),firstOfMonth.getTimestamp()));	
+					resultMonth.get(0).setTimestamp(start);
+				}
+
+				if(firstOfMonth != null || (resultMonth != null && !resultMonth.isEmpty()))	{
+					resultMonth.add(new DataCollectionEntry("ON", endMonth));
+					returner[1] = "" + calculateAccountableTime(new EndpointArrayReturnObject(resultMonth), startMonth, endMonth, lowerDeathBound, upperDeathBound);
+				}
+				else	{
+					returner[1] = "0";
 				}
 			}
-		}	
-		return new EndpointArrayReturnObject(returner);
+		}
+		catch(ParseException e)	{
+			returner[0] = "ERROR, ParseException";
+		}
+		
+		return new EndpointArrayReturnObject(returner);	
+	}
+	
+	private String calculateAccountableTime(EndpointArrayReturnObject passer, long windowStart, long windowEnd, String lowerDeathBound, String upperDeathBound) throws ParseException{
+		
+		List<DataCollectionEntry> passedList = passer.passObject;
+		int startIn = 0;
+		int deadZoneCounter = 1;
+		passedList.get(0).setTimestamp(windowStart);
+		String label = "OFF";
+		if(passedList.get(passedList.size()-1).getState().equals("OFF"))	{
+			label = "ON";
+		}
+		passedList.add(passedList.size(), new DataCollectionEntry(label,Math.min(windowEnd,Calendar.getInstance().getTimeInMillis())));
+		
+		Calendar startReference = Calendar.getInstance();
+		startReference.setTime(new Date(windowStart));
+		startReference.setTimeZone(TimeZone.getTimeZone("EST"));
+
+		Calendar deadzoneLB = Calendar.getInstance();
+		deadzoneLB.setTime((new SimpleDateFormat("HH:mm:ss:SSS").parse(lowerDeathBound)));
+		deadzoneLB.setTimeZone(TimeZone.getTimeZone("EST"));
+		deadzoneLB.set(startReference.get(Calendar.YEAR), startReference.get(Calendar.MONTH), startReference.get(Calendar.DAY_OF_MONTH));
+		long lb = deadzoneLB.getTimeInMillis();
+		
+		Calendar deadzoneUB = Calendar.getInstance();
+		deadzoneUB.setTime((new SimpleDateFormat("HH:mm:ss:SSS").parse(upperDeathBound)));
+		deadzoneUB.setTimeZone(TimeZone.getTimeZone("EST"));
+		deadzoneUB.set(startReference.get(Calendar.YEAR), startReference.get(Calendar.MONTH), startReference.get(Calendar.DAY_OF_MONTH));
+		if(deadzoneLB.compareTo(deadzoneUB) >= 0)	{
+			deadzoneUB.add(Calendar.DATE, 1);
+		}
+		long ub = deadzoneUB.getTimeInMillis();
+		
+		LinkedList<DataCollectionEntry> list = new LinkedList<>();
+		long time = 0L;
+		String lastState = "";
+
+		for(int i=0; i<passedList.size(); i++)	{
+			if(!(lastState.equals(passedList.get(i).getState()))){
+				list.add(passedList.get(i));
+			}
+			lastState = passedList.get(i).getState();
+		}
+		long start = 0L;
+		DataCollectionEntry current = null;
+		while(0<list.size())	{
+			
+			current = list.removeFirst();
+			while(current.getTimestamp()>=ub)	{
+				ub = ub + 86400000;
+				lb = lb + 86400000;
+				deadZoneCounter++;
+			}
+			
+			if(current.getState().equals("ON") && start == 0L)	{
+				if(lb < current.getTimestamp() && current.getTimestamp() < ub)	{
+					current.setTimestamp(ub);
+				}
+				else{
+					startIn = deadZoneCounter;
+				}
+				start = current.getTimestamp();
+			}
+			else if(current.getState().equals("OFF") && start != 0L){
+				if(lb < current.getTimestamp() && current.getTimestamp() < ub)	{
+					current.setTimestamp(lb);
+				}
+				if(current.getTimestamp() > start)	{
+					time = time + current.getTimestamp() - start;
+					if(startIn != 0)	{
+						if(startIn != deadZoneCounter){
+							for(int j=startIn; j<deadZoneCounter; j++)	{
+								time = time - (ub - lb);
+							}
+						}
+						startIn = 0;
+					}
+				}
+				start = 0L;
+			}
+		}
+		return ""+time;
 	}
 }

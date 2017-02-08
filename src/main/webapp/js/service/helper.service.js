@@ -329,6 +329,13 @@ angular.module('madcap-analysis')
 			  ];
 			return scope;
 			//----------------End for the stuff of the Datepicker--------------------------------------	
+		},
+		
+		getTimeWithUnits : function(time)	{
+			var hours = Math.floor(time/3600000);
+			var minutes = Math.floor((time-hours*3600000)/60000);
+			var seconds = Math.floor((time-hours*3600000-minutes*60000)/1000);
+			return hours + "h " + minutes + "m " + seconds + "s";
 		}
 	};
 });

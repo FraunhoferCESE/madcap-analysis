@@ -1,3 +1,55 @@
 <div allowed="SEE_GUI">
-	test
+	<div class="row">
+		<div class="col-xs-12">
+			<b>Further Information</b>
+		</div>			
+	</div>
+	<div class="row">
+		<div class="col-xs-6 col-md-3">
+			<span>Smartphone: {{informationData.model}}</span>
+		</div>
+		<div class="col-xs-6 col-md-3">
+			<span>Manufacturer: {{informationData.manufacturer}}</span>
+		</div>
+		<div class="col-xs-6 col-md-3">
+			<span>API level: {{informationData.api}}</span>
+		</div>
+		<div class="col-xs-6 col-md-3">
+			<span>MADCAP version: {{informationData.madcapVersion}}</span>
+		</div>
+	</div>
+	</br>
+	<div class="row">
+		<div class="col-xs-12">
+			<b>Collection Information</b>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-xs-6">
+			<span>Submitted hours (Day): {{informationData.onTimeDay}}</span>
+		</div>
+		<div class="col-xs-6">
+			<span>Submitted hours (Month): {{informationData.onTimeMonth}}</span>
+		</div>
+	</div>
+	</br>
+	<div class="row">
+		<div class="col-xs-12">
+			<b>Interruption Information</b>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-xs-6 col-md-3">
+			<span>Interrupted time (Day): {{informationData.interruptionTimeDay}}</span>
+		</div>
+		<div class="col-xs-6 col-md-3">
+			<span>Interruption amount (Day): {{informationData.interruptionCountDay}}</span>
+		</div>
+		<div class="col-xs-6 col-md-3">
+			<span>Interrupted time (Month): {{informationData.interruptionTimeMonth}}</span>
+		</div>
+		<div class="col-xs-6 col-md-3">
+			<span>Interruption amount (Month): {{informationData.interruptionCountMonth}}</span>
+		</div>
+	</div>
 </div>

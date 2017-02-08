@@ -88,11 +88,10 @@ module('timeline').
     	
     	// passes the callback to the permission check directive
     	allowed_directive_service.passDirectiveCallback(function()	{
-      			
+    	
     		document.getElementById('timelineloadspinner').style.display="block";
 			document.getElementById('timelineloadmessage').style.display="block";		
-		
-			$scope.stopper.directiveFinished = true;
+    		$scope.stopper.directiveFinished = true;
 			if($scope.stopper.renderingFinished)	{
             	$scope.filterAccordingToSlider($scope.eventData.source);	
       			}
@@ -116,7 +115,7 @@ module('timeline').
 				
 		var time = new Date();
 		$scope.unixRest = time - (time%86400000) + (new Date().getTimezoneOffset()*60000);
-        
+
 		
 		/**
 		 * Renders the timeline. Loads the events and filters them by bundling multiple timstamps
@@ -130,7 +129,7 @@ module('timeline').
 
 			if($scope.userData.currentSubject !== '')	{
 				
-				if(!($scope.stopper.firstRendering))	{
+				if ($scope.dialog[0].parentElement === null) {
 					var dialog = loading_overlay.createLoadOverlay("Loading data ...", this, 'old_timeline_content');
 				}
 				
@@ -324,7 +323,7 @@ module('timeline').
 									if(cuttedLastBarAt !== -1)	{
 										refinedData.push({
 											label: 'No Data Collected',
-											start: onOffTimes[cutedLastBarAt].timestamp,
+											start: onOffTimes[cuttedLastBarAt].timestamp,
 											end: $scope.unixRest + 86400000-1,
 											opaque: 100
 										});
@@ -389,7 +388,7 @@ module('timeline').
 				if($scope.stopper.directiveFinished)	{
 					$scope.filterAccordingToSlider(src);	
 				}
-				if(!($scope.stopper.firstRendering) && typeof dialog !== 'undefined')	{
+				if ($scope.dialog[0].parentElement !== null) {
 					dialog.remove();
 				}
 			}

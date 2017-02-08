@@ -9,8 +9,13 @@ package org.fraunhofer.cese.madcap.analysis.models;
 public class EndpointReturnObject {
 	
 	public String returned;
+	public Object passObject;
 	
 	public EndpointReturnObject(String returned){
 		this.returned = returned;
+	}
+	
+	public EndpointReturnObject(Object passObject){
+		this.passObject = passObject;
 	}
 }

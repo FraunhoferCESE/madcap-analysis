@@ -124,8 +124,15 @@
         "properties" : {
           "returned" : {
             "type" : "string"
+          },
+          "passObject" : {
+            "$ref" : "_any"
           }
         }
+      },
+      "_any" : {
+        "id" : "_any",
+        "type" : "any"
       },
       "StringCollection" : {
         "id" : "StringCollection",

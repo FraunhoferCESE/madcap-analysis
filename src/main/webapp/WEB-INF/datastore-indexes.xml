@@ -8,24 +8,22 @@
         <property name="userID" direction="asc" />
         <property name="timestamp" direction="desc" />
     </datastore-index>    
-    <datastore-index kind="BlockCache" ancestor="false">
-        <property name="longitude" direction="asc" />
-        <property name="latitude" direction="asc" />
-    </datastore-index>
-    <datastore-index kind="ForegroundBackgroundEventEntry" ancestor="false">
-        <property name="userID" direction="asc" />
-        <property name="timestamp" direction="asc" />
-    </datastore-index>
     <datastore-index kind="ActivityEntry" ancestor="false">
         <property name="userID" direction="asc" />
         <property name="timestamp" direction="asc" />
     </datastore-index>
-    <datastore-index kind="ForegroundBackgroundEventEntry" ancestor="false">
+    <datastore-index kind="ActivityEntry" ancestor="false">
         <property name="userID" direction="asc" />
         <property name="timestamp" direction="desc" />
     </datastore-index>
-    <datastore-index kind="ActivityEntry" ancestor="false">
-        <property name="userID" direction="asc" />
+    <datastore-index kind="ForegroundBackgroundEventEntry" ancestor="false">
+        <property name="userID" direction="desc" />
+        <property name="eventType" direction="asc" />
+        <property name="timestamp" direction="asc" />
+    </datastore-index>
+    <datastore-index kind="ForegroundBackgroundEventEntry" ancestor="false">
+        <property name="userID" direction="desc" />
+        <property name="eventType" direction="asc" />
         <property name="timestamp" direction="desc" />
     </datastore-index>
     <datastore-index kind="DataCollectionEntry" ancestor="false">

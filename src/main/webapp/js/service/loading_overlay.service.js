@@ -16,10 +16,10 @@ angular.module('madcap-analysis')
         	var height = anchorElement.offsetHeight;
         	var dialog = $('<div class="well well-sg opacityscarf" style="width:'
         		+width+'px; height:'
-        		+height+'px;"><div id="loadoverlayspinner" class="innerloader" style="display: block; margin-left: auto; margin-right: auto;"></div><h2 id="loadoverlaymessage" style="text-align: center;"></h2>');
+        		+height+'px;"><div id="loadoverlayspinner'+anchorElement.id+'" class="innerloader" style="display: block; margin-left: auto; margin-right: auto;"></div><h2 id="loadoverlaymessage'+anchorElement.id+'" style="text-align: center;"></h2>');
         	dialog.appendTo(anchorElement);
-        	var messageGui = document.getElementById('loadoverlaymessage');
-        	var spinner = document.getElementById('loadoverlayspinner');
+        	var messageGui = document.getElementById('loadoverlaymessage'+anchorElement.id);
+        	var spinner = document.getElementById('loadoverlayspinner'+anchorElement.id);
         	spinner.style['margin-top'] = Math.floor((height-spinner.offsetHeight-70)/2) + "px";
         	messageGui.innerHTML = message;
         	return dialog;

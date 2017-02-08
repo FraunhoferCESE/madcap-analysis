@@ -111,9 +111,6 @@ module('timelineV2').
     	// passes the callback to the permission check directive
     	allowed_directive_service.passDirectiveCallback(function()	{
       			
-    		document.getElementById('timelineloadspinner').style.display="block";
-			document.getElementById('timelineloadmessage').style.display="block";		
-		
 			$scope.stopper.directiveFinished = true;
 			if($scope.stopper.renderingFinished)	{
             	$scope.filterAccordingToSlider($scope.controlScope.sourceData.timelineSource);	
@@ -559,8 +556,6 @@ module('timelineV2').
         	}
         	
 			if($scope.stopper.firstRendering){
-				document.getElementById('timelineloadspinner').style.display="none";
-				document.getElementById('timelineloadmessage').style.display="none";					
 				$scope.stopper.firstRendering = false;
 				$scope.onTimelineResize = function()	{
 					var container = document.getElementById("timeline_container");
