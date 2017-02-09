@@ -128,13 +128,20 @@ public class AnalysisEndpoint {
 	
 	
 	@ApiMethod(name = "getOnOffTime", httpMethod = ApiMethod.HttpMethod.GET)
-	public DataCollectionEntry[] getOnOffTime(@Named("user") String id, @Named("start") long startTime, @Named("end") long endTime, User user) throws OAuthRequestException{
+	public DataCollectionEntry[] getOnOffTimePublic(@Named("user") String id, @Named("start") long startTime, @Named("end") long endTime, User user) throws OAuthRequestException{	
+		return getOnOffTime(id, startTime, endTime, user);	
+	}
+		
+	
+	
+	private DataCollectionEntry[] getOnOffTime(String id, long startTime, long endTime, User user) throws OAuthRequestException{
 		SecurityEndpoint.isUserValid(user);
 		ObjectifyService.begin();
 		List<DataCollectionEntry> resultDCE = ofy().load().type(DataCollectionEntry.class).filter("userID =",id).filter("timestamp >=",startTime).filter("timestamp <=",endTime).order("timestamp").list();
 		List<ReverseHeartBeatEntry> resultRHBE = ofy().load().type(ReverseHeartBeatEntry.class).filter("userID =",id).filter("timestamp >",startTime).filter("timestamp <",endTime).order("timestamp").list();
 		
 		List<DataCollectionEntry> returner = new ArrayList<DataCollectionEntry>();
+		
 		resultDCE.add(0,new DataCollectionEntry("ON", startTime-1));
 		resultRHBE.add(0,new ReverseHeartBeatEntry("DEATHEND", startTime-2));
 		resultDCE.add(resultDCE.size(),new DataCollectionEntry("OFF", endTime-1));
