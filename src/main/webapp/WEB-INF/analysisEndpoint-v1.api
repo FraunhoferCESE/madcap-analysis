@@ -79,7 +79,7 @@
       "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
       "audiences" : [ ],
       "clientIds" : [ "611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com" ],
-      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getOnOffTime",
+      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getOnOffTimePublic",
       "request" : {
         "parameters" : {
           "user" : {
@@ -130,6 +130,35 @@
         "body" : "autoTemplate(backendResponse)"
       }
     },
+    "analysisEndpoint.getInWindow" : {
+      "path" : "locationentrycollection/{user}/{start}/{end}",
+      "httpMethod" : "GET",
+      "authLevel" : "NONE",
+      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
+      "audiences" : [ ],
+      "clientIds" : [ "611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com" ],
+      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getInWindow",
+      "request" : {
+        "parameters" : {
+          "user" : {
+            "type" : "string",
+            "required" : true
+          },
+          "start" : {
+            "type" : "int64",
+            "required" : true
+          },
+          "end" : {
+            "type" : "int64",
+            "required" : true
+          }
+        },
+        "body" : "empty"
+      },
+      "response" : {
+        "body" : "autoTemplate(backendResponse)"
+      }
+    },
     "analysisEndpoint.getActivityData" : {
       "path" : "timelinereturncontainer/{user}/{start}/{end}/{source}/{include_first}",
       "httpMethod" : "GET",
@@ -158,35 +187,6 @@
           },
           "include_first" : {
             "type" : "boolean",
-            "required" : true
-          }
-        },
-        "body" : "empty"
-      },
-      "response" : {
-        "body" : "autoTemplate(backendResponse)"
-      }
-    },
-    "analysisEndpoint.getInWindow" : {
-      "path" : "locationentrycollection/{user}/{start}/{end}",
-      "httpMethod" : "GET",
-      "authLevel" : "NONE",
-      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
-      "audiences" : [ ],
-      "clientIds" : [ "611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com" ],
-      "rosyMethod" : "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getInWindow",
-      "request" : {
-        "parameters" : {
-          "user" : {
-            "type" : "string",
-            "required" : true
-          },
-          "start" : {
-            "type" : "int64",
-            "required" : true
-          },
-          "end" : {
-            "type" : "int64",
             "required" : true
           }
         },
@@ -401,7 +401,7 @@
           "$ref" : "EndpointArrayReturnObject"
         }
       },
-      "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getOnOffTime" : {
+      "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getOnOffTimePublic" : {
         "response" : {
           "$ref" : "DataCollectionEntryCollection"
         }
@@ -411,14 +411,14 @@
           "$ref" : "LocationEntryCollection"
         }
       },
-      "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getActivityData" : {
-        "response" : {
-          "$ref" : "TimelineReturnContainer"
-        }
-      },
       "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getInWindow" : {
         "response" : {
           "$ref" : "LocationEntryCollection"
+        }
+      },
+      "org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint.getActivityData" : {
+        "response" : {
+          "$ref" : "TimelineReturnContainer"
         }
       }
     }

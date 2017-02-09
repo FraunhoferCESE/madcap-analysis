@@ -45,7 +45,20 @@ module('controlUnitV2').
     		blockCsvTrigger: false,
     		rerenderSlider: function()	{
     	    	$scope.$broadcast('rzSliderForceRender');
-    		}
+    		},
+    	};
+    	
+    	$scope.refreshOrders =	{
+    		refreshTimeline: false,
+    		refreshMap: false,
+    		timeline: function()	{
+            	$scope.eventTrigger = 'timelineRefresh';
+            	$scope.refreshOrders.refreshTimeline = true;
+    		},
+    		usermap: function()	{
+            	$scope.eventTrigger = 'mapRefresh';
+            	$scope.refreshOrders.refreshMap = true;
+        	}
     	};
     	
     	// Data regarding the source if a visualization displays multiple like the timeline for example

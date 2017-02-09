@@ -113,17 +113,17 @@ angular.module('madcap-analysis')
 						onIntervalAt = j;
 						foundInterval = true;
 					}
-					else if(outBefore && onOffTimes[j].timestamp > thisData[i].time)	{
+					/*else if(outBefore && onOffTimes[j].timestamp > thisData[i].time)	{
 						onIntervalAt = j;
 						foundInterval = true;
 						onOffTimes[j].timestamp = thisData[i].time - 1;
 					}
 					else if(onOffTimes[j].timestamp < thisData[i].time)	{
 						outBefore = true;
-					}
+					}*/
 				}
 				
-				//Extends a bar if the grouper attribute match and the timestamp is in the same ON intervall
+				//Extends a bar if the grouper attribute match and the timestamp is in the same ON interval
 				if(onIntervalAt === lastOnInterval && refinedData.length !== 0 && refinedData[locationCounter][grouper] === thisData[i][grouper])	{	
 					if(refinedData[locationCounter].start > thisData[i].time)	{
 						refinedData[locationCounter].start = thisData[i].time;
@@ -138,7 +138,7 @@ angular.module('madcap-analysis')
 					if(typeof refinedData[locationCounter] !== 'undefined')	{
 						refinedData[locationCounter].end = Math.min(thisData[i].time, onOffTimes[lastOnInterval+1].timestamp);
 						refinedData[locationCounter].holes = [];
-						//Attaches the holes (for example because of crashes) between this and the next eentry to this entry.
+						//Attaches the holes (for example because of crashes) between this and the next entry to this entry.
 						for(var k=lastOnInterval; k<onIntervalAt; k=k+2){
 							refinedData[locationCounter].holes.push({
 								start: onOffTimes[k+1].timestamp,
@@ -154,6 +154,15 @@ angular.module('madcap-analysis')
 					for(var property in thisData[i])	{
 						refinedData[locationCounter][property] = thisData[i][property];
 					}
+					if(locationCounter === 0){
+						refinedData.startHoles = [];
+						for(var l=1; l<onIntervalAt; l=l+2){
+							refinedData[locationCounter].startHoles.push({
+								start: onOffTimes[l+1].timestamp,
+								end: onOffTimes[l+2].timestamp,
+							});
+						}
+					}
 					refinedData[locationCounter].origin = onOffTimes[onIntervalAt+1].state.substring(3,onOffTimes[onIntervalAt+1].state.length);
 					if(refinedData[locationCounter].origin.charAt(0) === ' ')	{
 						refinedData[locationCounter].origin = refinedData[locationCounter].origin.substring(1,refinedData[locationCounter].origin.length);
@@ -162,6 +171,20 @@ angular.module('madcap-analysis')
 					refinedData[locationCounter].end = thisData[i].time;					
 				}
 			}
+			
+			// Adds holes for last bar
+			if(typeof refinedData[locationCounter] !== 'undefined')	{
+				refinedData[locationCounter].end = Math.min(new Date(), onOffTimes[onIntervalAt+1].timestamp);
+				refinedData[locationCounter].holes = [];
+				//Attaches the holes (for example because of crashes) between this and the next entry to this entry.
+				for(var k=onIntervalAt+1; k<onOffTimes.length-1; k=k+2){
+					refinedData[locationCounter].holes.push({
+						start: onOffTimes[k].timestamp,
+						end: onOffTimes[k+1].timestamp,
+					});
+				}
+			}
+			
 			return refinedData;
 		},
 		

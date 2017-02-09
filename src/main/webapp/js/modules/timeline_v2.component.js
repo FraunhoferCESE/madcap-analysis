@@ -18,7 +18,7 @@ module('timelineV2').
 		// Access to the controlling variables of the control unit component
     	$scope.controlScope = $scope.$parent.controlControl.childScope;
     	
-    	$scope.processTickets = 0;
+    	$scope.processTickets = [];
     	$scope.noData = false;
     	    	
     	// Various flags to synchronize the multiple callbacks during initialization
@@ -73,6 +73,14 @@ module('timelineV2').
 			}
 	    });
     	
+    	// Listener for the timeline refresh button
+    	$scope.$watch('controlScope.refreshOrders.refreshTimeline', function(newValue) { 
+			if($scope.controlScope.refreshOrders.refreshTimeline === true)	{
+				$scope.renderTimeline();
+				$scope.controlScope.refreshOrders.refreshTimeline = false;
+			}
+	    });
+    	
     	// Listener for the timeline csv download button
     	$scope.$watch('controlScope.control.timelineCsvTrigger', function(newValue) { 
 			if($scope.controlScope.control.timelineCsvTrigger)	{
@@ -124,11 +132,13 @@ module('timelineV2').
 		 *  or ON/OFF events inside them
 		 */
 		$scope.renderTimeline = function()	{
-			
-			$scope.processTickets++;
-			
-			var startUnix = $scope.controlScope.dateData.unixRest;
 
+			var time = new Date().getTime();
+			var source = $scope.controlScope.sourceData.timelineSource;
+			var user = $scope.controlScope.userData.currentSubject;
+			var date = $scope.controlScope.dateData.unixRest;
+			$scope.processTickets[source+user+date+""] = time+'';
+			
 			//In correlation to the source of the event change, the identifier for the cache entry gets built			
 			var cacheUser = $scope.controlScope.userData.currentSubject;
 			var cacheDate = $scope.controlScope.dateData.unixRest;
@@ -145,11 +155,17 @@ module('timelineV2').
 			}
 			
 			//Chaches the data if there is data to cache
-			if(cacheUser !== '' && !($scope.noData))	{
+			if(cacheUser !== '' && !($scope.noData) && $scope.controlScope.eventTrigger !== 'timelineRefresh')	{
 				$scope.cache = helper.cacheData($scope.cache, {
 					storage: $scope.eventData.eventStorage,
 					probabilities: $scope.eventData.probability
 				}, cacheSource + cacheDate + cacheUser);
+			}
+			else if($scope.controlScope.eventTrigger === 'timelineRefresh')	{
+				var index = $scope.cache.meta.indexOf( cacheSource + cacheDate + cacheUser);
+				delete $scope.cache.content.storage[index];
+				delete $scope.cache.content.probabilities[index];
+				delete $scope.cache.meta[index];
 			}
 			
 			//Resets information
@@ -169,20 +185,38 @@ module('timelineV2').
 				
 				// Checks if the key is in the cache
 				for(var j=0; cachedAt === -1 && j< $scope.cache.size; j++){
-					if($scope.controlScope.sourceData.timelineSource + startUnix + $scope.controlScope.userData.currentSubject === $scope.cache.meta[j])	{
+					if($scope.controlScope.sourceData.timelineSource + date + $scope.controlScope.userData.currentSubject === $scope.cache.meta[j])	{
 						cachedAt = j;
 					}
 				}
-				if(cachedAt !== -1 && --($scope.processTickets) === 0)	{
-					$scope.eventData.eventStorage = $scope.cache.content.storage[cachedAt];
-					$scope.eventData.probability = $scope.cache.content.probabilities[cachedAt];
-					afterDataLoad();
+				if(cachedAt !== -1)	{
+					
+					var maxTicket = 0;
+					var keys = Object.keys($scope.processTickets);
+					for(var k=0; k<keys.length; k++)	{
+						if(maxTicket < parseInt($scope.processTickets[keys[k]]))	{
+							maxTicket = parseInt($scope.processTickets[keys[k]]);
+						}
+					}
+					
+					if(maxTicket === parseInt($scope.processTickets[source + user + date]))	{
+						$scope.eventData.eventStorage = $scope.cache.content.storage[cachedAt];
+						$scope.eventData.probability = $scope.cache.content.probabilities[cachedAt];
+						$scope.processTickets = {};
+						afterDataLoad();
+					}
 				}
 				else	{
 					//Loads the data to display in the timeline
-					gapi.client.analysisEndpoint.getActivityData({"user" : $scope.controlScope.userData.currentSubject, "start" : startUnix, "end" : (startUnix + 86400000), "source" : src, "include_first" : true}).execute(function(resp)	{
+					gapi.client.analysisEndpoint.getActivityData({"user" : $scope.controlScope.userData.currentSubject, "start" : date, "end" : (date + 86400000), "source" : src, "include_first" : true}).execute(function(resp)	{
 						if(resp !== null && resp !== false && (typeof resp.returnedFBEE !== 'undefined' || typeof resp.returnedAE !== 'undefined'))	{
 	
+
+							var mock = {
+								probability: [],
+								eventStorage: []
+							};
+							
 							// Fills the rawData array with data from the corresponding member of resp
 							var rawData = [];
 							if(src === 'Activity in Foreground')	{
@@ -215,164 +249,202 @@ module('timelineV2').
 									}
 	     		   					rawData[i].label = max;
 	     		   					// Sets the probability for that event. Probabilities will NOT be refined.
-	     		   					if(typeof $scope.eventData.probability[max] === 'undefined')	{
-	     		   						$scope.eventData.probability[max] = [];
+	     		   					if(typeof mock.probability[max] === 'undefined')	{
+	     		   						mock.probability[max] = [];
 	     		   					}
-	     		   					$scope.eventData.probability[max][rawData[i].time] = maxNum*100;     			   			
+	     		   					mock.probability[max][rawData[i].time] = maxNum*100;     			   			
 								}
 							}
 							
 							/*Gets the ON/OFF events in the interval we got data for. Start is not the beginning of the day,
 							but the timestamp of the last event of the previous day to be able to deliver data for the interval before
 							the first activity event off the chosen day.*/
-							helper.provideOnOffTime($scope.controlScope.userData.currentSubject, parseInt(rawData[0].time), parseInt(startUnix + 86400000), function(onOffTimes)	{
+							helper.provideOnOffTime($scope.controlScope.userData.currentSubject, parseInt(rawData[0].time), parseInt(date + 86400000), function(onOffTimes)	{
 								if(onOffTimes !== false)	{
 									
 									//Refines the data
 									var refinedData = helper.refineData(rawData, onOffTimes, 'label');
 									var startLength = refinedData.length; 
-
-									if(--($scope.processTickets) === 0)	{
-
-										$scope.eventData.probability['Data collection turned off'] = [];
-										$scope.eventData.probability['Unexpected collection interuption'] = [];
+										
+									mock.probability['Data collection turned off'] = [];
+									mock.probability['Unexpected collection interuption'] = [];
 			
-										//Expands the last bar so that the expanded parts can get cutted top
-										var cuttedLastBarAt = -1;
-										var oldEnd = refinedData[refinedData.length-1].end;
-										var endOrigin = refinedData[refinedData.length-1].origin;
-										refinedData[refinedData.length-1].end = Math.min($scope.controlScope.dateData.unixRest + 86400000-2, new Date());
-										for(var k=0; k<onOffTimes.length; k++)	{
-											if(onOffTimes[k].state.substring(0,3) === 'OFF' && oldEnd < onOffTimes[k].timestamp && onOffTimes[k].timestamp < refinedData[refinedData.length-1].end)	{
-												cuttedLastBarAt = k;
-												refinedData[refinedData.length-1].end = onOffTimes[k].timestamp; 
-												if(onOffTimes[k].state === 'OFF INTENT')	{
-													$scope.eventData.probability['Data collection turned off'][onOffTimes[k].timestamp] = 100;
-												}
-												else if(onOffTimes[k].state === 'OFF CRASH')
-												$scope.eventData.probability['Unexpected collection interuption'][onOffTimes[k].timestamp] = 100;
+									//Expands the last bar so that the expanded parts can get cutted top
+									var cuttedLastBarAt = -1;
+									var oldEnd = refinedData[refinedData.length-1].end;
+									var endOrigin = refinedData[refinedData.length-1].origin;
+									refinedData[refinedData.length-1].end = Math.min(date + 86400000-2, new Date());
+									for(var k=0; k<onOffTimes.length; k++)	{
+										if(onOffTimes[k].state.substring(0,3) === 'OFF' && oldEnd < onOffTimes[k].timestamp && onOffTimes[k].timestamp < refinedData[refinedData.length-1].end)	{
+											cuttedLastBarAt = k;
+											refinedData[refinedData.length-1].end = onOffTimes[k].timestamp; 
+											if(onOffTimes[k].state === 'OFF INTENT')	{
+												mock.probability['Data collection turned off'][onOffTimes[k].timestamp] = 100;
+											}
+											else if(onOffTimes[k].state === 'OFF CRASH')
+											mock.probability['Unexpected collection interuption'][onOffTimes[k].timestamp] = 100;
+										}
+									}
+									
+									//Main part
+									for(var i=0; i<startLength; i++){
+										
+										var outOfRange = false;
+										var shifter = {};
+										// Removes data if it lies completely outside of the days timeframe
+										if(refinedData[i].end < date)	{
+											var shifter = refinedData.shift();
+											outOfRange = true;
+											if(0<refinedData.length)	{
+												i--;
+												startLength--;
 											}
 										}
-										
-										for(var i=0; i<startLength; i++){
+										else if(refinedData[i].start < date)	{
+											if(src === 'Kind of Movement')	{
+												mock.probability[refinedData[i].label][date+1] = mock.probability[refinedData[i].label][parseInt(refinedData[i].start)];
+												refinedData[i].opaque = mock.probability[refinedData[i].label][date+1];
+											}
+											refinedData[i].start = $scope.controlScope.dateData.unixRest+1;
+										}
+										if(!outOfRange)	{
+											//Collects the timestamps where the probability changes in the bar. While doing that, also sets the opacity of each bar
+											var enteredFor = false;
+											var cuttedAt = [];
+											var hasProbability = false;
 											
-											var outOfRange = false;
-											var shiftOrigin = '';
-											
-											// Removes data if it lies completely outside of the days timeframe
-											if(refinedData[i].end < $scope.controlScope.dateData.unixRest)	{
-												shiftOrigin = refinedData.shift().origin;
-												outOfRange = true;
-												if(0<refinedData.length)	{
-													i--;
-													startLength--;
+											for(var k=0; typeof mock.probability[refinedData[i].label] !== 'undefined' && k<Object.keys(mock.probability[refinedData[i].label]).length; k++){
+												hasProbability = true
+												var time = parseInt(Object.keys(mock.probability[refinedData[i].label])[k]);
+												if(time === refinedData[i].start)	{
+													refinedData[i].opaque = mock.probability[refinedData[i].label][time];
 												}
-												else	{
-													// Creates filler if all data has been removed
-													createFiller();
+												if(refinedData[i].start < time && time < refinedData[i].end)	{
+													enteredFor = true;
+													cuttedAt.push(time);
 												}
 											}
-											else if(refinedData[i].start < $scope.controlScope.dateData.unixRest)	{
-												if(src === 'Kind of Movement')	{
-													$scope.eventData.probability[refinedData[i].label][$scope.controlScope.dateData.unixRest+1] = $scope.eventData.probability[refinedData[i].label][parseInt(refinedData[i].start)];
-													refinedData[i].opaque = $scope.eventData.probability[refinedData[i].label][$scope.controlScope.dateData.unixRest+1];
-												}
-												refinedData[i].start = $scope.controlScope.dateData.unixRest+1;
-											}
-											if(!outOfRange)	{
-												//Collects the timestamps where the probability changes in the bar. While doing that, also sets the opacity of each bar
-												var enteredFor = false;
-												var cuttedAt = [];
-												var hasProbability = false;
+											
+											var indexWhereEndIs = i;
 												
-												for(var k=0; typeof $scope.eventData.probability[refinedData[i].label] !== 'undefined' && k<Object.keys($scope.eventData.probability[refinedData[i].label]).length; k++){
-													hasProbability = true
-													var time = parseInt(Object.keys($scope.eventData.probability[refinedData[i].label])[k]);
-													if(time === refinedData[i].start)	{
-														refinedData[i].opaque = $scope.eventData.probability[refinedData[i].label][time];
-													}
-													if(refinedData[i].start < time && time < refinedData[i].end)	{
-														enteredFor = true;
-														cuttedAt.push(time);
-													}
-												}
-												
-												var indexWhereEndIs = i;
-												
-												// Cuts the bar and pushes the new "part-bars" separately onto the refinedData array. Adds probablitity for new bars too
-												if(enteredFor){
-													cuttedAt.push(refinedData[i].end);
-													for(var k=0; k<cuttedAt.length;k++)	{
-														if(k<cuttedAt.length-1)	{
-															refinedData.push({
-																label: refinedData[i].label,
-																start: cuttedAt[k],
-																end: cuttedAt[k+1],
-																origin: refinedData[i].origin,
-																holes: refinedData[i].holes,
-																opaque: $scope.eventData.probability[refinedData[i].label][cuttedAt[k]]
-															});
-															$scope.eventData.probability[refinedData[i].label][cuttedAt[k]] = $scope.eventData.probability[refinedData[i].label][cuttedAt[k]];
-														}
-													}
-													indexWhereEndIs = refinedData.length-1;
-													refinedData[i].end = cuttedAt[0];
-												}
-												// Sets the opacity when there is no probability fetched
-												if(!hasProbability)	{
-													refinedData[i].opaque = 100;
-												}
-												
-												if(i < startLength-1 && refinedData[indexWhereEndIs].end !== refinedData[i+1].start){
-													//Creates bars for the holes provided in the by the refine-method.
-													var label = 'Data collection turned off';
-													if(refinedData[indexWhereEndIs].origin === 'CRASH')	{
-														label = 'Unexpected collection interuption'
-													}
-													for(var j=0; j<refinedData[indexWhereEndIs].holes.length; j++)	{	
+											// Cuts the bar and pushes the new "part-bars" separately onto the refinedData array. Adds probablitity for new bars too
+											if(enteredFor){
+												cuttedAt.push(refinedData[i].end);
+												for(var k=0; k<cuttedAt.length;k++)	{
+													if(k<cuttedAt.length-1)	{
 														refinedData.push({
-															label: label,
-															start: refinedData[indexWhereEndIs].holes[j].start,
-															end: refinedData[indexWhereEndIs].holes[j].end,
-															opaque: 100
+															label: refinedData[i].label,
+															start: cuttedAt[k],
+															end: cuttedAt[k+1],
+															origin: refinedData[i].origin,
+															holes: refinedData[i].holes,
+															opaque: mock.probability[refinedData[i].label][cuttedAt[k]]
 														});
-														$scope.eventData.probability[label][refinedData[indexWhereEndIs].end] = 100;
+														mock.probability[refinedData[i].label][cuttedAt[k]] = mock.probability[refinedData[i].label][cuttedAt[k]];
+													}
+												}
+												indexWhereEndIs = refinedData.length-1;
+												refinedData[i].end = cuttedAt[0];
+											}
+											// Sets the opacity when there is no probability fetched
+											if(!hasProbability)	{
+												refinedData[i].opaque = 100;
+											}
+											
+											if((i < startLength-1 && refinedData[indexWhereEndIs].end !== refinedData[i+1].start) || i === startLength-1 && refinedData[indexWhereEndIs].end !== Math.min($scope.controlScope.dateData.unixRest + 86400000-2, new Date())){
+												//Creates bars for the holes provided by the refine-method.
+												var label = 'Data collection turned off';
+												if(refinedData[indexWhereEndIs].origin === 'CRASH')	{
+													label = 'Unexpected collection interuption';
+												}
+												for(var j=0; j<refinedData[indexWhereEndIs].holes.length; j++)	{	
+													refinedData.push({
+														label: label,
+														start: refinedData[indexWhereEndIs].holes[j].start,
+														end: refinedData[indexWhereEndIs].holes[j].end,
+														opaque: 100
+													});
+													mock.probability[label][refinedData[indexWhereEndIs].end] = 100;
+												}
+											}
+										}
+									}
+										
+									var topBorder = onOffTimes[onOffTimes.length-1].timestamp;
+									if(0<refinedData.length)	{									
+										topBorder = refinedData[0].start;
+										//Adds last 'No Data' after the last, expanded bar after cutting so that it doesn't gets cutted too
+										if(cuttedLastBarAt !== -1)	{
+											var label = '';
+											var foundCollectionOff = false;
+											for(var n=onOffTimes.length-2; 0<=n; n--)	{
+												if(onOffTimes[n].state === 'OFF INTENT')	{
+													foundCollectionOff = true;
+												}
+												else if(onOffTimes[n].state === 'OFF CRASH')	{
+													if(foundCollectionOff)	{
+														label = 'Data collection turned off';
+													}
+													else	{
+														label = 'Unexpected collection interuption';
 													}
 												}
 											}
-										}
-										
-										// Adds "no data" bar when first data event is after the beginning of the day
-										if(0<refinedData.length)	{								
-											if(refinedData[0].start > $scope.controlScope.dateData.unixRest+1){
-												var label = 'Data collection turned off';
-												if(shiftOrigin === 'CRASH')	{
-													label = 'Unexpected collection interuption'
-												}
+											
+											if(label !== '')	{
 												refinedData.push({
 													label: label,
-													start: $scope.controlScope.dateData.unixRest + 1,
-													end: refinedData[0].start,
-													opaque: 100
-												});
-												$scope.eventData.probability[label][$scope.controlScope.dateData.unixRest+1] = 100;
-											}
-												
-											//Adds last 'No Data' bar after cutting so that it doesn't gets cutted
-											if(cuttedLastBarAt !== -1)	{
-												var label = 'Data collection turned off';
-												if(endOrigin === 'CRASH')	{
-													label = 'Unexpected collection interuption'
-												}
-												refinedData.push({
-													label: label,
-													start: onOffTimes[cuttedLastBarAt].timestamp,
-													end: Math.min(new Date(), $scope.controlScope.dateData.unixRest + 86400000-1),
+													start: onOffTimes[onOffTimes.length-1].timestamp,
+													end: Math.min(new Date(), date + 86400000-1),
 													opaque: 100
 												});
 											}
 										}
+									}
 										
+									// Adds "no data" bar when first data event is after the beginning of the day
+									if(topBorder > date+1){
+										var startHoles = [];
+										var startHoleStart = 0;
+										var startHoleIntent = '';
+										for(var m=0; m < onOffTimes.length && onOffTimes[m].timestamp <= topBorder; m++)	{
+											if(onOffTimes[m].timestamp >= date+1)	{
+												if( startHoleStart === 0 && onOffTimes[m].state.substring(0,3) === 'OFF')	{
+													startHoleStart = onOffTimes[m].timestamp;
+													startHoleIntent = onOffTimes[m].state;
+												}
+												else if(startHoleStart !== 0 && onOffTimes[m].state.substring(0,2) === 'ON')	{
+													if(startHoleIntent = "OFF CRASH")	{
+														startHoleIntent = 'Unexpected collection interuption';
+													}
+													else if(startHoleIntent = "OFF CRASH")	{
+														startHoleIntent = 'Data collection turned off';
+													}	
+													refinedData.push({
+														label: startHoleIntent,
+														start: startHoleStart,
+														end: onOffTimes[m].timestamp,
+														opaque: 100
+													});
+													mock.probability[startHoleIntent][startHoleStart] = 100;
+													startHoleStart = 0;
+													startHoleIntent = '';
+												}
+											}
+										}
+									}
+									
+
+									var maxTicket = 0;
+									var keys = Object.keys($scope.processTickets);
+									for(var k=0; k<keys.length; k++)	{
+										if(maxTicket < parseInt($scope.processTickets[keys[k]]))	{
+											maxTicket = parseInt($scope.processTickets[keys[k]]);
+										}
+									}
+									
+									if(maxTicket === parseInt($scope.processTickets[source + user + date]))	{
+									
 										// Creates the data for the timeline
 										for(var j=0; j<refinedData.length; j++)	{
 											if(refinedData[j].start < refinedData[j].end){
@@ -392,48 +464,58 @@ module('timelineV2').
 														expanded = true;
 													}
 												}
-												if(!expanded)	{
-													if(refinedData[j].label === 'Data collection turned off')	{
-														colorCode = 2;
+													if(!expanded)	{
+														if(refinedData[j].label === 'Data collection turned off')	{
+															colorCode = 2;
+														}
+														else if(refinedData[j].label === 'Unexpected collection interuption')	{
+															colorCode = 3;
+														}
+														$scope.eventData.eventStorage.push({label: refinedData[j].label, times: [{"starting_time": start, "ending_time": refinedData[j].end, "color_code": colorCode, "opaque": refinedData[j].opaque}]});	
 													}
-													else if(refinedData[j].label === 'Unexpected collection interuption')	{
-														colorCode = 3;
-													}
-													$scope.eventData.eventStorage.push({label: refinedData[j].label, times: [{"starting_time": start, "ending_time": refinedData[j].end, "color_code": colorCode, "opaque": refinedData[j].opaque}]});	
 												}
 											}
+											$scope.eventData.probability = mock.probability;
+											$scope.processTickets = {};
+											$scope.noData = false;
+											afterDataLoad();
 										}
-										$scope.noData = false;
-										afterDataLoad();	
 									}
-								}
-								else if(--($scope.processTickets) === 0)	{
-									createFiller();
-									afterDataLoad();	
-								}
-							});
-						}
-						else if(--($scope.processTickets) === 0)	{
-							createFiller();
-							afterDataLoad();	
-						}
-					});
+									else	{
+										createFiller();
+									}
+								});
+							}
+							else	{
+								createFiller();
+							}
+						});
+					}
 				}
-			}
-			else if(--($scope.processTickets) === 0)	{
-				createFiller();
-				afterDataLoad();
-			}
-		
+				else	{
+					createFiller();
+				}		
 			/**
 			 * Creates a filler bar to be shown when data is not available or insufficient
 			 */
 			function createFiller()	{
-				$scope.eventData.eventStorage.push({label: 'Data collection turned off', times: []});	
-				$scope.eventData.probability['Data collection turned off'] = [];
-				$scope.eventData.probability['Unexpected collection disruption'] = [];
-				$scope.eventData.eventStorage[0].times.push({"starting_time": $scope.controlScope.dateData.unixRest+1, "ending_time": $scope.controlScope.dateData.unixRest + 86400000-1, "color_code": 2, "opaque": 100});	
-				$scope.eventData.probability['Data collection turned off'][$scope.controlScope.dateData.unixRest] = 100;
+				var maxTicket = 0;
+				var keys = Object.keys($scope.processTickets);
+				for(var k=0; k<keys.length; k++)	{
+					if(maxTicket < parseInt($scope.processTickets[keys[k]]))	{
+						maxTicket = parseInt($scope.processTickets[keys[k]]);
+					}
+				}
+
+				if(maxTicket === parseInt($scope.processTickets[source + user + date]))	{							
+					$scope.eventData.eventStorage.push({label: 'Data collection turned off', times: []});	
+					$scope.eventData.probability['Data collection turned off'] = [];
+					$scope.eventData.probability['Unexpected collection disruption'] = [];
+					$scope.eventData.eventStorage[0].times.push({"starting_time": $scope.controlScope.dateData.unixRest+1, "ending_time": $scope.controlScope.dateData.unixRest + 86400000-1, "color_code": 2, "opaque": 100});	
+					$scope.eventData.probability['Data collection turned off'][$scope.controlScope.dateData.unixRest] = 100;
+					$scope.processTickets = {};
+					afterDataLoad();	
+				}
 			}
 		
 			/**
