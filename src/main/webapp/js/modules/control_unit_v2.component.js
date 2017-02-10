@@ -80,12 +80,15 @@ module('controlUnitV2').
     	//Data regarding the slider
     	$scope.slider = {
         	minValue: 0,
-        	maxValue: 1439,
+        	maxValue: 1440,
     		options: {
     			floor: 0,
-    			ceil: 1439,
+    			ceil: 1440,
     			disabled: false,
     			translate: function(value)	{
+    				if(value === 1440)	{
+    					return "24:00:00";
+    				}
 			    	return helper.getDateFromUnix(value*60000+$scope.dateData.unixRest);
     			}
     		},

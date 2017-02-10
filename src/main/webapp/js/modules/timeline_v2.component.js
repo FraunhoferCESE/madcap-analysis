@@ -268,6 +268,7 @@ module('timelineV2').
 										
 									mock.probability['Data collection turned off'] = [];
 									mock.probability['Unexpected collection interuption'] = [];
+									mock.probability['No safe assumption possible'] = [];
 			
 									//Expands the last bar so that the expanded parts can get cutted top
 									var cuttedLastBarAt = -1;
@@ -275,6 +276,7 @@ module('timelineV2').
 									var endOrigin = refinedData[refinedData.length-1].origin;
 									refinedData[refinedData.length-1].end = Math.min(date + 86400000-2, new Date());
 									for(var k=0; k<onOffTimes.length; k++)	{
+										onOffTimes[k].timestamp = parseInt(onOffTimes[k].timestamp);
 										if(onOffTimes[k].state.substring(0,3) === 'OFF' && oldEnd < onOffTimes[k].timestamp && onOffTimes[k].timestamp < refinedData[refinedData.length-1].end)	{
 											cuttedLastBarAt = k;
 											refinedData[refinedData.length-1].end = onOffTimes[k].timestamp; 
@@ -358,13 +360,31 @@ module('timelineV2').
 													label = 'Unexpected collection interuption';
 												}
 												for(var j=0; j<refinedData[indexWhereEndIs].holes.length; j++)	{	
+													
+													var barEnd = -1;
+													if(j+1 < refinedData[indexWhereEndIs].holes.length){
+														barEnd = refinedData[indexWhereEndIs].holes[j+1].start;
+													}
+													else if(i+1 < startLength)	{
+														barEnd = refinedData[i+1].start;
+													}
+													else	{
+														barEnd = Math.min($scope.controlScope.dateData.unixRest + 86400000-2, new Date());
+													}
 													refinedData.push({
 														label: label,
 														start: refinedData[indexWhereEndIs].holes[j].start,
 														end: refinedData[indexWhereEndIs].holes[j].end,
 														opaque: 100
 													});
-													mock.probability[label][refinedData[indexWhereEndIs].end] = 100;
+													mock.probability[label][refinedData[indexWhereEndIs].start] = 100;
+													refinedData.push({
+														label: "No safe assumption possible",
+														start: refinedData[indexWhereEndIs].holes[j].end,
+														end: barEnd,
+														opaque: 100
+													});
+													mock.probability["No safe assumption possible"][refinedData[indexWhereEndIs].end] = 100;
 												}
 											}
 										}
@@ -373,33 +393,6 @@ module('timelineV2').
 									var topBorder = onOffTimes[onOffTimes.length-1].timestamp;
 									if(0<refinedData.length)	{									
 										topBorder = refinedData[0].start;
-										//Adds last 'No Data' after the last, expanded bar after cutting so that it doesn't gets cutted too
-										if(cuttedLastBarAt !== -1)	{
-											var label = '';
-											var foundCollectionOff = false;
-											for(var n=onOffTimes.length-2; 0<=n; n--)	{
-												if(onOffTimes[n].state === 'OFF INTENT')	{
-													foundCollectionOff = true;
-												}
-												else if(onOffTimes[n].state === 'OFF CRASH')	{
-													if(foundCollectionOff)	{
-														label = 'Data collection turned off';
-													}
-													else	{
-														label = 'Unexpected collection interuption';
-													}
-												}
-											}
-											
-											if(label !== '')	{
-												refinedData.push({
-													label: label,
-													start: onOffTimes[onOffTimes.length-1].timestamp,
-													end: Math.min(new Date(), date + 86400000-1),
-													opaque: 100
-												});
-											}
-										}
 									}
 										
 									// Adds "no data" bar when first data event is after the beginning of the day
@@ -407,8 +400,20 @@ module('timelineV2').
 										var startHoles = [];
 										var startHoleStart = 0;
 										var startHoleIntent = '';
+										var firstOccurance = true;
 										for(var m=0; m < onOffTimes.length && onOffTimes[m].timestamp <= topBorder; m++)	{
 											if(onOffTimes[m].timestamp >= date+1)	{
+												if(firstOccurance)	{
+													refinedData.push({
+														label: "No safe assumption possible",
+														start: date+1,
+														end: onOffTimes[m].timestamp,
+														opaque: 100
+													});
+													mock.probability["No safe assumption possible"][date+1] = 100;
+													firstOccurance = false;
+												}
+												
 												if( startHoleStart === 0 && onOffTimes[m].state.substring(0,3) === 'OFF')	{
 													startHoleStart = onOffTimes[m].timestamp;
 													startHoleIntent = onOffTimes[m].state;
@@ -420,6 +425,12 @@ module('timelineV2').
 													else if(startHoleIntent = "OFF CRASH")	{
 														startHoleIntent = 'Data collection turned off';
 													}	
+													
+													var barEnd = topBorder;
+													if(m+1 < onOffTimes.length && onOffTimes[m+1].timestamp <= topBorder){
+														barEnd =  onOffTimes[m+1].timestamp;
+													}
+													
 													refinedData.push({
 														label: startHoleIntent,
 														start: startHoleStart,
@@ -427,10 +438,29 @@ module('timelineV2').
 														opaque: 100
 													});
 													mock.probability[startHoleIntent][startHoleStart] = 100;
+													
+													refinedData.push({
+														label: "No safe assumption possible",
+														start: onOffTimes[m].timestamp,
+														end: barEnd,
+														opaque: 100
+													});
+													mock.probability["No safe assumption possible"][onOffTimes[m].timestamp] = 100;
+													
 													startHoleStart = 0;
 													startHoleIntent = '';
 												}
 											}
+										}
+										if(firstOccurance)	{
+											refinedData.push({
+												label: "No safe assumption possible",
+												start: date+1,
+												end: refinedData[0].start,
+												opaque: 100
+											});
+											mock.probability["No safe assumption possible"][date+1] = 100;
+											firstOccurance = false;
 										}
 									}
 									
@@ -460,6 +490,10 @@ module('timelineV2').
 														else if(refinedData[j].label === 'Unexpected collection interuption')	{
 															colorCode = 3;
 														}
+														else if(refinedData[j].label === 'No safe assumption possible')	{
+															colorCode = 4;
+														}
+														
 														$scope.eventData.eventStorage[k].times.push({"starting_time": start, "ending_time": refinedData[j].end, "color_code": colorCode, "opaque": refinedData[j].opaque});
 														expanded = true;
 													}
@@ -470,6 +504,9 @@ module('timelineV2').
 														}
 														else if(refinedData[j].label === 'Unexpected collection interuption')	{
 															colorCode = 3;
+														}
+														else if(refinedData[j].label === 'No safe assumption possible')	{
+															colorCode = 4;
 														}
 														$scope.eventData.eventStorage.push({label: refinedData[j].label, times: [{"starting_time": start, "ending_time": refinedData[j].end, "color_code": colorCode, "opaque": refinedData[j].opaque}]});	
 													}
@@ -673,7 +710,11 @@ module('timelineV2').
 					arrayColors[1] = rgbToHex(0,0,255);
 					arrayNum[2] = 2;
 					arrayColors[2] = rgbToHex(150,150,150);
+					arrayNum[3] = 3;
 					arrayColors[3] = rgbToHex(0,0,0);
+					arrayNum[4] = 4;
+					arrayColors[4] = rgbToHex(255,0,0);
+					
 					var colorScale = d3.scale.ordinal().range(arrayColors).domain(arrayNum);
 					
 					$scope.renderOnScreen = function()	{
