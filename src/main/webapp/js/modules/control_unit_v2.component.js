@@ -35,6 +35,7 @@ module('controlUnitV2').
     		mapButtonsVisible: false,
     		csvMapButtonsVisible: false,
     		csvTimelineButtonsVisible: false,
+    		csvUserInformationButtonsVisible: false,
    			timelineDatapickerVisible: false,
     		userpickerVisible: false,
     		datepickerVisible: false,
@@ -42,6 +43,9 @@ module('controlUnitV2').
     		mapOriginCheckboxesVisible: false,
     		timelineCsvTrigger: false,
     		locationCsvTrigger: false,
+    		blockCsvTrigger: false,
+    		userInformationOneCsvTrigger: false,
+    		userInformationAllCsvTrigger: false,
     		blockCsvTrigger: false,
     		rerenderSlider: function()	{
     	    	$scope.$broadcast('rzSliderForceRender');
@@ -110,6 +114,12 @@ module('controlUnitV2').
     		},
     		startLocationCsv: function()	{
     			$scope.control.locationCsvTrigger = true;
+    		},
+    		startUserInformationCsvOne: function()	{
+    			$scope.control.userInformationOneCsvTrigger = true;
+    		},
+    		startUserInformationCsvAll: function()	{
+    			$scope.control.userInformationAllCsvTrigger = true;
     		}
         };
     	
@@ -117,8 +127,10 @@ module('controlUnitV2').
     	$scope.csvParameter = {
     			createCsvMap: false,
     			createCsvTimeline: false,
+    			createCsvUserInformation: false,
     			maxMap: 0,
-    			csvProgressMap: 0
+    			csvProgressMap: 0,
+    			csvProgressUserInformation: 0
     	};
     	
     	//Data regarding the map, which has to be part of the control panel

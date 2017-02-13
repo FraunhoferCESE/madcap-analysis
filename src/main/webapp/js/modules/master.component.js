@@ -87,6 +87,7 @@ module('master').
 				$scope.controlControl.childScope.control.mapButtonsVisible = usermapVisible;
 				$scope.controlControl.childScope.control.csvMapButtonsVisible = usermapVisible;
 				$scope.controlControl.childScope.control.mapOriginCheckboxesVisible = usermapVisible;
+				$scope.controlControl.childScope.control.csvUserInformationButtonsVisible = userinfoVisible;
 			}
 		});		
 		

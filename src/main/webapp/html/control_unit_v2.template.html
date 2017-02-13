@@ -36,14 +36,20 @@
 		</select>
 	</div>
 	
-	<div class="col-xs-12 col-sm-6 col-md-4" uib-collapse="!control.mapButtonsVisible">
+	<div class="col-xs-12 col-sm-6 col-md-3" uib-collapse="!control.mapButtonsVisible">
 		<b>Map Control</b>
 		</br>
 		<div class="btn-group" role="group" aria-label="Basic example">
 			<button type="submit" class="btn btn-default" id="heatmap_button" ng-model="heatmap_button" ng-click="mapControlData.toggleHeatmap()">Show Heatmap</button>
 			<button type="submit" class="btn btn-default" id="center_map" ng-model="center_map" ng-click="mapControlData.centerMap()">Center Map</button>	
-			<button type="submit" class="btn btn-default" id="request_census" ng-model="census_button" ng-click="mapControlData.requestCensusData()">Request census data</button>	
+			<button type="submit" class="btn btn-default" id="request_census" ng-model="census_button" ng-click="mapControlData.requestCensusData()">Request Census Data</button>	
 		</div>
+	</div>
+	
+	<div class="col-xs-12 col-sm-6 col-md-1" uib-collapse="!control.csvTimelineButtonsVisible">
+		<b>Refresh (Timeline)</b>
+		</br>
+		<button type="submit" class="btn btn-default" ng-click="refreshOrders.timeline()">Refresh</button>
 	</div>
 	
 	<div class="col-xs-12 col-sm-6 col-md-2" uib-collapse="!control.csvMapButtonsVisible">
@@ -65,10 +71,16 @@
 		<button type="submit" class="btn btn-default" ng-click="csvTrigger.startTimelineCsv()">Export fetched data</button>
 	</div>
 	
-	<div class="col-xs-12 col-sm-6 col-md-1" uib-collapse="!control.csvTimelineButtonsVisible">
-		<b>Refresh (Timeline)</b>
+	<div class="col-xs-12 col-sm-6 col-md-3" uib-collapse="!control.csvUserInformationButtonsVisible">
+		<b>CSV Export (User information)</b>
 		</br>
-		<button type="submit" class="btn btn-default" ng-click="refreshOrders.timeline()">Refresh</button>
+		<div class="btn-group" role="group" aria-label="Basic example">
+			<button type="submit" class="btn btn-default" ng-click="csvTrigger.startUserInformationCsvOne()">Export data from one user</button>
+			<button type="submit" class="btn btn-default" ng-click="csvTrigger.startUserInformationCsvAll()">Export data from all users</button>
+		</div>
+		<div ng-if="csvParameter.createCsvUserInformation">
+   			<uib-progressbar max="100" value="csvParameter.csvProgressUserInformation"><b>{{csvParameter.csvProgressUserInformation}}%</b></uib-progressbar>
+		</div>	
 	</div>
 	
 	<div class="col-xs-12 col-sm-6 col-md-2" uib-collapse="!control.mapOriginCheckboxesVisible">

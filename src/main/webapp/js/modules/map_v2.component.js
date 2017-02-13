@@ -147,7 +147,6 @@ angular
 		// Listener for the csv location download button
 		$scope.$watch('controlScope.control.locationCsvTrigger',function(newValue) {
 			if ($scope.controlScope.control.locationCsvTrigger) {
-				$scope.controlScope.control.locationCsvTrigger
 				$scope.downloadLocationCSV();
 				$scope.controlScope.control.locationCsvTrigger = false;
 			}
@@ -156,7 +155,6 @@ angular
 		// Listener for the block csv download button
 		$scope.$watch('controlScope.control.blockCsvTrigger',function(newValue) {
 			if ($scope.controlScope.control.blockCsvTrigger) {
-				$scope.controlScope.control.blockCsvTrigger;
 				$scope.downloadBlockCSV();
 				$scope.controlScope.control.blockCsvTrigger = false;
 			}
@@ -528,7 +526,7 @@ angular
 					}
 					if (equal) {
 						returned = "";
-						for (var m = (i + code.length); entry.charAt(m) !== ','; m++) {
+						for (var m = (i + code.length); entry.charAt(m) !== '",="'; m++) {
 							returned = returned + entry.charAt(m);
 						}
 						done = true;
@@ -769,7 +767,7 @@ angular
 			}
 			var row = 'data:text/csv;charset=utf-8,' + '"User","Time","latitude","longitude","bearing","origin","accuracy","extras"\r\n';
 			for (var i = $scope.mapData.markers.length - 1; 0 <= i; i--) {
-				row = row + '"' + subject + '",' + $scope.mapData.markers[i].getTitle() + ',' + $scope.mapData.markers[i].getPosition().lat() + ',' + $scope.mapData.markers[i].getPosition().lng() + ',' + $scope.mapData.markers[i].bearing + ',' + $scope.mapData.markers[i].origin + ',' + $scope.mapData.markers[i].accuracy +  ',' + $scope.mapData.markers[i].extras + '\r\n';
+				row = row + '="' + subject + '",="' + $scope.mapData.markers[i].getTitle() + '",="' + $scope.mapData.markers[i].getPosition().lat() + '",="' + $scope.mapData.markers[i].getPosition().lng() + '",="' + $scope.mapData.markers[i].bearing + '",="' + $scope.mapData.markers[i].origin + '",="' + $scope.mapData.markers[i].accuracy +  '",="' + $scope.mapData.markers[i].extras + '"\r\n';
 			}
 			var encodedUri = encodeURI(row);
 			var link = document.createElement("a");

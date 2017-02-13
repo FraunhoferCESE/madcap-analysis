@@ -214,11 +214,12 @@ public class AnalysisEndpoint {
 	}
 	
 	@ApiMethod(name = "getUserInformation", httpMethod = ApiMethod.HttpMethod.GET)
-	public EndpointArrayReturnObject getUserInfo(@Named("user") String id,@Named("time") long time,@Named("with_month") boolean wantsMonth, User user) throws OAuthRequestException	{
+	public EndpointArrayReturnObject getUserInfo(@Named("user") String id, @Named("time") long time,@Named("with_month") boolean wantsMonth, User user) throws OAuthRequestException	{
 		SecurityEndpoint.isUserValid(user);
 		
+		String[] returner = new String[11];
+		returner[10] = id;
 		String[] accResult = (getAccountableTime(id, time, wantsMonth)).returned;
-		String[] returner = new String[10];
 		returner[0] = accResult[0];
 		returner[1] = accResult[1];
 
@@ -227,7 +228,7 @@ public class AnalysisEndpoint {
 		List<ReverseHeartBeatEntry> rhbe = ofy().load().type(ReverseHeartBeatEntry.class).filter("userID =",id).filter("timestamp >",times[0]).filter("timestamp <",times[1]).order("timestamp").list();
 		List<ReverseHeartBeatEntry> rhbeMonth = ofy().load().type(ReverseHeartBeatEntry.class).filter("userID =",id).filter("timestamp >",times[2]).filter("timestamp <",times[3]).order("timestamp").list();
 
-		if(rhbe.get(0).getKind().equals("DEATHEND"))	{
+		if(rhbe != null && !rhbe.isEmpty() &&rhbe.get(0).getKind().equals("DEATHEND"))	{
 			rhbe.add(0, new ReverseHeartBeatEntry("DEATHSTART", times[0]));
 		}
 		

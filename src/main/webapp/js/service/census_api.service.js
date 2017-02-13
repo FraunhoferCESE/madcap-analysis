@@ -133,13 +133,13 @@ angular.module('madcap-analysis')
 				var row = 'data:text/csv;charset=utf-8,"Day","User","Start time","End time","Block","Average household size (owner)","Average household size (renter)","Average household size (total)"\r\n';
 				for(var i=0; i<data.length;i++)	{
 					if(i !== 0 && i !== data.length-1){
-						row = row + dayRef + ',"' + userRef + '",' + helper.getDateFromUnix(data[i].start) + ',' + helper.getDateFromUnix(data[i].end) + ',' + data[i].block + ',' + data[i].avOwner + ',' + data[i].avRenter + ',' + data[i].avTotal + '\r\n';
+						row = row + dayRef + '",="' + userRef + '",="' + helper.getDateFromUnix(data[i].start) + '",="' + helper.getDateFromUnix(data[i].end) + '",="' + data[i].block + '",="' + data[i].avOwner + '",="' + data[i].avRenter + '",="' + data[i].avTotal + '\r\n';
 					}
 					else if(i === 0){
-						row = row + dayRef + ',"' + userRef + '",' + '00:00:00' + ',' + helper.getDateFromUnix(data[i].end) + ',' + data[i].block + ',' + data[i].avOwner + ',' + data[i].avRenter + ',' + data[i].avTotal + '\r\n';
+						row = row + '="' + dayRef + '",="' + userRef + '",="' + '00:00:00' + '",="' + helper.getDateFromUnix(data[i].end) + '",="' + data[i].block + '",="' + data[i].avOwner + '",="' + data[i].avRenter + '",="' + data[i].avTotal + '"\r\n';
 					}
 					else	{
-						row = row + dayRef + ',"' + userRef + '",' + helper.getDateFromUnix(data[i].start) + ',' + '23:59:59' + ',' + data[i].block + ',' + data[i].avOwner + ',' + data[i].avRenter + ',' + data[i].avTotal + '\r\n';
+						row = row + '="' + dayRef + '",="' + userRef + '",="' + helper.getDateFromUnix(data[i].start) + '",="' + '23:59:59' + '",="' + data[i].block + '",="' + data[i].avOwner + '",="' + data[i].avRenter + '",="' + data[i].avTotal + '"\r\n';
 					}
 				}
 				var encodedUri = encodeURI(row);

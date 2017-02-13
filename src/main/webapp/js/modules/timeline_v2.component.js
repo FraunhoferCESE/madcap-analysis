@@ -185,7 +185,7 @@ module('timelineV2').
 				
 				// Checks if the key is in the cache
 				for(var j=0; cachedAt === -1 && j< $scope.cache.size; j++){
-					if($scope.controlScope.sourceData.timelineSource + date + $scope.controlScope.userData.currentSubject === $scope.cache.meta[j])	{
+					if(source + date + user === $scope.cache.meta[j])	{
 						cachedAt = j;
 					}
 				}
@@ -208,7 +208,7 @@ module('timelineV2').
 				}
 				else	{
 					//Loads the data to display in the timeline
-					gapi.client.analysisEndpoint.getActivityData({"user" : $scope.controlScope.userData.currentSubject, "start" : date, "end" : (date + 86400000), "source" : src, "include_first" : true}).execute(function(resp)	{
+					gapi.client.analysisEndpoint.getActivityData({"user" : user, "start" : date, "end" : (date + 86400000), "source" : src, "include_first" : true}).execute(function(resp)	{
 						if(resp !== null && resp !== false && (typeof resp.returnedFBEE !== 'undefined' || typeof resp.returnedAE !== 'undefined'))	{
 	
 
@@ -789,7 +789,7 @@ module('timelineV2').
 			var row = 'data:text/csv;charset=utf-8,' + '"User","Start time","End time","Activity"\r\n';
 			for(var i=$scope.eventData.eventStorage.length-1; 0<=i; i--)	{
 				for(var j=0; j<$scope.eventData.eventStorage[i].times.length; j++)	{
-					row = row + '"' + subject + '",' + $scope.eventData.eventStorage[i].times[j].starting_time + ',' + $scope.eventData.eventStorage[i].times[j].ending_time + "," + $scope.eventData.eventStorage[i].label + '\r\n';
+					row = row + '="' + subject + '",="' + $scope.eventData.eventStorage[i].times[j].starting_time + '",="' + $scope.eventData.eventStorage[i].times[j].ending_time + '",="' + $scope.eventData.eventStorage[i].label + '"\r\n';
 				}
 			}
 			var encodedUri = encodeURI(row);
