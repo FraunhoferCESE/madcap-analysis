@@ -95,7 +95,7 @@ angular.module('madcap-analysis')
 		 * 			2:50pm-4:00pm, Block 2099
 		 * 			4:50pm-8:50pm, Block 2020 
 		 */
-		refineData : function(thisData, onOffTimes, grouper)	{
+		refineData : function(thisData, onOffTimes, grouper, stopTime)	{
 
 			var refinedData = [];
 			var locationCounter = 0;
@@ -154,15 +154,6 @@ angular.module('madcap-analysis')
 					for(var property in thisData[i])	{
 						refinedData[locationCounter][property] = thisData[i][property];
 					}
-					if(locationCounter === 0){
-						refinedData.startHoles = [];
-						for(var l=1; l<onIntervalAt; l=l+2){
-							refinedData[locationCounter].startHoles.push({
-								start: onOffTimes[l+1].timestamp,
-								end: onOffTimes[l+2].timestamp,
-							});
-						}
-					}
 					refinedData[locationCounter].origin = onOffTimes[onIntervalAt+1].state.substring(3,onOffTimes[onIntervalAt+1].state.length);
 					if(refinedData[locationCounter].origin.charAt(0) === ' ')	{
 						refinedData[locationCounter].origin = refinedData[locationCounter].origin.substring(1,refinedData[locationCounter].origin.length);
@@ -183,6 +174,10 @@ angular.module('madcap-analysis')
 						end: onOffTimes[k+1].timestamp,
 					});
 				}
+				refinedData[locationCounter].holes.push({
+					start: onOffTimes[onOffTimes.length-1].timestamp,
+					end: stopTime,
+				});
 			}
 			
 			return refinedData;

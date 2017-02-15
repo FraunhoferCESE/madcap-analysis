@@ -1,6 +1,15 @@
 /**
- * This module contains the conrtrol elements for all visualization views (map, timeline, ...). Listening to the elements is normally handled
- * directly by the visualization views.
+ * This module contains the control elements for all visualization views (map, timeline, ...). Listening to the elements is normally handled
+ * directly by the visualization views. This element works as a middle man between the the control elements and the visualization. It will handle precalculations and such.
+ * Moreover, this module manages the logic of the control unit. This includes:
+ * - Dynamic managing of the visible elements for the control unit
+ * - Firing events for the visualizations
+ * - providing containers for controling-related information
+ * - setup of all control elements
+ * 
+ *  IMPORTANT!: This module is intended to be used only together with the master
+ * module and the control_unit_v2 module. It will NOT work on it's own!
+ * @author Stefan Hintzen
  */
 angular.
 module('controlUnitV2').
@@ -17,6 +26,10 @@ module('controlUnitV2').
        		chosen_user_for_gui: '',
        		currentSubject: '',
        		lastSubject: '',
+       		/**
+       		 * This method ges called, when the user changes the chosen user in the user dropdown. The user gets changed and the filler value gets deleted,
+       		 * when it is still part of the user array.
+       		 */
        		userChange: function()	{
        			$scope.eventTrigger = 'user';
        			if($scope.userData.currentSubject === '')	{
@@ -30,7 +43,7 @@ module('controlUnitV2').
        		}
         };
 
-    	// The booleans control which part of the control pannels are shown and which not
+    	// These booleans control which part of the control unit are shown and which are not
     	$scope.control = {
     		mapButtonsVisible: false,
     		csvMapButtonsVisible: false,
@@ -47,11 +60,15 @@ module('controlUnitV2').
     		userInformationOneCsvTrigger: false,
     		userInformationAllCsvTrigger: false,
     		blockCsvTrigger: false,
+    		/**
+    		 * Re-renders the slider to show correct values.
+    		 */
     		rerenderSlider: function()	{
     	    	$scope.$broadcast('rzSliderForceRender');
     		},
     	};
     	
+    	// Functions and variables to control visualization refresh orders.
     	$scope.refreshOrders =	{
     		refreshTimeline: false,
     		refreshMap: false,
@@ -71,12 +88,15 @@ module('controlUnitV2').
     		lastTimelineSource: '',
     		timelineSource: 'Activity in Foreground',
           	timelineSources: ['Activity in Foreground','Kind of Movement'],
-            timelineSourceChange: function()	{
+            /**
+             * States the source of the timeline render request.
+             */
+          	timelineSourceChange: function()	{
             	$scope.eventTrigger = 'timelineSource';
            		$scope.sourceData.lastTimelineSource = $scope.sourceData.timelineSource;
             	$scope.sourceData.timelineSource = document.getElementById("chosen_source").options[document.getElementById("chosen_source").selectedIndex].text;
            	}	
-        }
+        };
     	
         // Makes itself known to the master module
     	$scope.$parent.controlControl.childScope = $scope;
@@ -104,7 +124,7 @@ module('controlUnitV2').
     		lastUnixRest: 0
     	};
     	
-    	//Trigger variables for the csv downloads of all visualizations
+    	//Trigger methods for the csv downloads of all visualizations
     	$scope.csvTrigger = {
     		startTimelineCsv: function()	{
     			$scope.control.timelineCsvTrigger = true;
@@ -157,6 +177,7 @@ module('controlUnitV2').
     		cellAsOriginChecked: true
     	};
     	
+    	//First setting of the unixRest. unixRest states midnight of the chosen date in Unix milliseconds.
     	var time = new Date();
 		$scope.dateData.unixRest = time - ((time-(time.getTimezoneOffset()*60000))%86400000);
        

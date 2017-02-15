@@ -1,7 +1,8 @@
 /**
  * This module provides the timeline view for the master view of v2. It shows a timeline from either the ActivityEntry or ForegroundBAckgroundEventEntry probes.
- * Data will be queried by user and day and can be filtered through a slider. Main functionality is the calculation if the of the bars
- * from pure information timestamps. ON/OFF events from the DataCollectionEntry probe are included into the calculation. 
+ * Data will be queried by user and day and can be filtered through a slider. Main functionality is the calculation of the bars
+ * from pure information timestamps. ON/OFF events from the DataCollectionEntry probe and the ReverseHeartBeatEntry probe are included into the calculation.
+ * (Even though they get calculated in the AnalysisEndpoint.java( 
  * 
  * IMPORTANT!: This module is intended to be used only together with the master
  * module and the control_unit_v2 module. It will NOT work on it's own! For an
@@ -263,7 +264,7 @@ module('timelineV2').
 								if(onOffTimes !== false)	{
 									
 									//Refines the data
-									var refinedData = helper.refineData(rawData, onOffTimes, 'label');
+									var refinedData = helper.refineData(rawData, onOffTimes, 'label', parseInt(date + 86400000-1) );
 									var startLength = refinedData.length; 
 										
 									mock.probability['Data collection turned off'] = [];
@@ -277,7 +278,7 @@ module('timelineV2').
 									refinedData[refinedData.length-1].end = Math.min(date + 86400000-2, new Date());
 									for(var k=0; k<onOffTimes.length; k++)	{
 										onOffTimes[k].timestamp = parseInt(onOffTimes[k].timestamp);
-										if(onOffTimes[k].state.substring(0,3) === 'OFF' && oldEnd < onOffTimes[k].timestamp && onOffTimes[k].timestamp < refinedData[refinedData.length-1].end)	{
+										if(onOffTimes[k].state.substring(0,3) === 'OFF' && oldEnd <= onOffTimes[k].timestamp && onOffTimes[k].timestamp < refinedData[refinedData.length-1].end)	{
 											cuttedLastBarAt = k;
 											refinedData[refinedData.length-1].end = onOffTimes[k].timestamp; 
 											if(onOffTimes[k].state === 'OFF INTENT')	{
@@ -288,6 +289,8 @@ module('timelineV2').
 										}
 									}
 									
+									var intermediateBarStart = date+1;
+									
 									//Main part
 									for(var i=0; i<startLength; i++){
 										
@@ -295,6 +298,55 @@ module('timelineV2').
 										var shifter = {};
 										// Removes data if it lies completely outside of the days timeframe
 										if(refinedData[i].end < date)	{
+											//Creates bars for the holes provided by the refine-method.
+											var label = 'Data collection turned off';
+											if(refinedData[i].origin === 'CRASH')	{
+												label = 'Unexpected collection interuption';
+											}
+											for(var j=0; j<refinedData[i].holes.length; j++)	{	
+												
+												var barEnd = -1;
+												if(j+1 < refinedData[i].holes.length){
+													barEnd = refinedData[i].holes[j+1].start;
+												}
+												else if(i+1 < startLength)	{
+													barEnd = refinedData[i+1].start;
+												}
+												else	{
+													barEnd = Math.min($scope.controlScope.dateData.unixRest + 86400000-2, new Date());
+												}
+												
+												var holeOutOfRange = false;
+												var endOutOfRange = false;
+												if(refinedData[i].holes[j].start<date)	{
+													refinedData[i].holes[j].start = date+1;
+												}
+												if(refinedData[i].holes[j].end<date)	{
+													refinedData[i].holes[j].end = date+1;
+													endOutOfRange = true;
+												}
+												
+												if(!endOutOfRange){
+													refinedData.push({
+														label: label,
+														start: refinedData[i].holes[j].start,
+														end: refinedData[i].holes[j].end,
+														opaque: 100
+													});
+													intermediateBarStart = refinedData[i].holes[j].end;
+													mock.probability[label][refinedData[i].start] = 100;
+												}
+												if(date < barEnd)	{
+													refinedData.push({
+														label: "No safe assumption possible",
+														start: refinedData[i].holes[j].end,
+														end: barEnd,
+														opaque: 100
+													});
+													intermediateBarStart = barEnd;
+													mock.probability["No safe assumption possible"][refinedData[i].end] = 100;
+												}
+											}
 											var shifter = refinedData.shift();
 											outOfRange = true;
 											if(0<refinedData.length)	{
@@ -406,7 +458,7 @@ module('timelineV2').
 												if(firstOccurance)	{
 													refinedData.push({
 														label: "No safe assumption possible",
-														start: date+1,
+														start: intermediateBarStart,
 														end: onOffTimes[m].timestamp,
 														opaque: 100
 													});

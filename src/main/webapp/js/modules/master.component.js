@@ -1,10 +1,9 @@
 /**
  * The master component. It is the parent of all other modules of v2. It computes which views get shown or not and contains all the
- * view information. It serves as connection between the visualization views and the control panel. New modules can also use this module as connection.
+ * view information. It serves as connection between the visualization views and the control unit. New modules can also use this module as connection.
  * 
  */
-var mx = angular.
-module('master').
+angular.module('master').
   component('master', {
     templateUrl: 'html/master_view.template.html',
     controller: function masterController($scope) {
@@ -15,6 +14,7 @@ module('master').
 		$scope.controlControl = {
 			unitVisible: false,
 			unitAlreadyLoaded: false,
+			//Contains the scopes of all children, not only the control unit.
 			childScope: {},
 			generalRenderTrigger: false
 		};
@@ -26,11 +26,14 @@ module('master').
 				visible: false,
 				alreadyloaded: false,
 				scope: {},
+				// The background color of the view's entry in the navbar dropdown
 				style: 'rgb(230, 230, 230)',
 				textColor: 'rgb(150, 150, 150)',
+				//Gets called, when the collapse attribute around this module finished expanding
 				finishedExpand: function()	{
 					$scope.viewControl.usermap.expanded = true;
 				},
+				//Gets called, when the collapse attribute around this module finished collapsing
 				finishedCollapse: function()	{
 					$scope.viewControl.usermap.expanded = false;					
 				},
@@ -41,11 +44,14 @@ module('master').
 				visible: false,
 				alreadyLoaded: false,
 				scope: {},
+				// The background color of the view's entry in the navbar dropdown
 				style: 'rgb(230, 230, 230)',
 				textColor: 'rgb(150, 150, 150)',
+				//Gets called, when the collapse attribute around this module finished expanding
 				finishedExpand: function()	{
 					$scope.viewControl.timeline.expanded = true;
 				},
+				//Gets called, when the collapse attribute around this module finished collapsing
 				finishedCollapse: function()	{
 					$scope.viewControl.timeline.expanded = false;
 				},
@@ -56,11 +62,14 @@ module('master').
 				visible: false,
 				alreadyLoaded: false,
 				scope: {},
+				// The background color of the view's entry in the navbar dropdown
 				style: 'rgb(230, 230, 230)',
 				textColor: 'rgb(150, 150, 150)',
+				//Gets called, when the collapse attribute around this module finished expanding
 				finishedExpand: function()	{
 					$scope.viewControl.userinfo.expanded = true;
 				},
+				//Gets called, when the collapse attribute around this module finished collapsing
 				finishedCollapse: function()	{
 					$scope.viewControl.userinfo.expanded = false;
 				},
@@ -92,7 +101,7 @@ module('master').
 		});		
 		
 		/**
-		 * Controls the color setting in the navigation bar
+		 * Controls the color setting in the navigation bar. Opened modules will have a white background, while closed modules will have a grey background
 		 */
 		$scope.barControl = {
 			toggleColor: function(name, event)	{
@@ -113,6 +122,7 @@ module('master').
 				}
 			},
 			mouseStyle:	'auto',
+			// Changes the mouse style from the deffault style to the pointer style (that one that looks like a hand) when hovering over an entry in the navbar's dropdown.
 			dropdownHover: function()	{
 				if($scope.barControl.mouseStyle === 'auto')	{
 					$scope.barControl.mouseStyle = 'pointer';

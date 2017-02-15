@@ -1,6 +1,7 @@
 /**
  * The component for the userMap module. It enables a Google Map where markers can be put onto.
- * A heatmap-overlay is also supported. Filtering can be conducted by  time slider and date
+ * A heatmap-overlay is also supported. Filtering can be conducted by  time slider and date.
+ *  DEPRECATED: This file is part of the old version 1 of the MADCAP web application. Please use v2 modules in combination with the master instead. 
  */
 angular.
 module('userMap').

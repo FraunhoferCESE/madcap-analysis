@@ -56,12 +56,17 @@
   						  authorizedInit();
   					  }
   					  else	{
-  						  alert("Your Account is not allowed to use this app");
+  						  alert("Your Account is not allowed to use this app.");
   						  document.getElementById('siteloadspinner').style.display="none";
   						  document.getElementById('loadmessage').style.display="none";
   					  }
   				  });
   			  }
+  			  else	{
+  			  	  alert("Error while checking user. Please load the site again.");
+				  document.getElementById('siteloadspinner').style.display="none";
+				  document.getElementById('loadmessage').style.display="none";
+  		  	 }
   		  });
   	  }
   }

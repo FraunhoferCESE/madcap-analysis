@@ -3,7 +3,8 @@
  * Map and a information window for census data. Data can be queried by day and
  * user. Filtering is enabled. Block data (including census data for each block)
  * can be exported as Excel-friendly CSV-file. Data can be displayed either as
- * heatmap or makers. Caching is enabled too.
+ * heatmap or makers. Caching is enabled too. Data can be filtered by it"s origin.
+ * Data of different origin gets shown with different marker colors.
  * 
  * IMPORTANT!: This module is intended to be used only together with the master
  * module and the control_unit_v2 module. It will NOT work on it's own! For an
@@ -189,7 +190,7 @@ angular
 		 * This method is called whenever a new set of data
 		 * needs to get shown on the map. Currently, that's the
 		 * case when a new user is chosen or when the date in
-		 * the datepicker changes. Also get shwon when the view gets expanded
+		 * the datepicker changes.
 		 * 
 		 * It consists out of 3 parts:
 		 * 						  
@@ -211,10 +212,12 @@ angular
 		 * cache. Only when it's not in the cache, the webapp
 		 * will send a query to the App Engine to load the data.
 		 * 
-		 * @param source:
-		 *            A string, which indicates either the
-		 *            source of the call or gives important data
-		 *            to the function
+		 * This method implements a ticketing system to control, 
+		 * which data gets shown when multiplemload at the same time.
+		 * Hereby, data gets loaded into an mock object. The mock will
+		 * only get assigned to the actual $scope at the very end of the
+		 * method and only, when the process is the one with the latest
+		 * start time. All other will end without changing the map.
 		 */
 		$scope.initializeRefresh = function() {
 			
@@ -310,9 +313,9 @@ angular
 		};
 
 		/**
-		 * Queries all locations for the chosen user on the
-		 * chosen day. The locations will be returned in one
-		 * raw String, which will have to get refined.
+		 * Queries all locations for the chosen user on the chosen day. The locations will be returned in one raw String, which will have to get refined.
+		 * @param user: the chosen user
+		 * @param date: the chosen date
 		 */
 		$scope.showMarkers = function(user, date) {
 			gapi.client.analysisEndpoint.getInWindow({'user' : user, 'start' : date,'end' : (date + 86400000)}).execute(function(resp) {
@@ -321,12 +324,14 @@ angular
 					$scope.noData = false;
 					var entries = resp.items;
 					
+					//reates the mock
 					var mock = {
 						mvcArray: new google.maps.MVCArray(),
 						markers: [],
 						bounds: new google.maps.LatLngBounds()
 					};
 					
+					//Fills the mock with the loaded values.
 					for (var i = 0; typeof entries !== 'undefined' && i < entries.length; i++) {
 						var location = [];
 						location[0] = entries[i].latitude;
@@ -364,6 +369,8 @@ angular
 						mock.markers[i].accuracy = entries[i].accuracy;
 						mock.markers[i].origin = entries[i].origin;
 						mock.markers[i].extras = entries[i].extras;
+						
+						// Sets the origin and changes the markers color, depending on teh origin
 						if(mock.markers[i].origin === 'network')	{
 							mock.markers[i].origin = entries[i].extras;
 						}
@@ -401,6 +408,8 @@ angular
 							maxTicket = parseInt($scope.processTickets[keys[k]]);
 						}
 					}
+					
+					//Only sets the mock as actual data when the ticket of this request is the latest one
 					if(maxTicket === parseInt($scope.processTickets[user + date]))	{	
 						$scope.mapData.markers = mock.markers;
 						$scope.mapData.bounds = mock.bounds;
@@ -458,6 +467,7 @@ angular
 				}
 			}
 			
+			//Only sets the mock as actual data when the ticket of this request is the latest one
 			if(maxTicket === parseInt($scope.processTickets[user + date]))	{
 				$scope.mapData.markers = mock.markers;
 				$scope.mapData.bounds = mock.bounds;
@@ -499,7 +509,7 @@ angular
 
 		/**
 		 * Searches the entry String for the code word. returnes
-		 * everything betwen thecode word and the next comma in
+		 * everything between the code word and the next comma in
 		 * line.
 		 * 
 		 * @param code:
@@ -569,7 +579,7 @@ angular
 		 * is empty. This method sorts out the markers which
 		 * shall not be seen and fills the heatmap. It updates
 		 * automatically whenever the slider is moved, but is
-		 * also called manually
+		 * also called manually sometimes by methods.
 		 */
 		$scope.filterAccordingToSlider = function() {
 
@@ -616,9 +626,7 @@ angular
 				$scope.dialog.remove();
 			}
 		};
-		
-		$scope = helper.datePickerSetup($scope);
-		
+				
 		//Passes the callback method to the allowed_directive
 		setTimeout(function() {
 			allowed_directive_service.passDirectiveCallback($scope.initializePack.initializeCallback);
