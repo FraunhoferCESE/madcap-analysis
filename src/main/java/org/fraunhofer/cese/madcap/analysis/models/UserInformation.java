@@ -6,8 +6,8 @@ import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
 
 /**
- * A container for all relevant information regarding a user.
- * @author SHintzen
+ * A container for all relevant information regarding a user. This includes his personal information and his visibility rights.
+ * @author Stefan Hintzen
  */
 @Entity
 public class UserInformation {

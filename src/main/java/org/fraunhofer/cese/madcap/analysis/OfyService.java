@@ -12,7 +12,7 @@ import com.googlecode.objectify.*;
 
 /**
  * Handles all the neccessary setup for Obejctify to work. Objectify is used by the endpoints to get
- * data out of the Google Cloud Storage.
+ * data out of the Google datastore.
  */
 public class OfyService {
 	static {

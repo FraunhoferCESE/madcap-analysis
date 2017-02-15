@@ -27,15 +27,14 @@ import java.util.LinkedList;
  * - Loading of confidential files (JavaScript for example)
  * - loading of user permissions & permission checks
  * - Loading of secret keys
- * @author SHintzen
- *
+ * @author Stefan Hintzen
  */
 @Api(name = "securityEndpoint", version = "v1", namespace = @ApiNamespace(ownerDomain = "madcap.cese.fraunhofer.org", ownerName = "madcap.cese.fraunhofer.org", packagePath = "security"), clientIds = {Constants.WEB_CLIENT_ID})
 public class SecurityEndpoint {
 	
 	
 	/**
-	 * Retuns a list of the paths of all confidential JavaScript-files
+	 * Retuns a list of the paths of all confidential JavaScript-files.
 	 * @return See description
 	 */
 	@ApiMethod(name = "getJs")
@@ -46,7 +45,7 @@ public class SecurityEndpoint {
 
 	
 	/**
-	 * Fetches our key for citySDK
+	 * Fetches the key for citySDK
 	 * @param user: OAuth user
 	 * @return the citySDK key
 	 * @throws OAuthRequestException
@@ -60,9 +59,9 @@ public class SecurityEndpoint {
 	
 	/**
 	 * Returns if the given user is allowed to see the given container.
-	 * @param id The users Google id
-	 * @param elemPermissions The needed permissions for this element in a csv-string
-	 * @param user OAuth parameter
+	 * @param id: The users G-Mail address
+	 * @param elemPermissions: The needed permissions for this element in a csv-string
+	 * @param user: OAuth parameter
 	 * @return 'true' if the user is allowed to see the container, 'false' otherwise
 	 * @throws OAuthRequestException Gets thrown when there is no logged in user
 	 */
@@ -76,10 +75,10 @@ public class SecurityEndpoint {
 	
 	
 	/**
-	 * Checks if the logged in user is allowed to use the webapp.
-	 * @param id The users Google id
+	 * Checks if the logged in user is allowed to use the MADCAP web application.
+	 * @param id The users G-Mail address
 	 * @param user OAuth parameter
-	 * @return 'true' when the user is registered in the Constraints class, 'false' otherwise
+	 * @return 'true' when the user is registered, 'false' otherwise
 	 * @throws OAuthRequestException Gets thrown when there is no logged in user
 	 */
 	@ApiMethod(name = "isRegistered")
@@ -96,8 +95,7 @@ public class SecurityEndpoint {
 	
 	
 	/**
-	 * Does the logic work of getUserPermission. Checks if the user has all the necessary 
-	 * rights to see the container.
+	 * Does the logic work of getUserPermission(). Checks if the user has all the necessary rights to see the container.
 	 * @param user the user, including his permissions
 	 * @param elemPermissions the permissions necessary to see the container
 	 * @return 'true' if the user is allowed to see the container, 'false' otherwise
@@ -105,7 +103,7 @@ public class SecurityEndpoint {
 	private boolean permissionCheck(UserInformation user, String elemPermissions){
 		LinkedList<String> elemPermissionList = new LinkedList<>();
 		String cache = "";
-		// Parses csv-string to LinkedList<String>
+		// Parses csv-string to a LinkedList<String>
 		for(int i=0; i<elemPermissions.length(); i++)	{
 			if(elemPermissions.charAt(i) == ',')	{
 				elemPermissionList.push(cache);
@@ -135,7 +133,8 @@ public class SecurityEndpoint {
 	
 	
 	/**
-	 * Returns a URL where the user can login.
+	 * Returns a URL, where the user can login into his Google Account.
+	 * @param callback: A website, which gets opened once the login is done.
 	 * @return the URL
 	 */
 	@ApiMethod(name = "login")
@@ -145,7 +144,6 @@ public class SecurityEndpoint {
 		try {
 			url = URLDecoder.decode(callback, "UTF-8");
 		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return new EndpointReturnObject(userService.createLoginURL(url));
@@ -153,7 +151,7 @@ public class SecurityEndpoint {
 	
 	
 	/**
-	 * Checks if a logged in OAuth user got provided and if the user is registered in the Datastore
+	 * Checks if a logged in OAuth user got provided and if the user is registered in the datastore entity UserInformation
 	 * @param user: OAuth user
 	 * @return boolean indicating if the user is valid
 	 * @throws OAuthRequestException

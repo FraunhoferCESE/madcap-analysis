@@ -4,9 +4,8 @@ import java.util.List;
 
 /**
  * A container to return values to the client through endpoints. 
- * Endpoints can't return primitive types. Therefore, this class exists.
- * @author SHintzen
- *
+ * Endpoints can't return primitive types. Therefore, this class exists to return primitive types parsed as Strings.
+ * @author Stefan Hintzen
  */
 public class EndpointArrayReturnObject {
 	

@@ -1,5 +1,9 @@
 package org.fraunhofer.cese.madcap.analysis.models;
 
+/**
+ * A container to return the data probes, which are needed by the timeline visualization.
+ * @author Stefan Hintzen
+ */
 public class TimelineReturnContainer {
 
 	public ActivityEntry[] returnedAE;
