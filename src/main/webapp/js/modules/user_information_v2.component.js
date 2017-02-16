@@ -53,9 +53,12 @@ component('userV2', {
     	
     	// Listener for the timeline csv download button
     	$scope.$parent.$watch('viewControl.userinfo.expanded', function(newValue) { 
-			if(!($scope.firstOpen) && $scope.$parent.viewControl.userinfo.exoanded)	{
+			if(!($scope.firstOpen) && $scope.$parent.viewControl.userinfo.expanded)	{
 				$scope.firstOpen = false;
 				$scope.refreshData();
+			}
+			else if($scope.firstOpen)	{
+				$scope.firstOpen = false;
 			}
 	    });
     	
