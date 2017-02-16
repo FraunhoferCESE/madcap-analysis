@@ -88,6 +88,37 @@ angular.module('master').
 			$scope.controlControl.unitVisible = ($scope.viewControl.usermap.visible || $scope.viewControl.timeline.visible || $scope.viewControl.userinfo.visible);
 			
 			if($scope.controlControl.unitVisible)	{
+				
+				var clearfixUsermapUserinfo = document.getElementById("clearfixComboUsermapUserinfo");
+    			var clearfixUsermapTimelineUserinfo = document.getElementById("clearfixComboUsermapTimelineUserinfo");
+    			var clearfixUsermapTimeline = document.getElementById("clearfixComboUsermapTimeline");
+    			var clearfixTimelineUserinfo = document.getElementById("clearfixComboTimelineUserinfo");
+    			var clearfixUsermap = document.getElementById("clearfixComboUsermap");
+    			
+    			clearfixUsermapTimelineUserinfo.setAttribute("class","");
+    			clearfixUsermapUserinfo.setAttribute("class","");
+    			clearfixUsermapTimeline.setAttribute("class","");
+    			clearfixTimelineUserinfo.setAttribute("class","");
+    			clearfixUsermap.setAttribute("class","");
+    			
+    			if(usermapVisible && timelineVisible && userinfoVisible){
+    				clearfixUsermapTimelineUserinfo.setAttribute("class","clearfix visible-xs-block visible-sm-block visible-md-block visible-lg-block visible-xl-block");	
+    			}
+    			else if(usermapVisible && userinfoVisible)	{
+    				clearfixUsermapUserinfo.setAttribute("class","clearfix visible-xs-block visible-sm-block visible-md-block visible-lg-block visible-xl-block");	
+    			}
+    			else if(usermapVisible && timelineVisible)	{
+    				clearfixUsermapTimeline.setAttribute("class","clearfix visible-xs-block visible-sm-block visible-md-block visible-lg-block visible-xl-block");	
+    			}
+    			else if(timelineVisible && userinfoVisible)	{
+    				clearfixTimelineUserinfo.setAttribute("class","clearfix visible-xs-block visible-sm-block visible-md-block visible-lg-block visible-xl-block");	
+    			}
+    			else if(usermapVisible)	{
+    				clearfixUsermap.setAttribute("class","clearfix visible-xs-block visible-sm-block visible-md-block visible-lg-block visible-xl-block");	
+    			}
+    			
+				$scope.controlControl.childScope.control.constellationUsermapTimelineUserinfo = (usermapVisible && timelineVisible && userinfoVisible);
+				$scope.controlControl.childScope.control.constellationUsermapUserinfo = (usermapVisible && !timelineVisible && userinfoVisible);
 				$scope.controlControl.childScope.control.sliderVisible = (usermapVisible || timelineVisible);
 				$scope.controlControl.childScope.control.userpickerVisible = (usermapVisible || timelineVisible || $scope.viewControl.userinfo.visible);
 				$scope.controlControl.childScope.control.datepickerVisible = (usermapVisible || timelineVisible || $scope.viewControl.userinfo.visible);

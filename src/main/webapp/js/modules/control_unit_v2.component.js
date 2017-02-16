@@ -60,6 +60,7 @@ module('controlUnitV2').
     		userInformationOneCsvTrigger: false,
     		userInformationAllCsvTrigger: false,
     		blockCsvTrigger: false,
+
     		/**
     		 * Re-renders the slider to show correct values.
     		 */
