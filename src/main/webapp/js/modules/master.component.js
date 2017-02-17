@@ -102,19 +102,19 @@ angular.module('master').
     			clearfixUsermap.setAttribute("class","");
     			
     			if(usermapVisible && timelineVisible && userinfoVisible){
-    				clearfixUsermapTimelineUserinfo.setAttribute("class","clearfix visible-xs-block visible-sm-block visible-md-block visible-lg-block visible-xl-block");	
+    				clearfixUsermapTimelineUserinfo.setAttribute("class","clearfix visible-xs-block visible-sm-block visible-md-block visible-lg-block visible-xl-block tenpx");	
     			}
     			else if(usermapVisible && userinfoVisible)	{
-    				clearfixUsermapUserinfo.setAttribute("class","clearfix visible-xs-block visible-sm-block visible-md-block visible-lg-block visible-xl-block");	
+    				clearfixUsermapUserinfo.setAttribute("class","clearfix visible-xs-block visible-sm-block visible-md-block visible-lg-block visible-xl-block tenpx");	
     			}
     			else if(usermapVisible && timelineVisible)	{
-    				clearfixUsermapTimeline.setAttribute("class","clearfix visible-xs-block visible-sm-block visible-md-block visible-lg-block visible-xl-block");	
+    				clearfixUsermapTimeline.setAttribute("class","clearfix visible-xs-block visible-sm-block visible-md-block visible-lg-block visible-xl-block tenpx");	
     			}
     			else if(timelineVisible && userinfoVisible)	{
-    				clearfixTimelineUserinfo.setAttribute("class","clearfix visible-xs-block visible-sm-block visible-md-block visible-lg-block visible-xl-block");	
+    				clearfixTimelineUserinfo.setAttribute("class","clearfix visible-xs-block visible-sm-block visible-md-block visible-lg-block visible-xl-block tenpx");	
     			}
     			else if(usermapVisible)	{
-    				clearfixUsermap.setAttribute("class","clearfix visible-xs-block visible-sm-block visible-md-block visible-lg-block visible-xl-block");	
+    				clearfixUsermap.setAttribute("class","clearfix visible-xs-block visible-sm-block visible-md-block visible-lg-block visible-xl-block tenpx");	
     			}
     			
 				$scope.controlControl.childScope.control.constellationUsermapTimelineUserinfo = (usermapVisible && timelineVisible && userinfoVisible);
