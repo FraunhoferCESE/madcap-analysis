@@ -23,6 +23,6 @@ config(['$locationProvider', '$routeProvider',
       when('/user-map',	{
       	  template: '<user-map></user-map>'
       }).
-          otherwise('/user-map');
+          otherwise('/master');
       }
   ]);

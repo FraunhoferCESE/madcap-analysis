@@ -4,8 +4,11 @@
 	 * Calls auth(), when the libraries have been loaded.
 	 */
   function init() {
+	  
 		"use strict";
-		var apisToLoad = 3;
+	  	var client_id_dev = '611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com';
+	  	var client_id_product = '353945552589-0nsvnfceek9iclrb8amjhpn8aome60ej.apps.googleusercontent.com';
+	  	var apisToLoad = 3;
 		document.getElementById('loadmessage').innerHTML = "Loading APIs ...";
 		
 		/**
@@ -13,10 +16,10 @@
 		 * auth() gets called. IMPORTANT!: The value of apisToLoad has to match the numbers of
 		 * apis which get loaded
 		 */
-		function con()	{
+		function con(resp)	{
 			if(--apisToLoad === 0)	{
 				document.getElementById('loadmessage').innerHTML = "Checking user ...";
-				gapi.auth.authorize({client_id: '611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com',scope: 'https://www.googleapis.com/auth/userinfo.email', immediate: true}, auth);
+				gapi.auth.authorize({client_id: client_id_dev ,scope: 'https://www.googleapis.com/auth/userinfo.email', immediate: true}, auth);
 			}
 		}
 		if(window.location.href.substring(0,8) !== "https://") {

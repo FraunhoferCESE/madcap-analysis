@@ -18,6 +18,7 @@ angular
 	controller : function MapController(NgMap, $scope, $timeout, loading_overlay, census_api, helper, allowed_directive_service) {
 		
 		"use strict";
+		var f=0;
 		// Creates loading overlay for initial loading
 		$scope.dialog = loading_overlay.createLoadOverlay('Loading the map ...', this, 'map_content');
 		$scope.fromStart = true;
@@ -58,7 +59,8 @@ angular
 			initializeMap : function() {
 				//Sets well size for loaded view. Removes well size used while loading
 				document.getElementById("mapWell").style.height = "";
-				document.getElementById("mapRow").style.height = document.getElementById("mapInformationContainer").offsetHeight + 120;
+				var mapRow = document.getElementById("mapRow");
+				mapRow.style.height = document.getElementById("mapInformationContainer").offsetHeight + 120 + 'px';
 				$scope.dialog.remove();
 				$(window).on('resize',$scope.moveElementsOnResize);
 				NgMap.getMap({id : "map"}).then(function(returnMap) {
@@ -90,7 +92,7 @@ angular
 				document.getElementById("mapWell").style.height = "";
 			} else if ($scope.$parent.viewControl.usermap.visible && !($scope.initializePack.xsSize) && 768 > $(window).width()) {
 				$scope.initializePack.xsSize = true;
-				document.getElementById("mapWell").style.height = document.getElementById("mapWrap").offsetHeight + document.getElementById("mapInformationContainer").offsetHeight + 120;
+				document.getElementById("mapWell").style.height = document.getElementById("mapWrap").offsetHeight + document.getElementById("mapInformationContainer").offsetHeight + 120 + 'px';
 			}
 		};
 
