@@ -143,6 +143,7 @@ angular.module('madcap-analysis')
 							refinedData[locationCounter].holes.push({
 								start: onOffTimes[k+1].timestamp,
 								end: onOffTimes[k+2].timestamp,
+								holeOrigin: onOffTimes[k+1].state.substring(4,onOffTimes[onIntervalAt+1].state.length)
 							});
 						}
 					}
@@ -172,11 +173,13 @@ angular.module('madcap-analysis')
 					refinedData[locationCounter].holes.push({
 						start: onOffTimes[k].timestamp,
 						end: onOffTimes[k+1].timestamp,
+						holeOrigin: onOffTimes[k].state.substring(4,onOffTimes[onIntervalAt+1].state.length)
 					});
 				}
 				refinedData[locationCounter].holes.push({
 					start: onOffTimes[onOffTimes.length-1].timestamp,
 					end: stopTime,
+					holeOrigin: onOffTimes[onOffTimes.length-1].state.substring(4,onOffTimes[onIntervalAt+1].state.length)
 				});
 			}
 			

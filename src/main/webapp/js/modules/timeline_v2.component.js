@@ -299,11 +299,13 @@ module('timelineV2').
 										// Removes data if it lies completely outside of the days timeframe
 										if(refinedData[i].end < date)	{
 											//Creates bars for the holes provided by the refine-method.
-											var label = 'Data collection turned off';
-											if(refinedData[i].origin === 'CRASH')	{
-												label = 'Unexpected collection interuption';
-											}
+											
 											for(var j=0; j<refinedData[i].holes.length; j++)	{	
+											
+												var label = 'Data collection turned off';
+												if(refinedData[i].holes[j].holeOrigin === 'CRASH')	{
+													label = 'Unexpected collection interuption';
+												}
 												
 												var barEnd = -1;
 												if(j+1 < refinedData[i].holes.length){
@@ -407,12 +409,13 @@ module('timelineV2').
 											
 											if((i < startLength-1 && refinedData[indexWhereEndIs].end !== refinedData[i+1].start) || i === startLength-1 && refinedData[indexWhereEndIs].end !== Math.min($scope.controlScope.dateData.unixRest + 86400000-2, new Date())){
 												//Creates bars for the holes provided by the refine-method.
-												var label = 'Data collection turned off';
-												if(refinedData[indexWhereEndIs].origin === 'CRASH')	{
-													label = 'Unexpected collection interuption';
-												}
 												for(var j=0; j<refinedData[indexWhereEndIs].holes.length; j++)	{	
 													
+													var label = 'Data collection turned off';
+													if(refinedData[indexWhereEndIs].holes[j].holeOrigin === 'CRASH')	{
+														label = 'Unexpected collection interuption';
+													}
+														
 													var barEnd = -1;
 													if(j+1 < refinedData[indexWhereEndIs].holes.length){
 														barEnd = refinedData[indexWhereEndIs].holes[j+1].start;
