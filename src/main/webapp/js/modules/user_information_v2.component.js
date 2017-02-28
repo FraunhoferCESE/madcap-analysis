@@ -160,8 +160,8 @@ component('userV2', {
 			    			$scope.informationData.interruptionCountDay = returned.returned[3];
 				   			$scope.informationData.interruptionTimeMonth = helper.getTimeWithUnits(returned.returned[4]);
 				   			$scope.informationData.interruptionCountMonth = returned.returned[5];
-				   			$scope.informationData.model =  returned.returned[6];
-				   			$scope.informationData.manufacturer = returned.returned[7];
+				   			$scope.informationData.manufacturer =  returned.returned[6];
+				   			$scope.informationData.model = returned.returned[7];
 				    		$scope.informationData.api = returned.returned[8];
 				    		$scope.informationData.madcapVersion = returned.returned[9];
 				    		$scope.processTickets = {};
