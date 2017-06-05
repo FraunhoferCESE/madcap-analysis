@@ -11,7 +11,7 @@
 
 	<properties>
 		<app.id>madcap-dev1</app.id>
-		<app.version>1</app.version>
+		<app.version>2</app.version>
 		<appengine.version>1.9.42</appengine.version>
 		<gcloud.plugin.version>2.0.9.121.v20160815</gcloud.plugin.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
