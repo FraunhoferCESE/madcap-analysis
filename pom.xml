@@ -12,7 +12,7 @@
 	<properties>
 		<app.id>madcap-dev1</app.id>
 		<app.version>2</app.version>
-		<appengine.version>1.9.42</appengine.version>
+		<appengine.version>1.9.54</appengine.version>
 		<gcloud.plugin.version>2.0.9.121.v20160815</gcloud.plugin.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -24,7 +24,7 @@
 	</properties>
 
 	<prerequisites>
-		<maven>3.3.9</maven>
+		<maven>3.5</maven>
 	</prerequisites>
 
 	<dependencies>
@@ -55,15 +55,15 @@
 			<artifactId>javax.inject</artifactId>
 			<version>1</version>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.json/json -->	
+		<!-- https://mvnrepository.com/artifact/org.json/json -->
 		<dependency>
-		
-    		<groupId>org.json</groupId>
-    		<artifactId>json</artifactId>
-    		<version>20160810</version>
+
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20160810</version>
 		</dependency>
-		
-	
+
+
 		<!-- Test Dependencies -->
 		<dependency>
 			<groupId>junit</groupId>
@@ -94,146 +94,145 @@
 	<build>
 		<!-- for hot reload of the web application -->
 		<outputDirectory>${project.build.directory}/${project.build.finalName}/WEB-INF/classes</outputDirectory>
-		<plugins>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-project-info-reports-plugin</artifactId>
-				<version>2.9</version>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>findbugs-maven-plugin</artifactId>
-				<version>${findbugs.version}</version>
-				<configuration>
-					<effort>Max</effort>
-					<threshold>Low</threshold>
-					<failOnError>true</failOnError>
-					<findbugsXmlOutput>true</findbugsXmlOutput>
-					<findbugsXmlWithMessages>true</findbugsXmlWithMessages>
-					<xmlOutput>true</xmlOutput>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>check</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>versions-maven-plugin</artifactId>
-				<version>2.3</version>
-				<executions>
-					<execution>
-						<phase>compile</phase>
-						<goals>
-							<goal>display-dependency-updates</goal>
-							<goal>display-plugin-updates</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-war-plugin</artifactId>
-				<version>2.6</version>
-				<configuration>
-					<webXml>${project.build.directory}/generated-sources/appengine-endpoints/WEB-INF/web.xml</webXml>
-					<!-- <archiveClasses>true</archiveClasses> -->
-					<webResources>
-						<resource>
-							<!-- this is relative to the pom.xml directory -->
-							<directory>${basedir}/src/main/webapp/WEB-INF</directory>
-							<filtering>true</filtering>
-							<directory>${project.build.directory}/generated-sources/appengine-endpoints</directory>
-							<!-- the list has a default value of ** -->
-							<includes>
-								<include>WEB-INF/*.discovery</include>
-								<include>WEB-INF/*.api</include>
-							</includes>
-						</resource>
-					</webResources>
-				</configuration>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-antrun-plugin</artifactId>
-				<version>1.7</version>
-				<executions>
-					<execution>
-						<phase>process-classes</phase>
-						<goals>
-							<goal>run</goal>
-						</goals>
-						<configuration>
-							<target>
-								<property name="target.webapp.dir"
-									value="${project.build.directory}/${project.build.finalName}" />
-								<property name="src.webapp.dir" value="${basedir}/src/main/webapp" />
-
-								<sync verbose="true" todir="${target.webapp.dir}"
-									includeEmptyDirs="true">
-									<fileset dir="${src.webapp.dir}" />
-									<preserveintarget>
-										<include name="WEB-INF/lib/**" />
-										<include name="WEB-INF/classes/**" />
-										<include name="WEB-INF/appengine-generated/**" />
-									</preserveintarget>
-								</sync>
-
-								<!-- <sync verbose="true" todir="${target.webapp.dir}/WEB-INF/classes"> 
-									<fileset dir="${basedir}/target/classes" /> </sync> -->
-
-							</target>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-
-			<plugin>
-				<groupId>com.google.appengine</groupId>
-				<artifactId>appengine-maven-plugin</artifactId>
-				<version>${appengine.version}</version>
-				<configuration>
-					<enableJarClasses>false</enableJarClasses>
-					<version>${app.version}</version>
-					<!-- Comment in the below snippet to bind to all IPs instead of just 
-						localhost -->
-					<address>0.0.0.0</address>
-					<port>8080</port>
-					<!-- Comment in the below snippet to enable local debugging with a remote 
-						debugger like those included with Eclipse or IntelliJ -->
-					<!-- <jvmFlags> <jvmFlag>-agentlib:jdwp=transport=dt_socket,address=8000,server=y,suspend=n</jvmFlag> 
-						</jvmFlags> <jvmFlags> <jvmFlag>-Xdebug</jvmFlag> <jvmFlag>-Xrunjdwp:transport=dt_socket,address=1044,server=y,suspend=y 
-						</jvmFlag> </jvmFlags> -->
-					<disableUpdateCheck>true</disableUpdateCheck>
-
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>endpoints_get_discovery_doc</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>com.google.appengine</groupId>
-				<artifactId>gcloud-maven-plugin</artifactId>
-				<version>${gcloud.plugin.version}</version>
-				<configuration>
-					<set_default>true</set_default>
-				</configuration>
-			</plugin>
-		</plugins>
 		<pluginManagement>
 			<plugins>
-				<!-- This plugin's configuration is used to store Eclipse m2e settings 
-					only. It has no influence on the Maven build itself. -->
+
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-project-info-reports-plugin</artifactId>
+					<version>2.9</version>
+				</plugin>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>findbugs-maven-plugin</artifactId>
+					<version>${findbugs.version}</version>
+					<configuration>
+						<effort>Max</effort>
+						<threshold>Low</threshold>
+						<failOnError>false</failOnError>
+						<findbugsXmlOutput>true</findbugsXmlOutput>
+						<findbugsXmlWithMessages>true</findbugsXmlWithMessages>
+						<xmlOutput>true</xmlOutput>
+					</configuration>
+					<executions>
+						<execution>
+							<goals>
+								<goal>check</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>versions-maven-plugin</artifactId>
+					<version>2.3</version>
+					<executions>
+						<execution>
+							<phase>compile</phase>
+							<goals>
+								<goal>display-dependency-updates</goal>
+								<goal>display-plugin-updates</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-war-plugin</artifactId>
+					<version>2.6</version>
+					<configuration>
+						<webXml>${project.build.directory}/generated-sources/appengine-endpoints/WEB-INF/web.xml</webXml>
+						<!-- <archiveClasses>true</archiveClasses> -->
+						<webResources>
+							<resource>
+								<!-- this is relative to the pom.xml directory -->
+								<directory>${basedir}/src/main/webapp/WEB-INF</directory>
+								<filtering>true</filtering>
+								<directory>${project.build.directory}/generated-sources/appengine-endpoints</directory>
+								<!-- the list has a default value of ** -->
+								<includes>
+									<include>WEB-INF/*.discovery</include>
+									<include>WEB-INF/*.api</include>
+								</includes>
+							</resource>
+						</webResources>
+					</configuration>
+				</plugin>
+
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-antrun-plugin</artifactId>
+					<version>1.7</version>
+					<executions>
+						<execution>
+							<phase>process-classes</phase>
+							<goals>
+								<goal>run</goal>
+							</goals>
+							<configuration>
+								<target>
+									<property name="target.webapp.dir"
+										value="${project.build.directory}/${project.build.finalName}" />
+									<property name="src.webapp.dir" value="${basedir}/src/main/webapp" />
+
+									<sync verbose="true" todir="${target.webapp.dir}"
+										includeEmptyDirs="true">
+										<fileset dir="${src.webapp.dir}" />
+										<preserveintarget>
+											<include name="WEB-INF/lib/**" />
+											<include name="WEB-INF/classes/**" />
+											<include name="WEB-INF/appengine-generated/**" />
+										</preserveintarget>
+									</sync>
+
+									<!-- <sync verbose="true" todir="${target.webapp.dir}/WEB-INF/classes"> 
+										<fileset dir="${basedir}/target/classes" /> </sync> -->
+
+								</target>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
+
+				<plugin>
+					<groupId>com.google.appengine</groupId>
+					<artifactId>appengine-maven-plugin</artifactId>
+					<version>${appengine.version}</version>
+					<configuration>
+						<enableJarClasses>false</enableJarClasses>
+						<version>${app.version}</version>
+						<!-- Comment in the below snippet to bind to all IPs instead of just 
+							localhost -->
+						<address>0.0.0.0</address>
+						<port>8080</port>
+						<!-- Comment in the below snippet to enable local debugging with a 
+							remote debugger like those included with Eclipse or IntelliJ -->
+						<!-- <jvmFlags> <jvmFlag>-agentlib:jdwp=transport=dt_socket,address=8000,server=y,suspend=n</jvmFlag> 
+							</jvmFlags> <jvmFlags> <jvmFlag>-Xdebug</jvmFlag> <jvmFlag>-Xrunjdwp:transport=dt_socket,address=1044,server=y,suspend=y 
+							</jvmFlag> </jvmFlags> -->
+						<disableUpdateCheck>true</disableUpdateCheck>
+
+					</configuration>
+					<executions>
+						<execution>
+							<goals>
+								<goal>endpoints_get_discovery_doc</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
+					<groupId>com.google.appengine</groupId>
+					<artifactId>gcloud-maven-plugin</artifactId>
+					<version>${gcloud.plugin.version}</version>
+					<configuration>
+						<set_default>true</set_default>
+					</configuration>
+				</plugin>
+				<!--</plugins> <pluginManagement> <plugins> This plugin's configuration 
+					is used to store Eclipse m2e settings only. It has no influence on the Maven 
+					build itself. -->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
 					<artifactId>lifecycle-mapping</artifactId>
