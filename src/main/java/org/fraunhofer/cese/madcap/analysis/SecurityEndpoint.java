@@ -159,14 +159,17 @@ public class SecurityEndpoint {
 	public static boolean isUserValid(User user) throws OAuthRequestException	{
 		// Checking if there is a logged in user
 		if(user == null){
+			System.out.println("User: NULL");
 			throw new OAuthRequestException("ERROR: User is null! Value:" + user);
 		}
+		System.out.println("User: " + user.getEmail());
 		ObjectifyService.begin();
 		// Checking if the logged in user is registered 
 		UserInformation result = ofy().load().type(UserInformation.class).id(user.getEmail().toLowerCase()).now();
+		System.out.println("User login result: " + result);
 		if(result != null){
 			return true;
 		}
-		throw new OAuthRequestException("ERROR: User is mot registered! Value" + user.getEmail().toLowerCase());	
+		throw new OAuthRequestException("ERROR: User is not registered! Value" + user.getEmail().toLowerCase());	
 	}
 }

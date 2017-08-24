@@ -1,6 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 	<packaging>war</packaging>
@@ -12,7 +11,7 @@
 	<properties>
 		<app.id>madcap-dev1</app.id>
 		<app.version>2</app.version>
-		<appengine.version>1.9.42</appengine.version>
+		<appengine.version>1.9.54</appengine.version>
 		<gcloud.plugin.version>2.0.9.121.v20160815</gcloud.plugin.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -89,7 +88,12 @@
 			<version>${appengine.version}</version>
 			<scope>test</scope>
 		</dependency>
-	</dependencies>
+	<dependency>
+<groupId>com.google.guava</groupId>
+<artifactId>guava</artifactId>
+<version>20.0</version>
+</dependency>
+</dependencies>
 
 	<build>
 		<!-- for hot reload of the web application -->
@@ -108,7 +112,7 @@
 				<configuration>
 					<effort>Max</effort>
 					<threshold>Low</threshold>
-					<failOnError>true</failOnError>
+					<failOnError>false</failOnError>
 					<findbugsXmlOutput>true</findbugsXmlOutput>
 					<findbugsXmlWithMessages>true</findbugsXmlWithMessages>
 					<xmlOutput>true</xmlOutput>
@@ -171,17 +175,15 @@
 						</goals>
 						<configuration>
 							<target>
-								<property name="target.webapp.dir"
-									value="${project.build.directory}/${project.build.finalName}" />
-								<property name="src.webapp.dir" value="${basedir}/src/main/webapp" />
+								<property name="target.webapp.dir" value="${project.build.directory}/${project.build.finalName}"/>
+								<property name="src.webapp.dir" value="${basedir}/src/main/webapp"/>
 
-								<sync verbose="true" todir="${target.webapp.dir}"
-									includeEmptyDirs="true">
-									<fileset dir="${src.webapp.dir}" />
+								<sync includeEmptyDirs="true" todir="${target.webapp.dir}" verbose="true">
+									<fileset dir="${src.webapp.dir}"/>
 									<preserveintarget>
-										<include name="WEB-INF/lib/**" />
-										<include name="WEB-INF/classes/**" />
-										<include name="WEB-INF/appengine-generated/**" />
+										<include name="WEB-INF/lib/**"/>
+										<include name="WEB-INF/classes/**"/>
+										<include name="WEB-INF/appengine-generated/**"/>
 									</preserveintarget>
 								</sync>
 

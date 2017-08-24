@@ -388,6 +388,9 @@ angular
 						else if(mock.markers[i].origin === 'gps')	{
 							mock.markers[i].setIcon('https://maps.google.com/mapfiles/ms/icons/red-dot.png');
 						}
+						else if(mock.markers[i].origin === 'fused')	{
+							mock.markers[i].setIcon('https://maps.google.com/mapfiles/ms/icons/yellow-dot.png');
+						}
 							
 						mock.markers[i].circle = new google.maps.Circle({
 				            strokeColor: '#FF0000',
@@ -496,7 +499,7 @@ angular
 		});
 		
 		//Listener for checkboxes
-		$scope.$watchGroup(['controlScope.mapControlData.wifiAsOriginChecked','controlScope.mapControlData.cellAsOriginChecked','controlScope.mapControlData.gpsAsOriginChecked'], function(value) {
+		$scope.$watchGroup(['controlScope.mapControlData.wifiAsOriginChecked','controlScope.mapControlData.cellAsOriginChecked','controlScope.mapControlData.gpsAsOriginChecked','controlScope.mapControlData.fusedAsOriginChecked'], function(value) {
 			$scope.filterAccordingToSlider();
 		});
 		
@@ -604,6 +607,10 @@ angular
 					}
 					else if($scope.mapData.markers[i].origin === 'cell tower')	{
 						originCheck = $scope.controlScope.mapControlData.cellAsOriginChecked;
+					}
+					else if($scope.mapData.markers[i].origin === 'fused')	{
+						console.log("fused location");
+						originCheck = $scope.controlScope.mapControlData.fusedAsOriginChecked;
 					}
 					
 					if (value <= $scope.controlScope.slider.maxValue && $scope.controlScope.slider.minValue <= value && originCheck) {

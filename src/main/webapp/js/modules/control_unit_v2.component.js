@@ -175,7 +175,8 @@ module('controlUnitV2').
     		censusRequest: false,
     		wifiAsOriginChecked: true,
     		gpsAsOriginChecked: true,
-    		cellAsOriginChecked: true
+    		cellAsOriginChecked: true,
+            fusedAsOriginChecked: true
     	};
     	
     	//First setting of the unixRest. unixRest states midnight of the chosen date in Unix milliseconds.
