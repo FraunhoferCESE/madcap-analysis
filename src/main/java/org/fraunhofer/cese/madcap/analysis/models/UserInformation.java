@@ -11,6 +11,7 @@ import com.googlecode.objectify.annotation.Id;
  */
 @Entity
 public class UserInformation {
+	//users who are allowed to view the webapp 
 	
 	@Id
 	private String email;

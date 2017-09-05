@@ -27,7 +27,7 @@ module('controlUnitV2').
        		currentSubject: '',
        		lastSubject: '',
        		/**
-       		 * This method ges called, when the user changes the chosen user in the user dropdown. The user gets changed and the filler value gets deleted,
+       		 * This method gets called, when the user changes the chosen user in the user drop-down. The user gets changed and the filler value gets deleted,
        		 * when it is still part of the user array.
        		 */
        		userChange: function()	{

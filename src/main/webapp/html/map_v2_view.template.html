@@ -1,75 +1,72 @@
 <div allowed="SEE_GUI">
 	<div id="refreshWindow" ng-if="mapData.refreshMap">
-		<div class="row" id="mapRow" ng-init="initializePack.initializeMap()">	
-			<div id="mapWrap" class="col-xs-12 col-sm-8" style="height:100%;">
-				<ng-map id="map" center="[38.97, -76.92]" zoom="15" default-style="false" style="height:100%; display:inline-block;"></ng-map>
+		<div class="row" id="mapRow" ng-init="initializePack.initializeMap()">
+			<div id="mapWrap" class="col-xs-12 col-sm-8" style="height: 100%;">
+				<ng-map id="map" center="[38.97, -76.92]" zoom="15"
+					default-style="false" style="height:100%; display:inline-block;"></ng-map>
 			</div>
 			<div id="mapInformationContainer" class="col-xs-12 col-sm-4">
 				<div class="col-xs-12">
-					<h4><b>Geographical Data:</b></h4>
+					<h4>
+						<b>Geographical Data:</b>
+					</h4>
 				</div>
 				</br>
 				<div class="col-xs-3 col-sm-6">
-					<b>Longitude</b>
-					</br>
-					{{censusData.longitude}}
+					<b>Latitude</b> </br> {{censusData.latitude}}
 				</div>
 				<div class="col-xs-3 col-sm-6">
-					<b>Latitude</b>
-					</br>
-					{{censusData.latitude}}
+					<b>Longitude</b> </br> {{censusData.longitude}}
 				</div>
 				<div class="col-xs-3 col-sm-6">
-					<b>Upload origin</b>
-					</br>
-					{{censusData.origin}}
+					<b>Upload origin</b> </br> {{censusData.origin}}
 				</div>
 				<div class="col-xs-3 col-sm-6">
-					<b>Accuracy</b>
-					</br>
-					{{censusData.accuracy}} meter
+					<b>Accuracy</b> </br> {{censusData.accuracy}} meter
 				</div>
 				<div class="col-xs-12">
-					<h4><b>Governmental Data:</b></h4>
+					<h4>
+						<b>Governmental Data:</b>
+					</h4>
 				</div>
 				</br>
 				<div class="col-xs-3 col-sm-6">
-					<b>State</b>
-					</br>
-					{{censusData.blockData.state}}
+					<b>State</b> </br> {{censusData.blockData.state}}
 				</div>
 				<div class="col-xs-3 col-sm-6">
-					<b>County</b>
-					</br>
-					{{censusData.blockData.county}}
+					<b>County</b> </br> {{censusData.blockData.county}}
 				</div>
 				<div class="col-xs-3 col-sm-6">
-					<b>Tract</b>
-					</br>
-					{{censusData.blockData.tract}}
+					<b>Tract</b> </br> {{censusData.blockData.tract}}
 				</div>
 				<div class="col-xs-3 col-sm-6">
-					<b>Block group</b> 
-					</br>
-					{{censusData.blockData.blockGroup}}
+					<b>Block group</b> </br> {{censusData.blockData.blockGroup}}
 				</div>
 				<div class="col-xs-3 col-sm-6">
-					<b>Block</b>
-					</br>
-					{{censusData.blockData.block}}
+					<b>Block</b> </br> {{censusData.blockData.block}}
 				</div>
 				<div class="col-xs-3 col-sm-6">
-					<b>Place name</b>
-					</br>
-					{{censusData.blockData.place_name}}
+					<b>Place name</b> </br> {{censusData.blockData.place_name}}
 				</div>
+				
+				<!-- Added by Pramod -->
+				<div class="col-xs-3 col-sm-6">
+				<b>Census level</b> </br> {{censusData.blockData.level}}
+				</div>
+				<div class="col-xs-3 col-sm-6">
+				<b>Year</b> </br> {{censusData.blockData.year}}
+				</div>
+				<!-- End -- Added by Pramod -->
+				
 				<div class="col-xs-12">
 					</br>
-					<h4><b>Census Data:</b></h4>
+					<h4>
+						<b>Census Data:</b>
+					</h4>
 				</div>
 				</br>
-				<div class="col-xs-4 col-sm-12">
-					<b>Average household size (owner)</b>
+				<!--<div class="col-xs-4 col-sm-12">
+					 <b>Average household size (owner)</b>
 					</br>
 					{{censusData.averages.owner}}
 				</div>
@@ -83,11 +80,29 @@
 					</br>
 					{{censusData.averages.total}}
 				</div>
-				<div class="col-xs-12">
-					</br></br>
-					<b>Disclaimer:</b> This product uses the Census Bureau Data API but is not endorsed or certified by the Census Bureau.
+				<div class="col-xs-12"> -->
+				
+				<!-- Edited by Pramod -->
+				<div class="col-xs-4 col-sm-12">
+				<b>Income</b>
+				</br> $ {{censusData.arrayData.income}}
+				</div>
+				<div class="col-xs-4 col-sm-12">
+				<b>Population</b>
+				</br>{{censusData.arrayData.population}}
+				</div>
+				<div class="col-xs-4 col-sm-12">
+				<b>Per capita income</b>
+				</br>$ {{censusData.arrayData.income_per_capita}}
+				</div>
+				<!-- End--Edited by Pramod -->
+				
+					<div class="col-xs-12">
+						</br>
+						</br> <b>Disclaimer:</b> This product uses the Census Bureau Data API
+						but is not endorsed or certified by the Census Bureau.
+					</div>
 				</div>
 			</div>
 		</div>
 	</div>
-</div>

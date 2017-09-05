@@ -62,9 +62,9 @@
 			</div>
 			<div class="col-md-4"id="census_map_content">
 				<h3>Geographical Data:</h3>
-				Longitude: {{censusData.longitude}}
-				</br>
 				Latitude: {{censusData.latitude}}
+				</br>
+				Longitude: {{censusData.longitude}}
 				</br>
 				State: {{censusData.blockData.state}}
 				</br>
@@ -77,14 +77,25 @@
 				Block: {{censusData.blockData.block}}
 				</br>
 				Place name: {{censusData.blockData.place_name}}
+				<!-- Added by Pramod -->
 				</br>
+				Census level: {{censusData.blockData.level}}
+				</br>
+				Year: {{censusData.blockData.year}}
+				</br>
+				<!-- End -- Added by Pramod -->
 				<h3>Census Data:</h3>
-				Average household size (owner): {{censusData.averages.owner}}
+				<!-- Average household size (owner): {{censusData.averages.owner}}
 				</br>
 				Average household size (renter): {{censusData.averages.renter}}
 				</br>
 				Average household size (total): {{censusData.averages.total}}
-				</br>
+				</br> -->
+				<!-- Added by Pramod -->
+				Income: {{censusData.income}} </br>
+				Population: {{censusData.population}}</br>
+				Per capita income: {{censusData.income_per_capital}} </br>
+				<!-- End--Added by Pramod -->
 			</div>
 		</div>
 		<div class="row">	

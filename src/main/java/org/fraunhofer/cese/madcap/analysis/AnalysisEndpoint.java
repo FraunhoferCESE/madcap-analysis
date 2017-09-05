@@ -69,8 +69,19 @@ public class AnalysisEndpoint {
 	public EndpointArrayReturnObject getUsers(User user) throws OAuthRequestException{
 		SecurityEndpoint.isUserValid(user);
 		ObjectifyService.begin();
-		 List<LocationEntry> result = ofy().load().type(LocationEntry.class).project("userID").distinct(true).list();
-		 String[] users = new String[result.size()];
+//		 List<LocationEntry> result = ofy().load().type(LocationEntry.class).project("userID").distinct(true).list();
+		
+		/*
+		 * Gets userID from the SystemInfoEntry table instead of LocationEntry table. 
+		 * Location is a "dangerous" permission from API 23. If the user does not upload location data, he is not listed on the webapp
+		 * 
+		 * Modified by: PGurupasad
+		 * Modified on: 30/08/2017
+		 *
+		 */
+		List<SystemInfoEntry> result = ofy().load().type(SystemInfoEntry.class).project("userID").distinct(true).list();
+		 
+		String[] users = new String[result.size()];
 		 //Gets the id's from the returned users.
 		 for(int i=0; i<result.size(); i++){
 			users[i] = result.get(i).getUserID();

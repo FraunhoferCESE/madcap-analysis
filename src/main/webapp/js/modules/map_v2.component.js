@@ -16,73 +16,73 @@ angular
 .component('mapV2',{
 	templateUrl : 'html/map_v2_view.template.html',
 	controller : function MapController(NgMap, $scope, $timeout, loading_overlay, census_api, helper, allowed_directive_service) {
-		
+
 		"use strict";
 		var f=0;
 		// Creates loading overlay for initial loading
-		$scope.dialog = loading_overlay.createLoadOverlay('Loading the map ...', this, 'map_content');
+		$scope.dialog = loading_overlay.createLoadOverlay('Loading map...', this, 'map_content');
 		$scope.fromStart = true;
-		
+
 		// Access to the controlling variables of the control unit component
 		$scope.controlScope = $scope.$parent.controlControl.childScope;
-		
+
 		$scope.noData = false;
-		
+
 		/*Count the running processes. The last running process is the one which gets shown on the view> Since all
 		 * requests take the same time, this implements a last-in-last-out startegy for the sowing of the data*/
 		$scope.processTickets = {};
-		
+
 		// All the data we need to show the Google Map, markers and the heatmap layer. Also contains map-related setup data
 		$scope.mapData = {
-			map : 'no map',
-			mvcArray : new google.maps.MVCArray(),
-			heatmapDataArray : new google.maps.MVCArray(),
-			heatmap : {},
-			isHeat : false,
-			refreshMap : false,
-			markers : [],
-			center : new google.maps.LatLng(38.97, -76.92),	
-			markerCircle : null,
-			lastClickedMarker: null,
-			bounds: new google.maps.LatLngBounds()
+				map : 'no map',
+				mvcArray : new google.maps.MVCArray(),
+				heatmapDataArray : new google.maps.MVCArray(),
+				heatmap : {},
+				isHeat : false,
+				refreshMap : false,
+				markers : [],
+				center : new google.maps.LatLng(38.97, -76.92),	
+				markerCircle : null,
+				lastClickedMarker: null,
+				bounds: new google.maps.LatLngBounds()
 		};
-		
+
 		// Necessary methods and variables to control the initial loading and general setup of the module
 		$scope.initializePack = {
-			rekick : false,
-			stopper : 2,
-			xsSize : false,
-			/**
-			 * This method gets called as soon as the Google map loads (through ng-init). Adapts the module's
-			 * layout to the window size and restarts the loading if the map wasn't ready when the markers where supposed to be set
-			 */
-			initializeMap : function() {
-				//Sets well size for loaded view. Removes well size used while loading
-				document.getElementById("mapWell").style.height = "";
-				var mapRow = document.getElementById("mapRow");
-				mapRow.style.height = document.getElementById("mapInformationContainer").offsetHeight + 120 + 'px';
-				$scope.dialog.remove();
-				$(window).on('resize',$scope.moveElementsOnResize);
-				NgMap.getMap({id : "map"}).then(function(returnMap) {
-					$scope.mapData.map = returnMap;
-					if ($scope.initializePack.rekick) {
-						$scope.initializePack.rekick = false;
-						$scope.initializeRefresh();
-					}
-				});
-			},
-			/**
-			 * Only lets the map load when previous setup as well as allowed_directive have finished their work
-			 */
-			initializeCallback : function() {
-				if (--($scope.initializePack.stopper) === 0) {
-					$scope.$apply(function()	{
-						$scope.mapData.refreshMap = true;
+				rekick : false,
+				stopper : 2,
+				xsSize : false,
+				/**
+				 * This method gets called as soon as the Google map loads (through ng-init). Adapts the module's
+				 * layout to the window size and restarts the loading if the map wasn't ready when the markers where supposed to be set
+				 */
+				initializeMap : function() {
+					//Sets well size for loaded view. Removes well size used while loading
+					document.getElementById("mapWell").style.height = "";
+					var mapRow = document.getElementById("mapRow");
+					mapRow.style.height = document.getElementById("mapInformationContainer").offsetHeight + 120 + 'px';
+					$scope.dialog.remove();
+					$(window).on('resize',$scope.moveElementsOnResize);
+					NgMap.getMap({id : "map"}).then(function(returnMap) {
+						$scope.mapData.map = returnMap;
+						if ($scope.initializePack.rekick) {
+							$scope.initializePack.rekick = false;
+							$scope.initializeRefresh();
+						}
 					});
+				},
+				/**
+				 * Only lets the map load when previous setup as well as allowed_directive have finished their work
+				 */
+				initializeCallback : function() {
+					if (--($scope.initializePack.stopper) === 0) {
+						$scope.$apply(function()	{
+							$scope.mapData.refreshMap = true;
+						});
+					}
 				}
-			}
 		};
-						
+
 		/**
 		 * Adapts the well size when a layout change through bootstrap is triggered
 		 */
@@ -96,57 +96,68 @@ angular
 			}
 		};
 
-		// A collection of data from census requests. Will probably expanded in the future probably
+		// A collection of data from census requests. Will probably expanded in the future 
 		$scope.censusData = {
-			blockData : {
-				state : "No data requested",
-				county : "No data requested",
-				tract : "No data requested",
-				blockGroup : "No data requested",
-				block : "No data requested",
-				place_name : "No data requested"
-			},
-			longitude : "No data requested",
-			latitude : "No data requested",
-			origin : "No data requested",
-			accuracy : "No data requested",
-			averages : {
-				owner : "No data requested",
-				renter : "No data requested",
-				total : "No data requested"
-			}
+				blockData : {
+					state : "No data requested.",
+					county : "No data requested.",
+					tract : "No data requested.",
+					blockGroup : "No data requested.",
+					block : "No data requested.",
+					place_name : "No data requested.",
+
+					//------------------Edited by Pramod--------------------
+					year : "No data requested.",
+					level: "No data requested."
+						//------------------End--Edited by Pramod--------------------
+				},
+				longitude : "No data requested.",
+				latitude : "No data requested.",
+				origin : "No data requested.",
+				accuracy : "No data requested.",
+				arrayData: {
+					income : "No data requested.",
+					population : "No data requested.",
+					income_per_capita : "No data requested."
+				}
+//				averages : {
+//				owner : "No data requested.",
+//				renter : "No data requested.",
+//				total : "No data requested."
+//				}
+
 		};
-		
+
 		$scope.mapData.heatmap = new google.maps.visualization.HeatmapLayer({
 			data : $scope.mapData.heatmapDataArray,
 			radius : 100
 		});
-						
+
 		// The data cache. content contains the saved content, meta holds the identifier. Size can be set to any number
 		$scope.cache = {
-			content : {
-				mvc : [],
-				marker : []
-			},
-			meta : [],
-			pointer : 0,
-			size : 5
+				content : {
+					mvc : [],
+					marker : []
+				},
+				meta : [],
+				pointer : 0,
+				size : 5
 		};
 
 		// Listener for the datepicker
 		$scope.$watch('controlScope.dateData.unixRest', function(newValue) {
-			if ($scope.$parent.viewControl.usermap.visible && typeof newValue !== 'undefined' && newValue !== 'Please select a date ...') {
+			if ($scope.$parent.viewControl.usermap.visible && typeof newValue !== 'undefined' && newValue !== 'Please select a date...') {
 				$scope.initializeRefresh();
 			}
 		});
-		
+
 		// Listener for the userpicker
 		$scope.$watch('controlScope.userData.currentSubject',function(newValue) {
 			if ($scope.$parent.viewControl.usermap.visible) {
 				$scope.initializeRefresh();
 			}
 		});
-						
+
 		// Listener for the csv location download button
 		$scope.$watch('controlScope.control.locationCsvTrigger',function(newValue) {
 			if ($scope.controlScope.control.locationCsvTrigger) {
@@ -162,7 +173,7 @@ angular
 				$scope.controlScope.control.blockCsvTrigger = false;
 			}
 		});
-						
+
 		//Listener for the variable that determines if the view gets shown or not
 		$scope.$parent.$watch('viewControl.usermap.extended',function(newValue) {
 			if ($scope.$parent.viewControl.usermap.extended) {
@@ -170,7 +181,7 @@ angular
 				$scope.initializeRefresh();
 			}
 		});
-		
+
 		//Listener for the variable that determines if the view gets shown or not
 		$scope.$watch('controlScope.mapControlData.censusRequest',function(newValue) {
 			if ($scope.mapData.lastClickedMarker !== null && $scope.controlScope.mapControlData.censusRequest) {
@@ -222,28 +233,28 @@ angular
 		 * start time. All other will end without changing the map.
 		 */
 		$scope.initializeRefresh = function() {
-			
+
 			var time = new Date().getTime();
 			var user = $scope.controlScope.userData.currentSubject;
 			var date = $scope.controlScope.dateData.unixRest;
 			$scope.processTickets[user+date+""] = time+'';
-			
+
 			$scope.mapData.lastClickedMarker = null;
-			
+
 			if ($scope.mapData.refreshMap) {
 				$scope.moveElementsOnResize();
 			}
 			if ($scope.dialog[0].parentElement === null) {
-				$scope.dialog = loading_overlay.createLoadOverlay("Loading entries ...", this,'map_content');
+				$scope.dialog = loading_overlay.createLoadOverlay("Loading entries...", this,'map_content');
 			}
 
 			// Step 1: Caching Data
-							
+
 			//In correlation to the source of the event change, the identifier for the cache entry gets built			
 			var cacheUser = $scope.controlScope.userData.currentSubject;
 			var cacheDate = $scope.controlScope.dateData.unixRest;
 			var cacheSource = $scope.controlScope.sourceData.timelineSource;
-			
+
 			if ($scope.controlScope.eventTrigger === 'user') {
 				cacheUser = $scope.controlScope.userData.lastSubject;
 			} else if ($scope.controlScope.eventTrigger === 'date') {
@@ -251,7 +262,7 @@ angular
 			} else if ($scope.controlScope.eventTrigger === 'timelineSource') {
 				cacheSource = $scope.controlScope.sourceData.lastTimelineSource;
 			}
-			
+
 			//Caches the data if there is data to cache
 			if (cacheUser !== '' && !($scope.noData)) {
 				$scope.cache = helper.cacheData($scope.cache, {
@@ -259,7 +270,7 @@ angular
 					mvc : $scope.mapData.mvcArray
 				}, cacheUser + cacheDate);
 			}
-							
+
 			// If there is no map, a flag is set to restart the loading when the map is ready
 			if ($scope.mapData.map === 'no map') {
 				$scope.initializePack.rekick = true;
@@ -288,7 +299,7 @@ angular
 				} else {
 					$scope.mapData.heatmap.setMap(null);
 				}
-				
+
 				var cachedAt = -1;
 				// Checks if the key is in the cache
 				for (var j = 0; cachedAt === -1 && j < $scope.cache.size; j++) {
@@ -296,7 +307,7 @@ angular
 						cachedAt = j;
 					}
 				}
-				
+
 				// Step 3: Load new data. The method to do so depends on the fact if the data is cached or not.
 				if (cachedAt === -1) {
 					// Load data anew
@@ -325,23 +336,23 @@ angular
 				if (resp !== false && typeof resp.items !== 'undefined' && resp.items.length !== 0) {
 					$scope.noData = false;
 					var entries = resp.items;
-					
+
 					//reates the mock
 					var mock = {
-						mvcArray: new google.maps.MVCArray(),
-						markers: [],
-						bounds: new google.maps.LatLngBounds()
+							mvcArray: new google.maps.MVCArray(),
+							markers: [],
+							bounds: new google.maps.LatLngBounds()
 					};
-					
+
 					//Fills the mock with the loaded values.
 					for (var i = 0; typeof entries !== 'undefined' && i < entries.length; i++) {
 						var location = [];
 						location[0] = entries[i].latitude;
 						location[1] = entries[i].longitude;
-						
+
 						var coordinates = new google.maps.LatLng(location[0],location[1]);
 						mock.mvcArray.push(coordinates);
-						
+
 						mock.markers[i] = new google.maps.Marker({
 							title : helper.getDateFromUnix(entries[i].timestamp)
 						});
@@ -354,7 +365,7 @@ angular
 								$scope.censusData.longitude = self.getPosition().lng();
 								$scope.mapData.lastClickedMarker = self;
 							});
-							
+
 							if(this.circle.getMap() === null)	{
 								this.circle.setMap($scope.mapData.map);
 							}
@@ -362,16 +373,16 @@ angular
 								this.circle.setMap(null);	
 							}
 						});
-							
+
 						mock.markers[i].setPosition(coordinates);
 						mock.markers[i].setMap($scope.mapData.map);
 						mock.markers[i].setVisible(false);
-							
+
 						mock.markers[i].bearing = entries[i].bearing;
 						mock.markers[i].accuracy = entries[i].accuracy;
 						mock.markers[i].origin = entries[i].origin;
 						mock.markers[i].extras = entries[i].extras;
-						
+
 						// Sets the origin and changes the markers color, depending on teh origin
 						if(mock.markers[i].origin === 'network')	{
 							mock.markers[i].origin = entries[i].extras;
@@ -391,21 +402,21 @@ angular
 						else if(mock.markers[i].origin === 'fused')	{
 							mock.markers[i].setIcon('https://maps.google.com/mapfiles/ms/icons/yellow-dot.png');
 						}
-							
+
 						mock.markers[i].circle = new google.maps.Circle({
-				            strokeColor: '#FF0000',
-				            strokeOpacity: 0.8,
-				            strokeWeight: 2,
-				            map: null,
-				            fillColor: '#FF0000',
-				            fillOpacity: 0.35,
-				            center: mock.markers[i].getPosition(),
-				            radius: mock.markers[i].accuracy
-				          });
-							
+							strokeColor: '#FF0000',
+							strokeOpacity: 0.8,
+							strokeWeight: 2,
+							map: null,
+							fillColor: '#FF0000',
+							fillOpacity: 0.35,
+							center: mock.markers[i].getPosition(),
+							radius: mock.markers[i].accuracy
+						});
+
 						mock.bounds.extend(mock.markers[i].getPosition());
 					}
-						
+
 					var maxTicket = 0;
 					var keys = Object.keys($scope.processTickets);
 					for(var k=0; k<keys.length; k++)	{
@@ -413,7 +424,7 @@ angular
 							maxTicket = parseInt($scope.processTickets[keys[k]]);
 						}
 					}
-					
+
 					//Only sets the mock as actual data when the ticket of this request is the latest one
 					if(maxTicket === parseInt($scope.processTickets[user + date]))	{	
 						$scope.mapData.markers = mock.markers;
@@ -444,16 +455,16 @@ angular
 		 *            cache
 		 */
 		function showFromCache(index, user, date) {
-			
+
 			var mock = {
 					mvcArray: new google.maps.MVCArray(),
 					markers: [],
 					bounds: new google.maps.LatLngBounds()
-				};
-			
+			};
+
 			mock.markers = $scope.cache.content.marker[index];
 			mock.mvcArray = $scope.cache.content.mvc[index];
-			
+
 			// Connects markers with map and hides them if heatmap shall be shown
 			for (var i = 0; i <mock.markers.length; i++) {
 				mock.markers[i].setMap($scope.mapData.map);
@@ -463,7 +474,7 @@ angular
 				// Extends the bounds, so that in the end all markers will be visible on the map at once
 				mock.bounds.extend(mock.markers[i].getPosition());
 			}
-			
+
 			var maxTicket = 0;
 			var keys = Object.keys($scope.processTickets);
 			for(var k=0; k<keys.length; k++)	{
@@ -471,7 +482,7 @@ angular
 					maxTicket = parseInt($scope.processTickets[keys[k]]);
 				}
 			}
-			
+
 			//Only sets the mock as actual data when the ticket of this request is the latest one
 			if(maxTicket === parseInt($scope.processTickets[user + date]))	{
 				$scope.mapData.markers = mock.markers;
@@ -484,7 +495,7 @@ angular
 				$scope.filterAccordingToSlider();
 			} 
 		}
-		
+
 		// Listener for the center Map button
 		$scope.$watch('controlScope.mapControlData.centerMapOrder',function() {
 			if ($scope.controlScope.mapControlData.centerMapOrder) {
@@ -492,17 +503,17 @@ angular
 				$scope.controlScope.mapControlData.centerMapOrder = false;
 			}
 		});
-		
+
 		//Listener for the slider
 		$scope.$watchGroup(['controlScope.slider.minValue','controlScope.slider.maxValue'], function(value) {
 			$scope.filterAccordingToSlider();
 		});
-		
+
 		//Listener for checkboxes
 		$scope.$watchGroup(['controlScope.mapControlData.wifiAsOriginChecked','controlScope.mapControlData.cellAsOriginChecked','controlScope.mapControlData.gpsAsOriginChecked','controlScope.mapControlData.fusedAsOriginChecked'], function(value) {
 			$scope.filterAccordingToSlider();
 		});
-		
+
 		/**
 		 * Centers map location and zoom on the markers (all of
 		 * them, not only the shown ones)
@@ -578,7 +589,7 @@ angular
 			}
 			$scope.filterAccordingToSlider();
 		});
-		
+
 		/**
 		 * At rendering, all markers get shown and the heatmap
 		 * is empty. This method sorts out the markers which
@@ -597,7 +608,7 @@ angular
 				$scope.mapData.heatmapDataArray.clear();
 				for (var i = 0; i < $scope.mapData.markers.length; i++) {
 					var value = Math.floor((helper.getUnixFromDate($scope.mapData.markers[i].getTitle(),$scope.controlScope.dateData.unixRest) - $scope.controlScope.dateData.unixRest) / 60000);
-					
+
 					var originCheck = false;
 					if($scope.mapData.markers[i].origin === 'gps')	{
 						originCheck = $scope.controlScope.mapControlData.gpsAsOriginChecked;
@@ -609,10 +620,10 @@ angular
 						originCheck = $scope.controlScope.mapControlData.cellAsOriginChecked;
 					}
 					else if($scope.mapData.markers[i].origin === 'fused')	{
-						console.log("fused location");
+//						console.log("fused location");
 						originCheck = $scope.controlScope.mapControlData.fusedAsOriginChecked;
 					}
-					
+
 					if (value <= $scope.controlScope.slider.maxValue && $scope.controlScope.slider.minValue <= value && originCheck) {
 						// Only change if the marker is not
 						// visible while it shall be
@@ -635,74 +646,138 @@ angular
 				$scope.dialog.remove();
 			}
 		};
-				
+
 		//Passes the callback method to the allowed_directive
 		setTimeout(function() {
 			allowed_directive_service.passDirectiveCallback($scope.initializePack.initializeCallback);
 		}, 0);
-		
+
 		/**
 		 * Loads census data for a given coordinate pair. Saves
 		 * the returned data in the census data cache.
 		 */
+//		$scope.showCensus = function(time, lat, lng) {
+//		$scope.dialog = loading_overlay.createLoadOverlay("Loading census data...", this,"map_content");
+//		census_api.sendRequest(lat,lng,function(resp, id) {
+//		var count = 0;
+//		var persons = 0;
+//		var households = 0;
+//		var averages = [];
+//		if (typeof resp.data !== 'undefined') {
+
+//		// Calculate the averages from the fetched data.
+//		for ( var num in resp.data[0]) {
+//		persons = persons + parseInt(resp.data[0][num]) * (count + 1);
+//		households = households + parseInt(resp.data[0][num]);
+//		if (count === 6) {
+//		if (households !== 0) {
+//		averages[averages.length] = Number((persons / households).toFixed(1));
+//		} else {
+//		averages[averages.length] = 0;
+//		}
+//		persons = 0;
+//		households = 0;
+//		}
+
+//		count++;
+//		count = count % 7;
+//		}
+
+//		$scope.censusData.blockData = resp;
+//		delete $scope.censusData.blockData.variables;
+//		delete $scope.censusData.blockData.data;
+//		for ( var index in $scope.censusData.blockData) {
+//		if ($scope.censusData.blockData[index] === null) {
+//		$scope.censusData.blockData[index] = "No information in census response";
+//		}
+//		}
+//		} else {
+//		$scope.censusData.blockData = {};
+//		$scope.censusData.blockData.state = "No response from census";
+//		$scope.censusData.blockData.county = "No response from census";
+//		$scope.censusData.blockData.tract = "No response from census";
+//		$scope.censusData.blockData.blockGroup = "No response from census";
+//		$scope.censusData.blockData.block = "No response from census";
+//		$scope.censusData.blockData.place_name = "No response from census";
+//		for (var i = 0; i < 3; i++) {
+//		averages[i] = "No response from census";
+//		}
+//		}
+
+//		$scope.$apply(function() {
+//		$scope.censusData.averages = {};
+//		$scope.censusData.averages.owner = averages[0];
+//		$scope.censusData.averages.renter = averages[1];
+//		$scope.censusData.averages.total = averages[2];
+//		$scope.dialog.remove();
+//		});
+//		}, true, -1);
+//		};
+
+//		-----------------------Edited by Pramod to test Income data-------------------------------
 		$scope.showCensus = function(time, lat, lng) {
-			$scope.dialog = loading_overlay.createLoadOverlay("Loading census data ...", this,"map_content");
+			$scope.dialog = loading_overlay.createLoadOverlay("Loading census data...", this, "map_content");
 			census_api.sendRequest(lat,lng,function(resp, id) {
-				var count = 0;
-				var persons = 0;
-				var households = 0;
-				var averages = [];
+
+				// console.log("resp: ");
+				// console.log(resp);
+
+//				console.log("resp data:");
+//				console.log(resp.data);
+
 				if (typeof resp.data !== 'undefined') {
-					
-					// Calculate the averages from the fetched data.
-					for ( var num in resp.data[0]) {
-						persons = persons + parseInt(resp.data[0][num]) * (count + 1);
-						households = households + parseInt(resp.data[0][num]);
-						if (count === 6) {
-							if (households !== 0) {
-								averages[averages.length] = Number((persons / households).toFixed(1));
-							} else {
-								averages[averages.length] = 0;
-							}
-							persons = 0;
-							households = 0;
-						}
-						
-						count++;
-						count = count % 7;
-					}
-					
+
 					$scope.censusData.blockData = resp;
-					delete $scope.censusData.blockData.variables;
-					delete $scope.censusData.blockData.data;
+					// console.log("blockData");
+					// console.log($scope.censusData.blockData);
+//					delete $scope.censusData.blockData.variables;
+//					delete $scope.censusData.blockData.data;
 					for ( var index in $scope.censusData.blockData) {
 						if ($scope.censusData.blockData[index] === null) {
-							$scope.censusData.blockData[index] = "No information in census response";
+							$scope.censusData.blockData[index] = "Information unavailable.";
 						}
 					}
-				} else {
+				} else { // if resp.data == undefined
+					console.log("blockData: No response from census");
 					$scope.censusData.blockData = {};
-					$scope.censusData.blockData.state = "No response from census";
-					$scope.censusData.blockData.county = "No response from census";
-					$scope.censusData.blockData.tract = "No response from census";
-					$scope.censusData.blockData.blockGroup = "No response from census";
-					$scope.censusData.blockData.block = "No response from census";
-					$scope.censusData.blockData.place_name = "No response from census";
-					for (var i = 0; i < 3; i++) {
-						averages[i] = "No response from census";
-					}
+					$scope.censusData.blockData.state = "Information unavailable.";
+					$scope.censusData.blockData.county = "Information unavailable.";
+					$scope.censusData.blockData.tract = "Information unavailable.";
+					$scope.censusData.blockData.blockGroup = "Information unavailable.";
+					$scope.censusData.blockData.block = "Information unavailable.";
+					$scope.censusData.blockData.place_name = "Information unavailable.";
 				}
-				
-				$scope.$apply(function() {
-					$scope.censusData.averages = {};
-					$scope.censusData.averages.owner = averages[0];
-					$scope.censusData.averages.renter = averages[1];
-					$scope.censusData.averages.total = averages[2];
+
+				$scope.$apply(function() { //function to get the values from "Data" subarray
+					//This logic also works. 
+/*					for(var idx in resp.data[0]){
+					console.log("resp.data[0]["+idx+"]"); console.log(resp.data[0][idx]);
+					$scope.censusData.arrayData.income = resp.data[0][idx]; 
+					console.log("for/censusData.arrayData.income: "); console.log($scope.censusData.arrayData.income);
+					$scope.censusData.arrayData.population = resp.data[0][idx];
+					console.log("for/censusData.arrayData.population: "); console.log($scope.censusData.arrayData.population);
+					$scope.censusData.arrayData.income_per_capita = resp.data[0][idx];
+					console.log("for/censusData.arrayData.income_per_capita: "); console.log($scope.censusData.arrayData.income_per_capita);
+					} */
+
+					var variables = $scope.censusData.blockData.variables;
+					// console.log("income[variable]"); console.log(resp.data[0][variables[0]]);
+					$scope.censusData.arrayData.income = resp.data[0][variables[0]];
+					
+					// console.log("population[variable]"); console.log(resp.data[0][variables[1]]);
+					$scope.censusData.arrayData.population = resp.data[0][variables[1]];
+					
+					// console.log("percapita[variable]"); console.log(resp.data[0][variables[2]]);
+					$scope.censusData.arrayData.income_per_capita = resp.data[0][variables[2]];
+
 					$scope.dialog.remove();
 				});
-			}, true, -1);
+
+			},// inner callback function 
+			true, -1);
 		};
-		
+//		-----------------------End--Edited by Pramod to test Income data-------------------------------
+
 		/**
 		 * Starts a download for all map data as a csv-file.
 		 * Currently, the download includes all markers of the
@@ -741,7 +816,7 @@ angular
 			}
 			var dayString = "=\"" + month + "/" + day + "/" + date.getFullYear() + "\"";
 			census_api.csvDownload(coords,dayString,$scope.controlScope.userData.currentSubject,function(percent) {
-				
+
 				//Hides progress bar if export is done
 				var phase = $scope.$root.$$phase;
 				if (phase === '$apply' || phase === '$digest') {
@@ -766,7 +841,7 @@ angular
 				}
 			});
 		};
-		
+
 		/**
 		 * Exports the last 1000 locations of the user as CSV
 		 * file. Formated to be openable in Excel.
@@ -794,7 +869,7 @@ angular
 			link.click();
 			document.body.removeChild(link);
 		};
-		
+
 		$scope.initializePack.initializeCallback();
 	}
 });

@@ -1633,9 +1633,9 @@
             break;
         }
       }
-//----------------------MADE BY ME-------------------------------------------------------------      
+//----------------------ADDED BY STEPHAN-------------------------------------------------------------      
       var noBlkGrp = false;
-//---------------------END OF MADE BY ME-------------------------------------------------------------
+//---------------------END OF ADDED BY STEPHAN-------------------------------------------------------------
   
       // Only do this if the previous switch had no effect
       // (i.e. no contianer)
@@ -1654,7 +1654,7 @@
             
             
             
-//----------------------MADE BY ME-------------------------------------------------------------
+//----------------------ADDED BY STEPHAN-------------------------------------------------------------
                     
           case "block":
         	  if (req.sublevel) {
@@ -1670,7 +1670,7 @@
         		  cascade = true;
               }
                               
-//---------------------END OF MADE BY ME-------------------------------------------------------------
+//---------------------END OF ADDED BY STEPHAN-------------------------------------------------------------
                     
                     
           case "blockGroup":
@@ -1773,9 +1773,9 @@
       if (requiredVariables.hasOwnProperty(req.api) && requiredVariables[req.api].hasOwnProperty(req.year)) {
         for (var i = 0; i < requiredVariables[req.api][req.year].length; i++) {
           if (req.variables.indexOf(requiredVariables[req.api][req.year][i]) == -1) {
-//-------------------------MADE BY ME----------------------------------------------------------------
+//-------------------------ADDED BY STEPHAN----------------------------------------------------------------
         	  req.variables.push(requiredVariables[req.api][req.year][i]);
-//---------------------END OF MADE BY ME-------------------------------------------------------------
+//---------------------END OF ADDED BY STEPHAN-------------------------------------------------------------
           }
         }
       }
@@ -1845,9 +1845,9 @@
         "place": "PLACE",
         "county": "COUNTY",
         "blockGroup": "BLKGRP",
-//----------------------MADE BY ME-------------------------------------------------------------
+//----------------------ADDED BY STEPHAN-------------------------------------------------------------
         "block": "BLOCK"
-//---------------------END OF MADE BY ME-------------------------------------------------------
+//---------------------END OF ADDED BY STEPHAN-------------------------------------------------------
 
       };
 
@@ -2050,9 +2050,9 @@
           request["county"] = fipsData["COUNTY"];
           request["tract"] = fipsData["TRACT"];
           request["blockGroup"] = fipsData["BLKGRP"];
-//----------------------MADE BY ME-------------------------------------------------------------
+//----------------------ADDED BY STEPHAN-------------------------------------------------------------
           request["block"] = fipsData["BLOCK"];          
-//---------------------END OF MADE BY ME-------------------------------------------------------
+//---------------------END OF ADDED BY STEPHAN-------------------------------------------------------
           
           if ("Incorporated Places" in geographies && geographies["Incorporated Places"].length) {
             request["place"] = geographies["Incorporated Places"][0]["PLACE"];

@@ -21,7 +21,7 @@ angular.module('madcap-analysis')
 		   * the census bureau or the cache when data with the same coordinates has been loaded before.
 		   * @param array: The coordinate array
 		   * @param day: The date the data belongs to
-		   * @param updater: A method which gets called continuosly throughout the download process.
+		   * @param updater: A method which gets called continuously throughout the download process.
 		   * 				Can be used to update a progress bar for example
 		   */
 		csvDownload : function(array, day, user, updater)	{
@@ -58,63 +58,89 @@ angular.module('madcap-analysis')
 				}
 			}
 
+//			function requestLookup(passedI)	{
+//				console.log("requestLookup called");
+//				self.sendRequest(array[passedI].lat, array[passedI].lng, function(resp, id)	{
+//					if(myId !== exportId){
+//						console.log("returning");
+//						return;
+//					}
+//					if(typeof resp.data === 'undefined')	{
+//						console.log("undefined");
+//						requestLookup(id);
+//					}
+//					else	{
+//						
+//						console.log("PassedI: "+ passedI);
+//						console.log("array[passedI].lat, array[passedI].lng: "+array[passedI].lat + array[passedI].lng);
+//						console.log("response: "+ resp);
+//						
+//						progress++;		
+//						var count = 0;
+//						var persons = 0;
+//						var households = 0;
+//						var averages = [];
+//						
+//						for(var num in resp.data[0])	{
+//							if(num !== 'NAME')	{
+//							
+//								persons = persons + parseInt(resp.data[0][num])*(count+1);
+//								households = households + parseInt(resp.data[0][num]);
+//							
+//								count++;
+//								
+//								if(count === 7){
+//									if(households !== 0)	{
+//										averages[averages.length] = Number((persons/households).toFixed(1));
+//									}
+//									else	{
+//										averages[averages.length] = 0;
+//									}
+//									persons = 0;
+//									households = 0;
+//									count = 0;
+//								}
+//							}
+//						}
+//						data[id].block = resp.block; 
+//						data[id].avOwner = averages[0]; 
+//						data[id].avRenter = averages[1];
+//						data[id].avTotal = averages[2]; 
+//					
+//						if(--calls === 0){
+//							createCsv(helper.refineDataOld(data));
+//						}
+//						updateDuringFetch();
+//					}
+//					
+//					if(progress===threshold){
+//						if(myId === exportId)	{
+//							sendBatchRequest(progress, stepSize);
+//						}
+//						else	{
+//							progressUpdate(-1);
+//						}
+//					}
+//				}, true, passedI);					
+//			}
+			
+//-----------------------------Added by Pramod-------------------			
 			function requestLookup(passedI)	{
+				// console.log("requestLookup for "+ passedI);
 				self.sendRequest(array[passedI].lat, array[passedI].lng, function(resp, id)	{
 					if(myId !== exportId){
+						console.log("returning");
 						return;
 					}
 					if(typeof resp.data === 'undefined')	{
+						console.log("undefined");
 						requestLookup(id);
 					}
-					else	{
-						progress++;		
-						var count = 0;
-						var persons = 0;
-						var households = 0;
-						var averages = [];
-						
-						for(var num in resp.data[0])	{
-							if(num !== 'NAME')	{
-							
-								persons = persons + parseInt(resp.data[0][num])*(count+1);
-								households = households + parseInt(resp.data[0][num]);
-							
-								count++;
-								
-								if(count === 7){
-									if(households !== 0)	{
-										averages[averages.length] = Number((persons/households).toFixed(1));
-									}
-									else	{
-										averages[averages.length] = 0;
-									}
-									persons = 0;
-									households = 0;
-									count = 0;
-								}
-							}
-						}
-						data[id].block = resp.block; 
-						data[id].avOwner = averages[0]; 
-						data[id].avRenter = averages[1];
-						data[id].avTotal = averages[2]; 
-					
-						if(--calls === 0){
-							createCsv(helper.refineDataOld(data));
-						}
-						updateDuringFetch();
-					}
-					
-					if(progress===threshold){
-						if(myId === exportId)	{
-							sendBatchRequest(progress, stepSize);
-						}
-						else	{
-							progressUpdate(-1);
-						}
-					}
+					// console.log("array[passedI].lat, array[passedI].lng: "+array[passedI].lat + array[passedI].lng);
+					// console.log("response: "+ resp);
 				}, true, passedI);					
 			}
+//------------------------End--Added by Pramod-------------------	
 			
 			/**
 			 * Calls the update method when the progress grew by one percent
@@ -171,34 +197,53 @@ angular.module('madcap-analysis')
         	 var request = {
                      "lat": lat,
                      "lng": lng,
-                     "level": "block",
+                     "level": "place",
+//                     "variables": [
+//                    	/* 
+//                    	 * (2010) Renter occupied: !! x-person household
+//                    	 * H016001x represents x number of persons in household
+//                    	 */
+//                        "H0160011", 
+//                        "H0160012", 
+//                        "H0160013", 
+//                        "H0160014", 
+//                        "H0160015", 
+//                        "H0160016", 
+//                        "H0160017", 
+//                         
+//                        /*
+//                         * 2010 Owner occupied houses. 
+//                         * 1-7 person per household
+//                         */
+//                        "H0160003",
+//                        "H0160004",
+//                        "H0160005",
+//                        "H0160006",
+//                        "H0160007",
+//                        "H0160008",
+//                        "H0160009",
+//                        
+//                        /*
+//                         * 2010 Occupied housing units
+//                         * 1-7 persons per household
+//                         */
+//                        "H0130002",
+//                        "H0130003",
+//                        "H0130004",
+//                        "H0130005",
+//                        "H0130006",
+//                        "H0130007",
+//                        "H0130008",
+//                     ],
+//                     "api": "sf1", //decennial list
+//                     "year": "2010"
                      "variables": [
-                        "H0160011",
-                        "H0160012",
-                        "H0160013",
-                        "H0160014",
-                        "H0160015",
-                        "H0160016",
-                        "H0160017",
-                        
-                        "H0160003",
-                        "H0160004",
-                        "H0160005",
-                        "H0160006",
-                        "H0160007",
-                        "H0160008",
-                        "H0160009",
-                        
-                        "H0130002",
-                        "H0130003",
-                        "H0130004",
-                        "H0130005",
-                        "H0130006",
-                        "H0130007",
-                        "H0130008",
+                         "income",
+                         "population",
+                         "income_per_capita"
                      ],
-                     "api": "sf1",
-                     "year": "2010"
+                     "api": "acs5", //american community survey 
+                     "year": "2014"
                  };
 
         	if(!callAPI)	{
