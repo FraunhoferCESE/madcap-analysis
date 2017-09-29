@@ -186,7 +186,7 @@ module('controlUnitV2').
 		// Listener to the datepicker. Sets the unixRest, to which the visualizations listen
     	$scope.$watch('dt.value', function(newValue) { 
 			$scope.eventTrigger = 'date';
-    		if(typeof newValue !== 'undefined' && newValue !== 'Please select a date ...')	{
+    		if(typeof newValue !== 'undefined' && newValue !== 'Please select a date...')	{
 				$scope.dateData.lastUnixRest = $scope.dateData.unixRest; 
 				$scope.dateData.unixRest = newValue - ((newValue-(newValue.getTimezoneOffset()*60000))%86400000);
 			}
@@ -197,7 +197,7 @@ module('controlUnitV2').
 			for(var i=0; i<resp.returned.length; i++)	{
 				$scope.userData.users[i+1] = resp.returned[i]+""; 
 			}
-			$scope.userData.users[0] = 'Please choose a user ...';	
+			$scope.userData.users[0] = 'Please choose a user...';	
 			$scope.$apply(function(){
 				$scope.userData.chosen_user_for_gui = $scope.userData.users[0];	
 			});

@@ -23,6 +23,7 @@
 			}
 		}
 		if(window.location.href.substring(0,8) !== "https://") {
+      console.log(window.location.href.substring(0,8))
 			window.location = "https://" + window.location.href.substring(7,window.location.href.length);
 		}
 		else	{

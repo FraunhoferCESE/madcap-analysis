@@ -1587,6 +1587,15 @@
 
       return CitySdk.ajaxRequest(url, true);
     }
+    
+    //---------------Added by Pramod--------------
+    getFipsFromFcc(fLat,fLng){
+        let fccUrl = `http://data.fcc.gov/api/block/2010/find?showall=true&format=json&`;
+        fccUrl += `latitude=${fLat}&longitude=${fLng}`;
+
+        return CitySDK.ajaxRequest(fccUrl, true);
+      }
+    //---------End----Added by Pramod-------------
 
     addressToFips(street, city, state) {
       let url = `${CensusModule.defaultEndpoints.geoCoderUrl}address`;
@@ -2040,37 +2049,71 @@
 
       // Check if we have latitude/longitude values.
       // If we do, call the geocoder and get the appropriate FIPS
+//      if ("lat" in request && "lng" in request && !("geocoded" in request)) {
+//        this.latLngToFips(request.lat, request.lng).then((response) => {
+//          //TODO: Expand this to support multiple blocks
+//          let geographies = response.result.geographies;
+//          let fipsData = geographies["2010 Census Blocks"][0];
+//
+//          request["state"] = fipsData["STATE"];
+//          request["county"] = fipsData["COUNTY"];
+//          request["tract"] = fipsData["TRACT"];
+//          request["blockGroup"] = fipsData["BLKGRP"];
+////----------------------ADDED BY STEPHAN-------------------------------------------------------------
+//          request["block"] = fipsData["BLOCK"];          
+////---------------------END OF ADDED BY STEPHAN-------------------------------------------------------
+//          
+//          if ("Incorporated Places" in geographies && geographies["Incorporated Places"].length) {
+//            request["place"] = geographies["Incorporated Places"][0]["PLACE"];
+//            request["place_name"] = geographies["Incorporated Places"][0]["NAME"];
+//          } else {
+//            request["place"] = null;
+//            request["place_name"] = null;
+//          }
+//
+//          request.geocoded = true;
+//          module.apiRequest(request, callback);
+//        });
+//
+//        // We return because the callback will fix our request into FIPs,
+//        // and then call the request again
+//        return;
+//      }
+
+//---------------Modified by Pramod-----------------------------------
       if ("lat" in request && "lng" in request && !("geocoded" in request)) {
-        this.latLngToFips(request.lat, request.lng).then((response) => {
-          //TODO: Expand this to support multiple blocks
-          let geographies = response.result.geographies;
-          let fipsData = geographies["2010 Census Blocks"][0];
-
-          request["state"] = fipsData["STATE"];
-          request["county"] = fipsData["COUNTY"];
-          request["tract"] = fipsData["TRACT"];
-          request["blockGroup"] = fipsData["BLKGRP"];
-//----------------------ADDED BY STEPHAN-------------------------------------------------------------
-          request["block"] = fipsData["BLOCK"];          
-//---------------------END OF ADDED BY STEPHAN-------------------------------------------------------
-          
-          if ("Incorporated Places" in geographies && geographies["Incorporated Places"].length) {
-            request["place"] = geographies["Incorporated Places"][0]["PLACE"];
-            request["place_name"] = geographies["Incorporated Places"][0]["NAME"];
-          } else {
-            request["place"] = null;
-            request["place_name"] = null;
-          }
-
-          request.geocoded = true;
-          module.apiRequest(request, callback);
-        });
-
-        // We return because the callback will fix our request into FIPs,
-        // and then call the request again
-        return;
+          this.latLngToFips(request.lat, request.lng).then((response) => {
+            //TODO: Expand this to support multiple blocks
+            let geographies = response.result.geographies;
+            let fipsData = geographies["2010 Census Blocks"][0];
+            
+            if(fipsData.length != 0){
+                request["state"] = fipsData["STATE"];
+                request["county"] = fipsData["COUNTY"];
+                request["tract"] = fipsData["TRACT"];
+                request["blockGroup"] = fipsData["BLKGRP"];
+        //----------------------ADDED BY STEPHAN-------------------------------------------------------------
+                request["block"] = fipsData["BLOCK"];          
+        //---------------------END OF ADDED BY STEPHAN-------------------------------------------------------
+                
+                if ("Incorporated Places" in geographies && geographies["Incorporated Places"].length) {
+                  request["place"] = geographies["Incorporated Places"][0]["PLACE"];
+                  request["place_name"] = geographies["Incorporated Places"][0]["NAME"];
+                } else {
+                  request["place"] = null;
+                  request["place_name"] = null;
+                }
+              }
+            request.geocoded = true;
+            module.apiRequest(request, callback);
+          });
+       // We return because the callback will fix our request into FIPs,
+          // and then call the request again
+          return;
       }
-
+//----------------End----- Modified by Pramod-------------------------
+      
+      
       // Check to see if geography is complete as required by api
       if ("geographyValidForAPI" in request) {
         if (request.geographyValidForAPI == false) {
@@ -2170,7 +2213,7 @@
                   let index = response[0].indexOf(validVariable);
 
                   currentDataObject[currentVariable] = response[1][index];
-                }
+                }else console.log(currentVariable + " not found in "+ request.api+ request.year);
 
                 if (currentDataObject[currentVariable] && module.isNormalizable(currentVariable)
                     && module.parseToValidVariable("population", request.api, request.year)) {
@@ -2402,9 +2445,8 @@
   }
 
   CensusModule.version = "0.0.1";
-  CensusModule.defaultApi = "acs5";
+  CensusModule.defaultApi = "acs5"; 
   CensusModule.defaultLevel = "blockGroup";
-
   CensusModule.defaultEndpoints = {
     acsVariableDictionaryURL: "https://api.census.gov/data/",
     geoCoderUrl: "https://geocoding.geo.census.gov/geocoder/geographies/",

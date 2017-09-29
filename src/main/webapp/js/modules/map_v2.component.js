@@ -29,7 +29,7 @@ angular
 		$scope.noData = false;
 
 		/*Count the running processes. The last running process is the one which gets shown on the view> Since all
-		 * requests take the same time, this implements a last-in-last-out startegy for the sowing of the data*/
+		 * requests take the same time, this implements a last-in-last-out strategy for the showing of the data*/
 		$scope.processTickets = {};
 
 		// All the data we need to show the Google Map, markers and the heatmap layer. Also contains map-related setup data
@@ -115,11 +115,13 @@ angular
 				latitude : "No data requested.",
 				origin : "No data requested.",
 				accuracy : "No data requested.",
+				//------------------Edited by Pramod--------------------
 				arrayData: {
 					income : "No data requested.",
 					population : "No data requested.",
 					income_per_capita : "No data requested."
 				}
+				//------------------End--Edited by Pramod--------------------
 //				averages : {
 //				owner : "No data requested.",
 //				renter : "No data requested.",
@@ -337,7 +339,7 @@ angular
 					$scope.noData = false;
 					var entries = resp.items;
 
-					//reates the mock
+					//creates the mock
 					var mock = {
 							mvcArray: new google.maps.MVCArray(),
 							markers: [],
@@ -383,7 +385,7 @@ angular
 						mock.markers[i].origin = entries[i].origin;
 						mock.markers[i].extras = entries[i].extras;
 
-						// Sets the origin and changes the markers color, depending on teh origin
+						// Sets the origin and changes the markers colour, depending on teh origin
 						if(mock.markers[i].origin === 'network')	{
 							mock.markers[i].origin = entries[i].extras;
 						}
@@ -404,11 +406,11 @@ angular
 						}
 
 						mock.markers[i].circle = new google.maps.Circle({
-							strokeColor: '#FF0000',
+							strokeColor: '#0000FF', //Pramod changed circle colour to blue from red.
 							strokeOpacity: 0.8,
 							strokeWeight: 2,
 							map: null,
-							fillColor: '#FF0000',
+							fillColor: '#0000FF', //Pramod changed circle colour to blue from red.
 							fillOpacity: 0.35,
 							center: mock.markers[i].getPosition(),
 							radius: mock.markers[i].accuracy
@@ -714,30 +716,12 @@ angular
 //		}, true, -1);
 //		};
 
-//		-----------------------Edited by Pramod to test Income data-------------------------------
+//		-----------------------Edited by Pramod-------------------------------
 		$scope.showCensus = function(time, lat, lng) {
 			$scope.dialog = loading_overlay.createLoadOverlay("Loading census data...", this, "map_content");
 			census_api.sendRequest(lat,lng,function(resp, id) {
 
-				// console.log("resp: ");
-				// console.log(resp);
-
-//				console.log("resp data:");
-//				console.log(resp.data);
-
-				if (typeof resp.data !== 'undefined') {
-
-					$scope.censusData.blockData = resp;
-					// console.log("blockData");
-					// console.log($scope.censusData.blockData);
-//					delete $scope.censusData.blockData.variables;
-//					delete $scope.censusData.blockData.data;
-					for ( var index in $scope.censusData.blockData) {
-						if ($scope.censusData.blockData[index] === null) {
-							$scope.censusData.blockData[index] = "Information unavailable.";
-						}
-					}
-				} else { // if resp.data == undefined
+				if (typeof resp.data === 'undefined') {
 					console.log("blockData: No response from census");
 					$scope.censusData.blockData = {};
 					$scope.censusData.blockData.state = "Information unavailable.";
@@ -746,11 +730,22 @@ angular
 					$scope.censusData.blockData.blockGroup = "Information unavailable.";
 					$scope.censusData.blockData.block = "Information unavailable.";
 					$scope.censusData.blockData.place_name = "Information unavailable.";
-				}
 
-				$scope.$apply(function() { //function to get the values from "Data" subarray
-					//This logic also works. 
-/*					for(var idx in resp.data[0]){
+				} else { // if resp.data !== undefined
+					$scope.censusData.blockData = resp;
+					// console.log("blockData");
+					// console.log($scope.censusData.blockData);
+
+					for ( var index in $scope.censusData.blockData) {
+						if ($scope.censusData.blockData[index] === null) {
+							$scope.censusData.blockData[index] = "Information unavailable.";
+						}
+					}
+
+
+					$scope.$apply(function() { //function to get the values from "Data" subarray
+						//This logic also works. 
+						/*					for(var idx in resp.data[0]){
 					console.log("resp.data[0]["+idx+"]"); console.log(resp.data[0][idx]);
 					$scope.censusData.arrayData.income = resp.data[0][idx]; 
 					console.log("for/censusData.arrayData.income: "); console.log($scope.censusData.arrayData.income);
@@ -760,23 +755,23 @@ angular
 					console.log("for/censusData.arrayData.income_per_capita: "); console.log($scope.censusData.arrayData.income_per_capita);
 					} */
 
-					var variables = $scope.censusData.blockData.variables;
-					// console.log("income[variable]"); console.log(resp.data[0][variables[0]]);
-					$scope.censusData.arrayData.income = resp.data[0][variables[0]];
-					
-					// console.log("population[variable]"); console.log(resp.data[0][variables[1]]);
-					$scope.censusData.arrayData.population = resp.data[0][variables[1]];
-					
-					// console.log("percapita[variable]"); console.log(resp.data[0][variables[2]]);
-					$scope.censusData.arrayData.income_per_capita = resp.data[0][variables[2]];
+						var variables = $scope.censusData.blockData.variables;
+						// console.log("income[variable]"); console.log(resp.data[0][variables[0]]);
+						$scope.censusData.arrayData.income = resp.data[0][variables[0]];
 
-					$scope.dialog.remove();
-				});
+						// console.log("population[variable]"); console.log(resp.data[0][variables[1]]);
+						$scope.censusData.arrayData.population = resp.data[0][variables[1]];
 
+						// console.log("percapita[variable]"); console.log(resp.data[0][variables[2]]);
+						$scope.censusData.arrayData.income_per_capita = resp.data[0][variables[2]];
+
+						$scope.dialog.remove();
+					});
+				}// end if !undefined
 			},// inner callback function 
 			true, -1);
 		};
-//		-----------------------End--Edited by Pramod to test Income data-------------------------------
+//		-----------------------End--Edited by Pramod-------------------------------
 
 		/**
 		 * Starts a download for all map data as a csv-file.
