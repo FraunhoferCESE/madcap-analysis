@@ -160,7 +160,7 @@ public class SecurityEndpoint {
 		// Checking if there is a logged in user
 		if(user == null){
 			System.out.println("User: NULL");
-			throw new OAuthRequestException("ERROR: User is null! Value:" + user);
+			throw new OAuthRequestException("ERROR: User is null! Value: NULL");
 		}
 		System.out.println("User: " + user.getEmail());
 		ObjectifyService.begin();
