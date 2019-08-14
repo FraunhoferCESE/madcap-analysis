@@ -11,15 +11,15 @@
 	<properties>
 		<app.id>madcap-dev1</app.id>
 		<app.version>2</app.version>
-		<appengine.version>1.9.54</appengine.version>
-		<gcloud.plugin.version>2.0.9.121.v20160815</gcloud.plugin.version>
+		<appengine.version>1.9.76</appengine.version>
+		<gcloud.plugin.version>2.0.9.133.v201611104</gcloud.plugin.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<maven.compiler.source>1.7</maven.compiler.source>
-		<maven.compiler.target>1.7</maven.compiler.target>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.showDeprecation>true</maven.compiler.showDeprecation>
 		<archiveClasses>true</archiveClasses>
-		<findbugs.version>3.0.2</findbugs.version>
+		<findbugs.version>3.0.5</findbugs.version>
 	</properties>
 
 	<prerequisites>
@@ -31,7 +31,7 @@
 		<dependency>
 			<groupId>com.googlecode.objectify</groupId>
 			<artifactId>objectify</artifactId>
-			<version>5.1.13</version>
+			<version>6.0.4</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.appengine</groupId>
@@ -46,7 +46,7 @@
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>servlet-api</artifactId>
-			<version>2.5</version>
+			<version>3.0-alpha-1</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -59,7 +59,7 @@
 		
     		<groupId>org.json</groupId>
     		<artifactId>json</artifactId>
-    		<version>20160810</version>
+    		<version>20190722</version>
 		</dependency>
 		
 	
@@ -67,7 +67,7 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.12</version>
+			<version>4.13-beta-3</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -91,7 +91,7 @@
 	<dependency>
 <groupId>com.google.guava</groupId>
 <artifactId>guava</artifactId>
-<version>20.0</version>
+<version>28.0-jre</version>
 </dependency>
 </dependencies>
 
@@ -103,7 +103,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-project-info-reports-plugin</artifactId>
-				<version>2.9</version>
+				<version>3.0.0</version>
 			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
@@ -128,7 +128,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>versions-maven-plugin</artifactId>
-				<version>2.3</version>
+				<version>2.7</version>
 				<executions>
 					<execution>
 						<phase>compile</phase>
@@ -143,7 +143,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
-				<version>2.6</version>
+				<version>3.2.3</version>
 				<configuration>
 					<webXml>${project.build.directory}/generated-sources/appengine-endpoints/WEB-INF/web.xml</webXml>
 					<!-- <archiveClasses>true</archiveClasses> -->
@@ -166,7 +166,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-antrun-plugin</artifactId>
-				<version>1.7</version>
+				<version>1.8</version>
 				<executions>
 					<execution>
 						<phase>process-classes</phase>
@@ -230,6 +230,11 @@
 				<configuration>
 					<set_default>true</set_default>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>com.google.appengine</groupId>
+				<artifactId>appengine-java-sdk</artifactId>
+				<version>1.9.76</version>
 			</plugin>
 		</plugins>
 		<pluginManagement>
