@@ -34,7 +34,7 @@ import static org.fraunhofer.cese.madcap.analysis.OfyService.ofy;
  * @author Stefan Hintzen
  */
 @Api(name = "analysisEndpoint", 
-	version = "v1", 
+	version = "v1",
 	namespace = @ApiNamespace(ownerDomain = "madcap.cese.fraunhofer.org", ownerName = "madcap.cese.fraunhofer.org", packagePath = "analysis"),
 	clientIds = Constants.WEB_CLIENT_ID)
 public class AnalysisEndpoint {

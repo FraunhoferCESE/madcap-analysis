@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?><web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.5" xmlns="http://java.sun.com/xml/ns/javaee" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
     <servlet>
-        <servlet-name>SystemServiceServlet</servlet-name>
-        <servlet-class>com.google.api.server.spi.SystemServiceServlet</servlet-class>
+        <servlet-name>EndpointsServlet</servlet-name>
+        <servlet-class>com.google.api.server.spi.EndpointsServlet</servlet-class>
         <init-param>
             <param-name>services</param-name>
             <param-value>org.fraunhofer.cese.madcap.analysis.AnalysisEndpoint,org.fraunhofer.cese.madcap.analysis.SecurityEndpoint</param-value>
         </init-param>
     </servlet>
     <servlet-mapping>
-        <servlet-name>SystemServiceServlet</servlet-name>
-        <url-pattern>/_ah/spi/*</url-pattern>
+        <servlet-name>EndpointsServlet</servlet-name>
+        <url-pattern>/_ah/api/*</url-pattern>
     </servlet-mapping>
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>
