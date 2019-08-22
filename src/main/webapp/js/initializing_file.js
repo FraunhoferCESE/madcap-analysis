@@ -22,17 +22,16 @@
 				document.getElementById('loadmessage').innerHTML = "Checking user ...";
 				gapi.auth.authorize({client_id: client_id_dev ,scope: 'https://www.googleapis.com/auth/userinfo.email', immediate: true}, auth);
 			}
-			console.log("here 9");
+			console.log("No. of push: 58 (for me to know when the changes are visible because it takes an arbitrary amount of time)");
 		}
-		/*if(window.location.href.substring(0,8) !== "https://") {
-      console.log(window.location.href.substring(0,8))
+		if(window.location.href.substring(0,8) !== "https://") {
+			console.log(window.location.href.substring(0,8))
 			window.location = "https://" + window.location.href.substring(7,window.location.href.length);
-		}*/
-		//else	{
+		} else {
 			gapi.client.load('oauth2', 'v2', con);
-			gapi.client.load('analysisEndpoint', 'v1', con, 'https://madcap-dev1.appspot.com/_ah/api');
-			gapi.client.load('securityEndpoint', 'v1', con, 'https://madcap-dev1.appspot.com/_ah/api');
-		//}
+			gapi.client.load('analysisEndpoint', 'v1', con, 'https://analysis-dot-madcap-dev1.appspot.com/_ah/api');
+			gapi.client.load('securityEndpoint', 'v1', con, 'https://analysis-dot-madcap-dev1.appspot.com/_ah/api');
+		}
 	}
   
   

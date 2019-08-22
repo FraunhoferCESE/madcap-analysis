@@ -23,6 +23,7 @@ import com.google.api.server.spi.config.ApiNamespace;
 import com.google.api.server.spi.config.Named;
 import com.google.appengine.api.oauth.OAuthRequestException;
 import com.google.appengine.api.users.User;
+import com.googlecode.objectify.Work;
 import com.googlecode.objectify.ObjectifyService;
 import static org.fraunhofer.cese.madcap.analysis.OfyService.ofy;
  
@@ -330,8 +331,17 @@ public class AnalysisEndpoint {
 
 		long times[] = getStartAndEnd(time);
 		
-		//Queries the ReverseHeartBeatEntry probes for the day
-		List<ReverseHeartBeatEntry> rhbe = ofy().load().type(ReverseHeartBeatEntry.class).filter("userID =",id).filter("timestamp >",times[0]).filter("timestamp <",times[1]).order("timestamp").list();
+		// Queries the ReverseHeartBeatEntry probes for the day
+		// List<ReverseHeartBeatEntry> rhbe = ofy().load().type(ReverseHeartBeatEntry.class).filter("userID =",id).filter("timestamp >",times[0]).filter("timestamp <",times[1]).order("timestamp").list();
+
+		// Replaced the call. RS 08/21/19
+		List<ReverseHeartBeatEntry> rhbe = ObjectifyService.run(new Work<List<ReverseHeartBeatEntry>>() {
+			@Override
+			public List<ReverseHeartBeatEntry> run() {
+				List<ReverseHeartBeatEntry> result = ofy().load().type(ReverseHeartBeatEntry.class).filter("userID =",id).filter("timestamp >",times[0]).filter("timestamp <",times[1]).order("timestamp").list();
+				return result;
+			}
+		});
 
 		if(rhbe != null && !rhbe.isEmpty() &&rhbe.get(0).getKind().equals("DEATHEND"))	{
 			rhbe.add(0, new ReverseHeartBeatEntry("DEATHSTART", times[0]));
@@ -357,7 +367,16 @@ public class AnalysisEndpoint {
 		
 		if(wantsMonth){
 			// Calculates the interrupted times for the whole month if required
-			List<ReverseHeartBeatEntry> rhbeMonth = ofy().load().type(ReverseHeartBeatEntry.class).filter("userID =",id).filter("timestamp >",times[2]).filter("timestamp <",times[3]).order("timestamp").list();
+			//List<ReverseHeartBeatEntry> rhbeMonth = ofy().load().type(ReverseHeartBeatEntry.class).filter("userID =",id).filter("timestamp >",times[2]).filter("timestamp <",times[3]).order("timestamp").list();
+			
+			List<ReverseHeartBeatEntry> rhbeMonth = ObjectifyService.run(new Work<List<ReverseHeartBeatEntry>>() {
+				@Override
+				public List<ReverseHeartBeatEntry> run() {
+					List<ReverseHeartBeatEntry> result = ofy().load().type(ReverseHeartBeatEntry.class).filter("userID =",id).filter("timestamp >",times[2]).filter("timestamp <",times[3]).order("timestamp").list();
+					return result;
+				}
+			});
+			
 			long deathTimeMonth = 0L;
 			long deathStartMonth = 0L;
 			int deathCountMonth = 0;
@@ -381,7 +400,16 @@ public class AnalysisEndpoint {
 		}
 		
 		// Gets the info about the smartphone
-		SystemInfoEntry userInfo = ofy().load().type(SystemInfoEntry.class).filter("userID =",id).first().now();
+		// SystemInfoEntry userInfo = ofy().load().type(SystemInfoEntry.class).filter("userID =",id).first().now();
+		
+		// Replaced the call. RS 08/21/19
+		SystemInfoEntry userInfo = ObjectifyService.run(new Work<SystemInfoEntry>() {
+			@Override
+			public SystemInfoEntry run() {
+				SystemInfoEntry userInfo = ofy().load().type(SystemInfoEntry.class).filter("userID =",id).first().now();
+				return userInfo;
+			}
+		});
 
 		returner[6] = userInfo.getManufacturer();
 		returner[7] = userInfo.getModel();
@@ -474,8 +502,28 @@ public class AnalysisEndpoint {
 			}
 
 			if(wantsMonth)	{
-				List<DataCollectionEntry> resultMonth = ofy().load().type(DataCollectionEntry.class).filter("userID =",id).filter("timestamp >=",startMonth).filter("timestamp <=",endMonth).order("timestamp").list();	
-				DataCollectionEntry firstOfMonth = ofy().load().type(DataCollectionEntry.class).filter("userID =",id).filter("timestamp <",startMonth).order("-timestamp").first().now();
+				
+				// List<DataCollectionEntry> resultMonth = ofy().load().type(DataCollectionEntry.class).filter("userID =",id).filter("timestamp >=",startMonth).filter("timestamp <=",endMonth).order("timestamp").list();	
+				
+				// Replaced the call. RS 08/21/19
+				List<DataCollectionEntry> resultMonth = ObjectifyService.run(new Work<List<DataCollectionEntry>>() {
+					@Override
+					public List<DataCollectionEntry> run() {
+						List<DataCollectionEntry> resultMonth = ofy().load().type(DataCollectionEntry.class).filter("userID =",id).filter("timestamp >=",startMonth).filter("timestamp <=",endMonth).order("timestamp").list();	
+						return resultMonth;
+					}
+				});
+				
+				// DataCollectionEntry firstOfMonth = ofy().load().type(DataCollectionEntry.class).filter("userID =",id).filter("timestamp <",startMonth).order("-timestamp").first().now();
+				
+				// Replaced the call. RS 08/21/19
+				DataCollectionEntry firstOfMonth = ObjectifyService.run(new Work<DataCollectionEntry>() {
+					@Override
+					public DataCollectionEntry run() {
+						DataCollectionEntry firstOfMonth = ofy().load().type(DataCollectionEntry.class).filter("userID =",id).filter("timestamp <",startMonth).order("-timestamp").first().now();
+						return firstOfMonth;
+					}
+				});
 				
 				// Gets month data into an on-off-chain, which spans of the whole timeframe.
 				if(firstOfMonth != null && resultMonth != null && !resultMonth.isEmpty()){
