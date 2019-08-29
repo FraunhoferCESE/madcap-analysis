@@ -14,6 +14,7 @@ import com.google.appengine.api.users.User;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
 import com.googlecode.objectify.ObjectifyService;
+import com.googlecode.objectify.Work;
 import static org.fraunhofer.cese.madcap.analysis.OfyService.ofy;
 
 import java.io.UnsupportedEncodingException;
@@ -87,7 +88,7 @@ public class SecurityEndpoint {
 			isUserValid(user);
 		}
 		catch(OAuthRequestException e)	{
-			return new EndpointReturnObject("false");			
+			return new EndpointReturnObject(e);			
 
 		}
 		return new EndpointReturnObject("true");
@@ -163,9 +164,20 @@ public class SecurityEndpoint {
 			throw new OAuthRequestException("ERROR: User is null! Value: NULL");
 		}
 		System.out.println("User: " + user.getEmail());
-		ObjectifyService.begin();
-		// Checking if the logged in user is registered 
-		UserInformation result = ofy().load().type(UserInformation.class).id(user.getEmail().toLowerCase()).now();
+		ObjectifyService.init();
+		
+		// registerClasses is called here. See documentation of the method at definition. 08/21/19 RS
+		OfyService.registerClasses();
+		//ObjectifyService.begin();
+		// Checking if the logged in user is registered
+		UserInformation result = ObjectifyService.run(new Work<UserInformation>() {
+			@Override
+			public UserInformation run() {
+				UserInformation result = ofy().load().type(UserInformation.class).id(user.getEmail().toLowerCase()).now();
+				return result;
+			}
+		});
+		//UserInformation result = ofy().load().type(UserInformation.class).id("name:"+user.getEmail().toLowerCase()).now();
 		System.out.println("User login result: " + result);
 		if(result != null){
 			return true;

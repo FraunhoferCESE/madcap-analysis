@@ -4,8 +4,8 @@
 	 * Calls auth(), when the libraries have been loaded.
 	 */
   function init() {
-	  
 		"use strict";
+		console.log("moin");
 	  	var client_id_dev = '611425056989-e5kvj5db6mhpdhsd2c420bpj80bkbo4q.apps.googleusercontent.com';
 	  	var client_id_product = '353945552589-0nsvnfceek9iclrb8amjhpn8aome60ej.apps.googleusercontent.com';
 	  	var apisToLoad = 3;
@@ -16,20 +16,21 @@
 		 * auth() gets called. IMPORTANT!: The value of apisToLoad has to match the numbers of
 		 * apis which get loaded
 		 */
-		function con(resp)	{
+		function con()	{
+			console.log(apisToLoad);
 			if(--apisToLoad === 0)	{
 				document.getElementById('loadmessage').innerHTML = "Checking user ...";
 				gapi.auth.authorize({client_id: client_id_dev ,scope: 'https://www.googleapis.com/auth/userinfo.email', immediate: true}, auth);
 			}
+			console.log("No. of push: 73 (for me to know when the changes are visible because it takes an arbitrary amount of time)");
 		}
 		if(window.location.href.substring(0,8) !== "https://") {
-      console.log(window.location.href.substring(0,8))
+			console.log(window.location.href.substring(0,8))
 			window.location = "https://" + window.location.href.substring(7,window.location.href.length);
-		}
-		else	{
-			gapi.client.load('oauth2','v2',con);
-			gapi.client.load('analysisEndpoint', 'v1', con, '//' + window.location.host + '/_ah/api');
-			gapi.client.load('securityEndpoint', 'v1', con, '//' + window.location.host + '/_ah/api');
+		} else {
+			gapi.client.load('oauth2', 'v2', con);
+			gapi.client.load('analysisEndpoint', 'v1', con, 'https://analysis-dot-madcap-dev1.appspot.com/_ah/api');
+			gapi.client.load('securityEndpoint', 'v1', con, 'https://analysis-dot-madcap-dev1.appspot.com/_ah/api');
 		}
 	}
   
@@ -41,6 +42,7 @@
    */
   function auth(oldResp) {
 	  "use strict";
+	  var propValue;
 	  if(!('access_token' in oldResp))	{
   		  gapi.client.securityEndpoint.login({"para" : encodeURI(window.location.href)}).execute(function(resp){
   			  window.location = resp.returned;

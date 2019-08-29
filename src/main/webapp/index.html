@@ -8,10 +8,14 @@
 	<meta name="keywords" content="ng-map,AngularJS,center">
 	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 		<meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; 
-	style-src 'self' data: gap: https://cdnjs.cloudflare.com https://maxcdn.bootstrapcdn.com 'unsafe-inline';
-	font-src 'self' data: gap: https://maxcdn.bootstrapcdn.com 'unsafe-inline';
-	media-src *; 
-	script-src-elem 'self' data: gap: https://cdnjs.cloudflare.com https://code.jquery.com https://maxcdn.bootstrapcdn.com https://d3js.org https://maps.google.com https://rawgit.com https://www.promisejs.org https://cdn-geoweb.s3.amazonaws.com https://apis.google.com https://maps.googleapis.com 'unsafe-inline';">
+	style-src * 'unsafe-inline';
+	font-src * 'unsafe-inline';
+	media-src * 'unsafe-inline';
+	img-src * 'self' data: https:; 
+	script-src 'self' 'unsafe-inline' 'unsafe-eval' *;
+	frame-src * 'unsafe-inline';
+	connect-src * 'unsafe-inline';
+	script-src-elem * 'unsafe-inline';">
 	<title>MADCAP Web Tool</title>
     <script>console.log("Version: 30-08-2017")</script>
     <script>console.log("Testing on: 30-08-2017")</script>
@@ -54,7 +58,6 @@
 	<script src="https://cdn-geoweb.s3.amazonaws.com/terraformer-arcgis-parser/1.0.4/terraformer-arcgis-parser.min.js"></script>
     <!--<script src="https://cdn.rawgit.com/uscensusbureau/citysdk/gh-pages/static/js/citysdk/core/citysdk.js"></script>-->
     
-    <script src="https://apis.google.com/js/client.js?onload=init"></script>
 	<script src="js/external_libs/mod_census.citysdk.js"></script>	
     
     <script src="js/base/madcap_analysis_base.module.js"></script> 
@@ -68,6 +71,7 @@
     <script src="js/madcap_analysis.config.js"></script> 
     <script src="js/initializing_file.js"></script> 
     <script src="js/visibility_filter.filter.js"></script> 
+	<script src="https://apis.google.com/js/client.js?onload=init"></script>
     
     <link rel="stylesheet" type="text/css" href="css/overlay_information.css">
     <link rel="stylesheet" type="text/css" href="css/row_alligner.css">

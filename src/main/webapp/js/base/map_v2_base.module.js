@@ -3,4 +3,3 @@
  *  defined in map_v2.component.js
  */
 angular.module('mapV2', ['ngMap', 'ngRoute', 'ui.bootstrap', 'rzModule']);
-

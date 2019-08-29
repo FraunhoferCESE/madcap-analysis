@@ -185,15 +185,20 @@ component('userV2', {
 			
 			var result = [];
 			var userRef = $scope.controlScope.userData.users;
+			var userRefLength = userRef.length;
 			if(!forAll)	{
 				userRef = [$scope.controlScope.userData.currentSubject];
+				userRefLength = 1;
 			}
 			$scope.controlScope.csvParameter.csvProgressUserInformation = 0;
-			var step = Math.floor(100/$scope.controlScope.userData.users.length);
+			var step = Math.floor(100/userRefLength);
 			$scope.controlScope.csvParameter.createCsvUserInformation = true;
 				
 			var userCount = 0;
-	    	for(var j=0; j<userRef.length; j++){
+
+			var initialValueOfLoop = !!forAll ? 1 : 0;
+
+	    	for(var j=initialValueOfLoop; j<userRefLength; j++){
 		    	gapi.client.analysisEndpoint.getUserInformation({"user" : userRef[j], "time" : $scope.controlScope.dateData.unixRest+10000, "with_month" : true}).execute(function(returned)	{
 		   			result[userCount] = {
 		    			user: returned.returned[10],
@@ -212,8 +217,8 @@ component('userV2', {
 		    		$scope.$apply(function(){
 		    			$scope.controlScope.csvParameter.csvProgressUserInformation = $scope.controlScope.csvParameter.csvProgressUserInformation + step;
 		   			});
-		   				
-		    		if(++userCount === userRef.length)	{
+					   
+		    		if(++userCount === userRefLength-1 || userRefLength === 1 && !forAll)	{
 		    			$scope.controlScope.csvParameter.createCsvUserInformation = false;
 		    			$scope.controlScope.csvParameter.csvProgressUserInformation = 0;
 		   				continueExport(result);
