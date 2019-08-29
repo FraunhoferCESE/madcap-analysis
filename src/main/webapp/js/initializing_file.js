@@ -22,7 +22,7 @@
 				document.getElementById('loadmessage').innerHTML = "Checking user ...";
 				gapi.auth.authorize({client_id: client_id_dev ,scope: 'https://www.googleapis.com/auth/userinfo.email', immediate: true}, auth);
 			}
-			console.log("No. of push: 58 (for me to know when the changes are visible because it takes an arbitrary amount of time)");
+			console.log("No. of push: 73 (for me to know when the changes are visible because it takes an arbitrary amount of time)");
 		}
 		if(window.location.href.substring(0,8) !== "https://") {
 			console.log(window.location.href.substring(0,8))
